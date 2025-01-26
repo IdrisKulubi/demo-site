@@ -33,6 +33,15 @@ export const profiles = pgTable("profiles", {
   photos: json("photos").$type<string[]>(), // Array of photo URLs
   isVisible: boolean("is_visible").default(true),
   lastActive: timestamp("last_active").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  isComplete: boolean("is_complete").default(false),
+  profileCompleted: boolean("profile_completed").default(false),
+  lookingFor: text("looking_for"),
+  course: text("course"),
+  yearOfStudy: integer("year_of_study"),
+  instagram: text("instagram"),
+  spotify: text("spotify"),
+  snapchat: text("snapchat"),
 });
 
 // Swipes/Likes
