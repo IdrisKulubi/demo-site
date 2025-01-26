@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Heart, GraduationCap, Calendar } from "lucide-react";
 import { genders, ageRange } from "@/lib/constants";
+import { ProfileFormData } from "@/lib/actions/profile.actions";
 
 interface DetailsInputProps {
   values: {
@@ -22,7 +23,16 @@ interface DetailsInputProps {
     age: number;
   };
   onChange: (
-    field: "lookingFor" | "course" | "yearOfStudy" | "gender" | "age",
+    field: keyof Omit<
+      ProfileFormData,
+      | "profilePhoto"
+      | "photos"
+      | "bio"
+      | "interests"
+      | "instagram"
+      | "spotify"
+      | "snapchat"
+    >,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any
   ) => void;

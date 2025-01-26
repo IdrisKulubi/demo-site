@@ -4,7 +4,11 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ProfileFormData, updateProfile } from "@/lib/actions/profile.actions";
+import {
+  ProfileFormData,
+  updateProfile,
+  getProfile,
+} from "@/lib/actions/profile.actions";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { InterestSelector } from "@/components/shared/profile/interest-selector";
@@ -16,6 +20,7 @@ import { deleteUploadThingFile } from "@/lib/actions/upload.actions";
 import { BioInput } from "@/components/shared/profile/bio-input";
 import { SocialInput } from "@/components/shared/profile/social-input";
 import { DetailsInput } from "@/components/shared/profile/details-input";
+import { useSession } from "next-auth/react";
 
 const canProceed = (step: number, formData: ProfileFormData) => {
   switch (step) {
@@ -53,8 +58,25 @@ export default function ProfileSetup() {
       snapchat: "",
       gender: undefined,
       age: 0,
+      profilePhoto: "",
     },
   });
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    async function checkProfile() {
+      if (session?.user?.id) {
+        const profile = await getProfile(session.user.id);
+        // Redirect to profile page if profile exists AND is completed
+        if (profile?.profileCompleted) {
+          router.push("/profile");
+          return;
+        }
+      }
+    }
+
+    checkProfile();
+  }, [session, router]);
 
   const onSubmit = async (data: ProfileFormData) => {
     setIsSubmitting(true);
@@ -161,7 +183,6 @@ export default function ProfileSetup() {
               <BioInput
                 value={form.watch("bio") || ""}
                 onChange={(value) => form.setValue("bio", value)}
-                error={form.formState.errors.bio?.message}
               />
             </div>
           )}
@@ -195,6 +216,8 @@ export default function ProfileSetup() {
                   lookingFor: form.formState.errors.lookingFor?.message,
                   course: form.formState.errors.course?.message,
                   yearOfStudy: form.formState.errors.yearOfStudy?.message,
+                  gender: form.formState.errors.gender?.message,
+                  age: form.formState.errors.age?.message,
                 }}
               />
             </div>

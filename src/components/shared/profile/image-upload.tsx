@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { UploadDropzone } from "@/lib/uploadthing";
@@ -9,13 +10,17 @@ import { deleteUploadThingFile } from "@/lib/actions/upload.actions";
 
 interface ImageUploadProps {
   value: string[];
-  onChange: (urls: string[]) => void;
-  maxFiles?: number;
+  onChange: (value: string[]) => void;
+  onRemove?: (photoUrl: string) => void;
+  onProfilePhotoSelect?: (photoUrl: string) => void;
+  maxFiles: number;
 }
 
 export function ImageUpload({
   value = [],
   onChange,
+  onRemove,
+  onProfilePhotoSelect,
   maxFiles = 6,
 }: ImageUploadProps) {
   const removeImage = async (urlToRemove: string) => {

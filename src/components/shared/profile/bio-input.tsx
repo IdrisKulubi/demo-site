@@ -2,18 +2,17 @@
 
 import { motion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { Heart, Sparkles } from "lucide-react";
 
 interface BioInputProps {
   value: string;
   onChange: (value: string) => void;
-  error?: string;
 }
 
-export function BioInput({ value, onChange, error }: BioInputProps) {
+export function BioInput({ value, onChange }: BioInputProps) {
   const [wordCount, setWordCount] = useState(
-    value?.split(/\s+/).filter(Boolean).length || 0
+    () => value?.split(/\s+/).length || 0
   );
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -22,68 +21,34 @@ export function BioInput({ value, onChange, error }: BioInputProps) {
     setWordCount(newValue.split(/\s+/).filter(Boolean).length);
   };
 
-  const getEmoji = () => {
-    if (wordCount === 0) return "✨";
-    if (wordCount < 5) return "💭";
-    if (wordCount < 10) return "✍️";
-    return "💝";
-  };
-
-  const getMessage = () => {
-    if (wordCount === 0) return "Time to shine bestie Tell your story ✨";
-    if (wordCount < 5) return "Keep going Make it personal 💫";
-    if (wordCount < 10) return "Almost there A few more words 🌟";
-    return " Your bio is giving main character energy ✨";
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-3"
+      className="space-y-4"
     >
-      <div className="relative">
+      <div className="space-y-2">
+        <Label className="text-base">Tell everyone about yourself! 💫</Label>
         <Textarea
-          placeholder="What makes you uniquely you? Share your vibe, your passions, or your best dad joke 🦋"
+          placeholder="I'm a fun-loving student who..."
+          className="h-32 resize-none bg-pink-50/50 dark:bg-pink-950/50 border-pink-200"
           value={value}
           onChange={handleChange}
-          className={`min-h-[120px] resize-none bg-pink-50/50 dark:bg-pink-950/50 
-            border-pink-200 dark:border-pink-800 focus:border-pink-300 
-            dark:focus:border-pink-700 placeholder:text-muted-foreground`}
         />
-        <motion.div
-          initial={false}
-          animate={{
-            scale: wordCount >= 10 ? [1, 1.2, 1] : 1,
-            rotate: wordCount >= 10 ? [0, 10, -10, 0] : 0,
-          }}
-          transition={{ duration: 0.5 }}
-          className="absolute right-3 top-3"
-        >
-          {wordCount >= 10 ? (
-            <Heart className="w-5 h-5 text-pink-500 fill-pink-500" />
-          ) : (
-            <Sparkles className="w-5 h-5 text-pink-400" />
-          )}
-        </motion.div>
+        <div className="flex justify-between text-sm text-muted-foreground">
+          <span>Min. 10 words</span>
+          <motion.span
+            animate={{
+              color: wordCount >= 10 ? "#10b981" : "#6b7280",
+            }}
+          >
+            {wordCount} words {wordCount >= 10 && "✨"}
+          </motion.span>
+        </div>
       </div>
-
-      <div className="flex justify-between items-center text-sm text-muted-foreground">
-        <p>{getMessage()}</p>
-        <p className={`${wordCount >= 10 ? "text-pink-500" : ""}`}>
-          {getEmoji()} {wordCount}/10 words
-        </p>
-      </div>
-
-      {error && (
-        <motion.p
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-sm text-red-500"
-        >
-          {error}
-        </motion.p>
-      )}
+      <p className="text-sm text-muted-foreground">
+        Pro tip: Be authentic and let your personality shine! 🌟
+      </p>
     </motion.div>
   );
 }
