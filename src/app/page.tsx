@@ -1,9 +1,9 @@
-import { LandingContent } from "@/components/landing/landing-content";
-import { AboutContent } from "@/components/about/about-content";
-import { HowItWorksContent } from "@/components/how-it-works/how-it-works-content";
+import { LandingContent } from "@/components/shared/landing/landing-content";
+import { AboutContent } from "@/components/shared/about/about-content";
+import { HowItWorksContent } from "@/components/shared/how-it-works/how-it-works-content";
 import { FloatingHearts } from "@/components/ui/floating-hearts";
-import { Scene3DWrapper } from "@/components/3d/scene-wrapper";
-import { AnimatedSection } from "@/components/sections/animated-section";
+import { Scene3DWrapper } from "@/components/shared/3d/scene-wrapper";
+import { AnimatedSection } from "@/components/shared/sections/animated-section";
 
 export default function Home() {
   return (
@@ -14,9 +14,14 @@ export default function Home() {
       <section id="hero" className="relative">
         <LandingContent />
       </section>
+
+      <div className="h-32" />
+
       <AnimatedSection id="how-it-works">
         <HowItWorksContent />
       </AnimatedSection>
+
+      <div className="h-32" />
 
       <AnimatedSection id="about">
         <AboutContent />

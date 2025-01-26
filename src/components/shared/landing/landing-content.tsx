@@ -9,7 +9,7 @@ const features = [
   {
     title: "Valentine's Ready",
     description:
-      "Find your perfect match before the big day Special Valentine's events and ice-breakers included! 💝",
+      "Find your perfect match before the big day Special Valentine's events and ice-breakers included 💝",
     icon: Shield,
   },
   {
@@ -48,7 +48,7 @@ export function LandingContent() {
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-gray-100">
             Find Your Valentine at{" "}
             <span className="text-pink-600 dark:text-pink-400">
-              Strathclyde
+              Strathspace
             </span>{" "}
             <span className="inline-block animate-bounce">💘</span>
           </h1>

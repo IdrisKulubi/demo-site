@@ -1,4 +1,4 @@
-import { AboutContent } from "@/components/about/about-content";
+import { AboutContent } from "@/components/shared/about/about-content";
 
 export default function AboutPage() {
   return (

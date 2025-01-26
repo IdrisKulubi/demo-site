@@ -1,4 +1,4 @@
-import { HowItWorksContent } from "@/components/how-it-works/how-it-works-content";
+import { HowItWorksContent } from "@/components/shared/how-it-works/how-it-works-content";
 
 export default function HowItWorksPage() {
   return (

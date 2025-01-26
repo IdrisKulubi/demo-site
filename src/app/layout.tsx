@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
-import { Navbar } from "@/components/layout/navbar";
+import { Navbar } from "@/components/shared/layout/navbar";
 import { Toaster } from "@/components/ui/toaster";
 import { MusicProvider } from "@/context/music-context";
+import { Footer } from "@/components/shared/layout/footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,8 +33,11 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <MusicProvider>
-            <Navbar />
-            {children}
+            <div className="flex min-h-screen flex-col">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
             <Toaster />
           </MusicProvider>
         </ThemeProvider>
