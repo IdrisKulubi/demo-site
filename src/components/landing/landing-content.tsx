@@ -7,18 +7,21 @@ import { motion } from "framer-motion";
 
 const features = [
   {
-    title: "Verified Users",
-    description: "Connect with verified Strathspace students only",
+    title: "Valentine's Ready",
+    description:
+      "Find your perfect match before the big day Special Valentine's events and ice-breakers included! 💝",
     icon: Shield,
   },
   {
-    title: "Smart Matching",
-    description: "Find matches based on interests and courses",
+    title: "Vibe Check",
+    description:
+      "Our AI helps you find people who match your energy! No awkward convos, just genuine connections ✨",
     icon: Sparkles,
   },
   {
-    title: "Safe & Secure",
-    description: "Your privacy and security are our top priority",
+    title: "Safe Space",
+    description:
+      "Verified uni students only Your safety is our top priority, bestie 🔒",
     icon: Lock,
   },
 ];
@@ -43,15 +46,22 @@ export function LandingContent() {
             </motion.div>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-gray-100">
-            Find Your Perfect Match at{" "}
+            Find Your Valentine at{" "}
             <span className="text-pink-600 dark:text-pink-400">
-              StrathSpace
-            </span>
+              Strathclyde
+            </span>{" "}
+            <span className="inline-block animate-bounce">💘</span>
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400">
-            Connect with fellow students, share moments, and discover meaningful
-            relationships in a safe and trusted environment.
+            Don&apos;t let this Valentine&apos;s be another Netflix and chill alone! Join
+            StrathSpace and find someone who matches your vibe before February
+            14th! 🌹✨
           </p>
+          <div className="flex justify-center gap-2 text-pink-600 dark:text-pink-400">
+            <span className="animate-pulse">❤️</span>
+            <span className="animate-pulse delay-100">💖</span>
+            <span className="animate-pulse delay-200">💝</span>
+          </div>
         </motion.div>
 
         <motion.div
