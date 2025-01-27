@@ -1,9 +1,10 @@
 "use server";
 
 import db from "@/db/drizzle";
-import { profiles, swipes } from "@/db/schema";
+import { profiles, swipes, matches } from "@/db/schema";
 import { eq, and, not } from "drizzle-orm";
 import { auth } from "@/auth";
+import { calculateCompatibility } from "@/lib/matching/algorithms";
 
 export async function getSwipableProfiles() {
   const session = await auth();
@@ -33,36 +34,62 @@ export async function getSwipableProfiles() {
   }
 }
 
-export async function recordSwipe(swipedId: string, type: "like" | "pass") {
+export async function recordSwipe(
+  targetUserId: string,
+  action: "like" | "pass"
+) {
   const session = await auth();
-  if (!session?.user?.id)
-    return { error: "Bestie, you need to sign in first🔐" };
+  if (!session?.user?.id) return { error: "Unauthorized" };
 
-  try {
-    await db.insert(swipes).values({
-      swiperId: session.user.id,
-      swipedId,
-      type,
-    });
+  // Record the swipe
+  await db.insert(swipes).values({
+    swiperId: session.user.id,
+    swipedId: targetUserId,
+    type: action,
+    createdAt: new Date(),
+  });
 
-    // Check for match
-    const mutualLike = await db
-      .select()
-      .from(swipes)
-      .where(
-        and(
-          eq(swipes.swiperId, swipedId),
-          eq(swipes.swipedId, session.user.id),
-          eq(swipes.type, "like")
+  let isMatch = false;
+
+  if (action === "like") {
+    // Check for mutual like and compatibility
+    const [userProfile, targetProfile] = await Promise.all([
+      db.query.profiles.findFirst({
+        where: eq(profiles.userId, session.user.id),
+      }),
+      db.query.profiles.findFirst({
+        where: eq(profiles.userId, targetUserId),
+      }),
+    ]);
+
+    if (userProfile && targetProfile) {
+      const mutualLike = await db
+        .select()
+        .from(swipes)
+        .where(
+          and(
+            eq(swipes.swiperId, targetUserId),
+            eq(swipes.swipedId, session.user.id),
+            eq(swipes.type, "like")
+          )
         )
-      )
-      .limit(1);
+        .limit(1);
 
-    return { success: true, isMatch: mutualLike.length > 0 };
-  } catch (error) {
-    console.error("Yikes, swipe didn't work 🙈", error);
-    return { error: "Oopsie! Something went wrong with your swipe 😅" };
+      if (mutualLike.length > 0) {
+        isMatch = calculateCompatibility(userProfile, targetProfile);
+
+        if (isMatch) {
+          await db.insert(matches).values({
+            user1Id: session.user.id,
+            user2Id: targetUserId,
+            createdAt: new Date(),
+          });
+        }
+      }
+    }
   }
+
+  return { success: true, isMatch };
 }
 
 export async function undoLastSwipe() {
