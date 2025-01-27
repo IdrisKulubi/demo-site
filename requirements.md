@@ -1,4 +1,4 @@
-# ValSpace Requirements
+# StrathSpace Requirements
 
 ## User Authentication
 - University email verification
