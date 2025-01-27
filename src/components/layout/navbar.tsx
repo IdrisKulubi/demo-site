@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import Link from "next/link";
+import Link from "next/link"
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -56,8 +56,8 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Explore Button - Only shown for signed in users */}
-          {session?.user && (
+          {/* Explore Button - Only shown for signed in users and not on explore page */}
+          {session?.user && pathname !== "/explore" && (
             <Button
               asChild
               variant="ghost"

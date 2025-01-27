@@ -19,9 +19,21 @@ export const profileSchema = z
     }),
     course: z.string().min(1, "Don't be shy, tell us what you study 📚"),
     yearOfStudy: z.number().min(1).max(5, "Which year are you in? 🎓"),
-    instagram: z.string().optional(),
-    spotify: z.string().optional(),
-    snapchat: z.string().optional(),
+    instagram: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((val) => val || ""),
+    spotify: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((val) => val || ""),
+    snapchat: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((val) => val || ""),
     gender: z.enum(["male", "female", "non-binary", "other"], {
       required_error: "Please select your gender 💫",
     }),

@@ -6,9 +6,9 @@ import { profiles, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
-import { profileSchema } from "@/lib/validators";
 import { deleteUploadThingFile } from "./upload.actions";
 import { z } from "zod";
+import { profileSchema } from "../validators";
 
 export type ProfileFormData = z.infer<typeof profileSchema> & {
   firstName: string;
@@ -99,8 +99,16 @@ export async function updateProfile(data: ProfileFormData) {
 
     const actualUserId = user[0].id;
 
-    // Validate the data
-    const validatedData = await profileSchema.safeParseAsync(data);
+    // Transform social fields before validation
+    const processedData = {
+      ...data,
+      instagram: data.instagram ?? "",
+      spotify: data.spotify ?? "",
+      snapchat: data.snapchat ?? "",
+    };
+
+    // Validate the processed data
+    const validatedData = await profileSchema.safeParseAsync(processedData);
     if (!validatedData.success) {
       console.error("Validation errors:", validatedData.error);
       return {
@@ -109,25 +117,25 @@ export async function updateProfile(data: ProfileFormData) {
       };
     }
 
-    // Update the profile using the correct user ID
+    // Update the profile using validated data
     const updatedProfile = await db
       .update(profiles)
       .set({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phoneNumber: data.phoneNumber,
-        bio: data.bio,
-        interests: data.interests,
-        lookingFor: data.lookingFor,
-        course: data.course,
-        yearOfStudy: data.yearOfStudy,
-        instagram: data.instagram || null,
-        spotify: data.spotify || null,
-        snapchat: data.snapchat || null,
-        gender: data.gender,
-        age: data.age,
-        photos: data.photos,
-        profilePhoto: data.profilePhoto,
+        firstName: processedData.firstName,
+        lastName: processedData.lastName,
+        phoneNumber: processedData.phoneNumber,
+        bio: processedData.bio,
+        interests: processedData.interests,
+        lookingFor: processedData.lookingFor,
+        course: processedData.course,
+        yearOfStudy: processedData.yearOfStudy,
+        instagram: processedData.instagram,
+        spotify: processedData.spotify,
+        snapchat: processedData.snapchat,
+        gender: processedData.gender,
+        age: processedData.age,
+        photos: processedData.photos,
+        profilePhoto: processedData.profilePhoto,
         updatedAt: new Date(),
       })
       .where(eq(profiles.userId, actualUserId))
@@ -173,9 +181,9 @@ export async function submitProfile(data: ProfileFormData) {
         lookingFor: data.lookingFor,
         course: data.course,
         yearOfStudy: data.yearOfStudy,
-        instagram: data.instagram || null,
-        spotify: data.spotify || null,
-        snapchat: data.snapchat || null,
+        instagram: data.instagram || "",
+        spotify: data.spotify || "",
+        snapchat: data.snapchat || "",
         gender: data.gender,
         age: data.age,
         profilePhoto: data.profilePhoto,
@@ -192,7 +200,7 @@ export async function submitProfile(data: ProfileFormData) {
     console.error("Error updating profile:", error);
     return {
       success: false,
-      error: "Failed to update profile. Please try again 😅",
+      error: "Failed to update profile. Please try again 😢",
     };
   }
 }
@@ -218,7 +226,7 @@ export async function updateProfilePhoto(photoUrl: string) {
     console.error("Error updating profile photo:", error);
     return {
       success: false,
-      error: "Failed to update profile photo. Please try again 😅",
+      error: "Failed to update profile photo. Please try again 😢",
     };
   }
 }
@@ -245,7 +253,7 @@ export async function removePhoto(photoUrl: string) {
     if (profile.photos && profile.photos.length <= 1) {
       return {
         success: false,
-        error: "You must keep at least one photo! 📸",
+        error: "You must keep at least one photo 📸",
       };
     }
 
@@ -264,7 +272,7 @@ export async function removePhoto(photoUrl: string) {
     console.error("Error removing photo:", error);
     return {
       success: false,
-      error: "Failed to remove photo. Please try again😅",
+      error: "Failed to remove photo. Please try again😢",
     };
   }
 }
