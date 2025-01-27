@@ -4,11 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  ProfileFormData,
-  updateProfile,
-  getProfile,
-} from "@/lib/actions/profile.actions";
+import { ProfileFormData, updateProfile } from "@/lib/actions/profile.actions";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { InterestSelector } from "@/components/shared/profile/interest-selector";
@@ -64,19 +60,38 @@ export default function ProfileSetup() {
   const { data: session } = useSession();
 
   useEffect(() => {
-    async function checkProfile() {
-      if (session?.user?.id) {
-        const profile = await getProfile(session.user.id);
-        // Redirect to profile page if profile exists AND is completed
-        if (profile?.profileCompleted) {
-          router.push("/profile");
-          return;
+    let isMounted = true;
+    let intervalId: NodeJS.Timeout;
+
+    const checkAndRedirect = async () => {
+      try {
+        const response = await fetch("/api/profile/check", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) return;
+
+        const { profileCompleted } = await response.json();
+
+        if (isMounted && profileCompleted) {
+          console.log("Valid redirect triggered");
+          window.location.href = "/profile";
         }
+      } catch (error) {
+        console.error("Redirect check failed:", error);
       }
+    };
+
+    if (session?.user) {
+      checkAndRedirect();
+      intervalId = setInterval(checkAndRedirect, 5000); // Reduce polling interval
     }
 
-    checkProfile();
-  }, [session, router]);
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, [session]);
 
   const onSubmit = async (data: ProfileFormData) => {
     setIsSubmitting(true);
@@ -84,11 +99,11 @@ export default function ProfileSetup() {
       const result = await updateProfile(data);
       if (result.success) {
         toast({
-          title: "Profile updated bestie ✨",
-          description: "Time to find your perfect match",
+          title: "Profile completed bestie ✨",
+          description: "Let's check out your amazing profile!",
         });
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        router.push("/dashboard");
+        router.push("/profile");
       } else {
         setIsSubmitting(false);
         toast({

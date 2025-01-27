@@ -4,7 +4,7 @@ import { Heart } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import {
@@ -26,19 +26,27 @@ const navItems = [
 
 export function Navbar() {
   const pathname = usePathname();
-  const { data: session } = useSession();
-  const router = useRouter();
+  const { data: session, update } = useSession();
 
   const handleProfileClick = async () => {
-    if (!session?.user?.id) return;
-
     try {
-      const profile = await getProfile(session.user.id);
-      // Redirect to profile page if profile exists AND is completed
-      router.push(profile?.profileCompleted ? "/profile" : "/profile/setup");
+      // Force session refresh using the update method from useSession
+      await update();
+
+      // Get fresh profile data
+      const profile = await getProfile();
+
+      if (profile?.profileCompleted) {
+        console.log("Profile complete, hard redirecting");
+        window.location.href = "/profile";
+        return;
+      }
+
+      console.log("Profile incomplete, redirecting to setup");
+      window.location.href = "/profile/setup";
     } catch (error) {
-      console.error("Error checking profile:", error);
-      router.push("/profile/setup");
+      console.error("Profile check error:", error);
+      window.location.href = "/profile/setup";
     }
   };
 

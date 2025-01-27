@@ -43,6 +43,7 @@ export const profiles = pgTable("profiles", {
   spotify: text("spotify"),
   snapchat: text("snapchat"),
   profilePhoto: text("profile_photo"),
+  phoneNumber: text("phone_number"),
 });
 
 // Swipes/Likes

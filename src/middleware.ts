@@ -20,16 +20,18 @@ export async function middleware(request: Request & { nextUrl: URL }) {
   }
 
   // Check profile completion and redirect if needed
-  if (!isProfileSetup && session?.user?.id) {
+  if (!isProfileSetup && session?.user) {
     try {
-      const profile = await getProfile(session.user.id);
-      if (!profile?.isComplete) {
+      const profile = await getProfile();
+      if (!profile?.profileCompleted) {
         return NextResponse.redirect(
           new URL("/profile/setup", request.nextUrl)
         );
       }
     } catch (error) {
-      console.error("Error checking profile:", error);
+      console.error("Middleware profile check failed:", error);
+      // Allow proceeding to avoid infinite loop
+      return NextResponse.next();
     }
   }
 

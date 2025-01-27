@@ -5,7 +5,6 @@ import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Navbar } from "@/components/shared/layout/navbar";
 import { Toaster } from "@/components/ui/toaster";
 import { MusicProvider } from "@/context/music-context";
-import { Footer } from "@/components/shared/layout/footer";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
 
@@ -41,7 +40,6 @@ export default async function RootLayout({
               <div className="flex min-h-screen flex-col">
                 <Navbar />
                 <main className="flex-1">{children}</main>
-                <Footer />
               </div>
               <Toaster />
             </MusicProvider>

@@ -120,160 +120,242 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
+      {/* Love-themed header with floating hearts animation */}
+      <motion.div
+        className="relative"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="relative">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {[0, 20, 40, 60, 80, 100].map((leftPosition) => (
+              <div
+                key={leftPosition}
+                className="absolute text-pink-500/20 dark:text-pink-500/10 text-4xl animate-float"
+                style={{
+                  left: `${leftPosition}%`,
+                  animationDelay: `${leftPosition * 0.2}s`,
+                }}
+              >
+                💝
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="grid gap-6 md:grid-cols-2"
+        className="grid gap-8 md:grid-cols-2 md:gap-12"
+        layout
       >
         {/* Photos Section */}
-        <Card
-          className={`relative overflow-hidden transition-all ${
-            activeSection === "photos"
-              ? "ring-2 ring-pink-500 shadow-lg scale-[1.02]"
-              : ""
-          }`}
-          onMouseEnter={() => setActiveSection("photos")}
-          onMouseLeave={() => setActiveSection(null)}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-pink-500" />
-              Your Best Pics 📸
-            </CardTitle>
-            <CardDescription>
-              Show off your main character energy! ✨
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ImageUpload
-              value={form.watch("photos")}
-              onChange={handlePhotoUpdate}
-              onRemove={handlePhotoRemove}
-              onProfilePhotoSelect={handleProfilePhotoUpdate}
-              maxFiles={6}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Bio Section */}
-        <Card
-          className={`relative overflow-hidden transition-all ${
-            activeSection === "bio"
-              ? "ring-2 ring-pink-500 shadow-lg scale-[1.02]"
-              : ""
-          }`}
-          onMouseEnter={() => setActiveSection("bio")}
-          onMouseLeave={() => setActiveSection(null)}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-pink-500" />
-              Your Story 💭
-            </CardTitle>
-            <CardDescription>Let your personality shine! ✨</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <BioInput
-              value={form.watch("bio")}
-              onChange={(value) => handleFieldUpdate("bio", value)}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Interests Section */}
-        <Card
-          className={`relative overflow-hidden transition-all ${
-            activeSection === "interests"
-              ? "ring-2 ring-pink-500 shadow-lg scale-[1.02]"
-              : ""
-          }`}
-          onMouseEnter={() => setActiveSection("interests")}
-          onMouseLeave={() => setActiveSection(null)}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-pink-500" />
-              Your Vibes 🌟
-            </CardTitle>
-            <CardDescription>What makes you unique? ✨</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <InterestSelector
-              value={form.watch("interests")}
-              onChange={(value) => handleFieldUpdate("interests", value)}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Details Section */}
-        <Card
-          className={`relative overflow-hidden transition-all ${
-            activeSection === "details"
-              ? "ring-2 ring-pink-500 shadow-lg scale-[1.02]"
-              : ""
-          }`}
-          onMouseEnter={() => setActiveSection("details")}
-          onMouseLeave={() => setActiveSection(null)}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-pink-500" />
-              Your Details 📝
-            </CardTitle>
-            <CardDescription>Tell us more about you! ✨</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DetailsInput
-              values={{
-                lookingFor: form.watch("lookingFor"),
-                course: form.watch("course"),
-                yearOfStudy: form.watch("yearOfStudy"),
-                gender: form.watch("gender"),
-                age: form.watch("age"),
-              }}
-              onChange={(field, value) => handleFieldUpdate(field, value)}
-              errors={{
-                lookingFor: form.formState.errors.lookingFor?.message,
-                course: form.formState.errors.course?.message,
-                yearOfStudy: form.formState.errors.yearOfStudy?.message,
-                gender: form.formState.errors.gender?.message,
-                age: form.formState.errors.age?.message,
+        <motion.div layoutId="photos-section" className="md:col-span-2">
+          <Card
+            className={`relative overflow-hidden transition-all duration-300 ${
+              activeSection === "photos"
+                ? "ring-2 ring-pink-500 shadow-xl scale-[1.02] bg-gradient-to-br from-pink-50/50 to-white dark:from-pink-950/50 dark:to-background"
+                : "hover:shadow-lg hover:scale-[1.01] bg-white/50 dark:bg-background/50"
+            }`}
+            onMouseEnter={() => setActiveSection("photos")}
+            onMouseLeave={() => setActiveSection(null)}
+          >
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-br from-pink-100/20 to-transparent dark:from-pink-950/20"
+              animate={{
+                opacity: activeSection === "photos" ? 1 : 0,
               }}
             />
-          </CardContent>
-        </Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <motion.div
+                  animate={{
+                    rotate: activeSection === "photos" ? 360 : 0,
+                    scale: activeSection === "photos" ? 1.2 : 1,
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Sparkles className="w-6 h-6 text-pink-500" />
+                </motion.div>
+                Your Best Pics 📸
+              </CardTitle>
+              <CardDescription className="text-base">
+                Show off your main character energy! ✨
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ImageUpload
+                value={form.watch("photos")}
+                onChange={handlePhotoUpdate}
+                onRemove={handlePhotoRemove}
+                onProfilePhotoSelect={handleProfilePhotoUpdate}
+                maxFiles={6}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        {/* Socials Section */}
-        <Card
-          className={`relative overflow-hidden transition-all md:col-span-2 ${
-            activeSection === "socials"
-              ? "ring-2 ring-pink-500 shadow-lg scale-[1.02]"
-              : ""
-          }`}
-          onMouseEnter={() => setActiveSection("socials")}
-          onMouseLeave={() => setActiveSection(null)}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-pink-500" />
-              Your Socials 📱
-            </CardTitle>
-            <CardDescription>
-              Let&apos;s connect everywhere! (optional) ✨
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <SocialInput
-              values={{
-                instagram: form.watch("instagram"),
-                spotify: form.watch("spotify"),
-                snapchat: form.watch("snapchat"),
+        {/* Bio & Interests Side by Side */}
+        <motion.div layoutId="bio-section">
+          <Card
+            className={`relative h-full overflow-hidden transition-all duration-300 ${
+              activeSection === "bio"
+                ? "ring-2 ring-pink-500 shadow-xl scale-[1.02] bg-gradient-to-br from-pink-50/50 to-white dark:from-pink-950/50 dark:to-background"
+                : "hover:shadow-lg hover:scale-[1.01] bg-white/50 dark:bg-background/50"
+            }`}
+            onMouseEnter={() => setActiveSection("bio")}
+            onMouseLeave={() => setActiveSection(null)}
+          >
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-pink-500" />
+                Your Story 💭
+              </CardTitle>
+              <CardDescription>Let your personality shine ✨</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BioInput
+                value={form.watch("bio")}
+                onChange={(value) => handleFieldUpdate("bio", value)}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div layoutId="interests-section">
+          <Card
+            className={`relative h-full overflow-hidden transition-all duration-300 ${
+              activeSection === "interests"
+                ? "ring-2 ring-pink-500 shadow-xl scale-[1.02] bg-gradient-to-br from-pink-50/50 to-white dark:from-pink-950/50 dark:to-background"
+                : "hover:shadow-lg hover:scale-[1.01] bg-white/50 dark:bg-background/50"
+            }`}
+            onMouseEnter={() => setActiveSection("interests")}
+            onMouseLeave={() => setActiveSection(null)}
+          >
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-pink-500" />
+                Your Vibes 🌟
+              </CardTitle>
+              <CardDescription>What makes you unique? ✨</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <InterestSelector
+                value={form.watch("interests")}
+                onChange={(value) => handleFieldUpdate("interests", value)}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Details Section - Full Width */}
+        <motion.div layoutId="details-section" className="md:col-span-2">
+          <Card
+            className={`relative overflow-hidden transition-all duration-300 ${
+              activeSection === "details"
+                ? "ring-2 ring-pink-500 shadow-xl scale-[1.02] bg-gradient-to-br from-pink-50/50 to-white dark:from-pink-950/50 dark:to-background"
+                : "hover:shadow-lg hover:scale-[1.01] bg-white/50 dark:bg-background/50"
+            }`}
+            onMouseEnter={() => setActiveSection("details")}
+            onMouseLeave={() => setActiveSection(null)}
+          >
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-pink-500" />
+                Your Details 📝
+              </CardTitle>
+              <CardDescription>Tell us more about you! ✨</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DetailsInput
+                values={{
+                  lookingFor: form.watch("lookingFor"),
+                  course: form.watch("course"),
+                  yearOfStudy: form.watch("yearOfStudy"),
+                  gender: form.watch("gender"),
+                  age: form.watch("age"),
+                  phoneNumber: form.watch("phoneNumber"),
+                }}
+                onChange={(field, value) => handleFieldUpdate(field, value)}
+                errors={{
+                  lookingFor: form.formState.errors.lookingFor?.message,
+                  course: form.formState.errors.course?.message,
+                  yearOfStudy: form.formState.errors.yearOfStudy?.message,
+                  gender: form.formState.errors.gender?.message,
+                  age: form.formState.errors.age?.message,
+                  phoneNumber: form.formState.errors.phoneNumber?.message,
+                }}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Socials Section - Full Width */}
+        <motion.div layoutId="socials-section" className="md:col-span-2">
+          <Card
+            className={`relative overflow-hidden transition-all duration-300 ${
+              activeSection === "socials"
+                ? "ring-2 ring-pink-500 shadow-xl scale-[1.02] bg-gradient-to-br from-pink-50/50 to-white dark:from-pink-950/50 dark:to-background"
+                : "hover:shadow-lg hover:scale-[1.01] bg-white/50 dark:bg-background/50"
+            }`}
+            onMouseEnter={() => setActiveSection("socials")}
+            onMouseLeave={() => setActiveSection(null)}
+          >
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-pink-500" />
+                Your Socials 📱
+              </CardTitle>
+              <CardDescription>
+                Let&apos;s connect everywhere! (optional) ✨
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SocialInput
+                values={{
+                  instagram: form.watch("instagram"),
+                  spotify: form.watch("spotify"),
+                  snapchat: form.watch("snapchat"),
+                }}
+                onChange={(platform, value) =>
+                  handleFieldUpdate(platform, value)
+                }
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
+
+      {/* Love-themed footer decoration */}
+      <motion.div
+        className="relative h-12 mt-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+      >
+        <div className="absolute inset-x-0 flex justify-center gap-4">
+          {["💖", "✨", "💝", "✨", "💖"].map((emoji, i) => (
+            <motion.span
+              key={i}
+              className="text-2xl"
+              animate={{
+                y: [0, -10, 0],
+                rotate: [-5, 5, -5],
               }}
-              onChange={(platform, value) => handleFieldUpdate(platform, value)}
-            />
-          </CardContent>
-        </Card>
+              transition={{
+                duration: 2,
+                delay: i * 0.2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              {emoji}
+            </motion.span>
+          ))}
+        </div>
       </motion.div>
     </div>
   );

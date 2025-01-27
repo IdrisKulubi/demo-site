@@ -4,6 +4,7 @@ import { HowItWorksContent } from "@/components/shared/how-it-works/how-it-works
 import { FloatingHearts } from "@/components/ui/floating-hearts";
 import { Scene3DWrapper } from "@/components/shared/3d/scene-wrapper";
 import { AnimatedSection } from "@/components/shared/sections/animated-section";
+import { Footer } from "@/components/shared/layout/footer";
 
 export default function Home() {
   return (
@@ -26,6 +27,7 @@ export default function Home() {
       <AnimatedSection id="about">
         <AboutContent />
       </AnimatedSection>
+      <Footer />
     </main>
   );
 }

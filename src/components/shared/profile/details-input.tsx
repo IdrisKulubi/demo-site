@@ -21,6 +21,7 @@ interface DetailsInputProps {
     yearOfStudy: number;
     gender: string;
     age: number;
+    phoneNumber?: string;
   };
   onChange: (
     field: keyof Omit<
@@ -42,6 +43,7 @@ interface DetailsInputProps {
     yearOfStudy?: string;
     gender?: string;
     age?: string;
+    phoneNumber?: string;
   };
 }
 
@@ -163,6 +165,22 @@ export function DetailsInput({ values, onChange, errors }: DetailsInputProps) {
             </SelectContent>
           </Select>
           {errors?.age && <p className="text-sm text-red-500">{errors.age}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-pink-500" />
+            Phone Number (Optional) 📱
+          </Label>
+          <Input
+            value={values.phoneNumber || ""}
+            onChange={(e) => onChange("phoneNumber", e.target.value)}
+            placeholder="e.g., +254 712 345 678"
+            className="bg-pink-50/50 dark:bg-pink-950/50 border-pink-200"
+          />
+          {errors?.phoneNumber && (
+            <p className="text-sm text-red-500">{errors.phoneNumber}</p>
+          )}
         </div>
       </div>
 

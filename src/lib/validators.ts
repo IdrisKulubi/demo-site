@@ -27,4 +27,8 @@ export const profileSchema = z.object({
   age: z.number().min(18).max(25, {
     message: "Age must be between 18 and 25 🎂",
   }),
+  phoneNumber: z
+    .string()
+    .regex(/^\+?[0-9\s-]+$/, "Please enter a valid phone number 📱")
+    .optional(),
 });
