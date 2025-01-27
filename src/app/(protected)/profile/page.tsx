@@ -7,7 +7,7 @@ import { Sparkles } from "lucide-react";
 // Make this a Client Component to avoid hydration issues
 export default async function ProfilePage() {
   const session = await auth();
-  if (!session?.user) redirect("/signin");
+  if (!session?.user) redirect("/");
 
   const profile = await getProfile();
 
@@ -75,5 +75,3 @@ export default async function ProfilePage() {
     </div>
   );
 }
-
-

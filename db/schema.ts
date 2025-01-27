@@ -7,10 +7,12 @@ import {
   boolean,
   uuid,
   json,
+  primaryKey,
 } from "drizzle-orm/pg-core";
+import { type AdapterAccount } from "@auth/core/adapters";
 
 // Users table
-export const users = pgTable("users", {
+export const users = pgTable("user", {
   id: text("id").primaryKey(), // Maps to Auth.js user id
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
@@ -19,6 +21,51 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// Auth.js tables
+export const accounts = pgTable(
+  "account",
+  {
+    userId: text("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").$type<AdapterAccount["type"]>().notNull(),
+    provider: text("provider").notNull(),
+    providerAccountId: text("providerAccountId").notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
+    id_token: text("id_token"),
+    session_state: text("session_state"),
+  },
+  (account) => ({
+    compoundKey: primaryKey({
+      columns: [account.provider, account.providerAccountId],
+    }),
+  })
+);
+
+export const sessions = pgTable("session", {
+  sessionToken: text("sessionToken").notNull().primaryKey(),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expires: timestamp("expires", { mode: "date" }).notNull(),
+});
+
+export const verificationTokens = pgTable(
+  "verificationToken",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
+  },
+  (vt) => ({
+    compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
+  })
+);
 
 // Extended user profiles
 export const profiles = pgTable("profiles", {
@@ -29,6 +76,8 @@ export const profiles = pgTable("profiles", {
   bio: text("bio"),
   age: integer("age"),
   gender: text("gender"),
+  role: text("role").$type<"user" | "admin">().default("user"),
+
   interests: json("interests").$type<string[]>(),
   photos: json("photos").$type<string[]>(), // Array of photo URLs
   isVisible: boolean("is_visible").default(true),

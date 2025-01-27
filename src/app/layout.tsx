@@ -14,9 +14,9 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "StrathSpace - Find Your Perfect Match at Strathclyde",
+  title: "StrathSpace - Find Your Perfect Match at Strathmore",
   description:
-    "Connect with fellow Strathclyde students and find meaningful relationships",
+    "Connect with fellow Strathmore students and find meaningful relationships",
 };
 
 export default async function RootLayout({
@@ -26,6 +26,7 @@ export default async function RootLayout({
 }>) {
   const session = await auth();
 
+ 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} antialiased`}>

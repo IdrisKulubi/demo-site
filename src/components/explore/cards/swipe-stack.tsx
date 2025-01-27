@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { SwipeCard } from "./swipe-card";
 import type { Profile } from "@/db/schema";
@@ -15,11 +15,16 @@ interface SwipeStackProps {
 }
 
 export function SwipeStack({ initialProfiles }: SwipeStackProps) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [profiles, setProfiles] = useState(initialProfiles);
   const [activeIndex, setActiveIndex] = useState(0);
   const [showMatch, setShowMatch] = useState(false);
   const { toast } = useToast();
+
+  // Reset match state when profiles change
+  useEffect(() => {
+    setShowMatch(false);
+    setActiveIndex(0);
+  }, [profiles]);
 
   const handleSwipe = async (direction: "left" | "right") => {
     if (activeIndex >= profiles.length) return;
@@ -39,11 +44,15 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
       return;
     }
 
+    // Only show match if compatibility check passed
     if (result.isMatch) {
       setShowMatch(true);
     }
 
-    setActiveIndex((prev) => prev + 1);
+    // Remove swiped profile from stack
+    setProfiles((prev) =>
+      prev.filter((p) => p.userId !== currentProfile.userId)
+    );
   };
 
   const handleUndo = async () => {

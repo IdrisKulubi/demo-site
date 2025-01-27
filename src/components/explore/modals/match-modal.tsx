@@ -3,7 +3,7 @@
 import { Dialog } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import {  MessageCircle, Share2 } from "lucide-react";
+import { MessageCircle, Share2 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useEffect } from "react";
 

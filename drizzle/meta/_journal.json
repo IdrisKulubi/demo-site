@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1737890137947,
-      "tag": "0000_bitter_the_hood",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1737906422097,
-      "tag": "0001_flashy_prodigy",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1737910533779,
-      "tag": "0002_secret_black_bird",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1737938825974,
-      "tag": "0003_strange_dormammu",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1737943164092,
-      "tag": "0004_minor_firelord",
+      "when": 1737964368938,
+      "tag": "0000_stiff_chamber",
       "breakpoints": true
     }
   ]

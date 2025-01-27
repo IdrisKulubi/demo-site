@@ -184,8 +184,8 @@ export async function submitProfile(data: ProfileFormData) {
       })
       .where(eq(profiles.userId, session.user.id));
 
-    revalidatePath("/profile");
-    revalidatePath("/dashboard");
+    revalidatePath("/explore");
+    revalidatePath("/explore");
 
     return { success: true };
   } catch (error) {
