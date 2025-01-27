@@ -15,9 +15,10 @@ export async function GET() {
     return NextResponse.json({
       profileCompleted: !!profile?.profileCompleted,
     });
-  } catch (error) {
+  } catch {
+    // console.error("Error checking profile:");
     return NextResponse.json(
-      { error: "Failed to check profile status" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

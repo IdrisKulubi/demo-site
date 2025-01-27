@@ -142,7 +142,7 @@ export default function ProfileSetup() {
         });
       }
     };
-  }, []);
+  }, [form]);
 
   const isFormValid = (formData: ProfileFormData) => {
     return (

@@ -3,8 +3,15 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
+interface Heart {
+  id: number;
+  x: number;
+  scale: number;
+  duration: number;
+}
+
 export function FloatingHearts() {
-  const [hearts, setHearts] = useState([]);
+  const [hearts, setHearts] = useState<Heart[]>([]);
 
   useEffect(() => {
     const createHeart = () => {

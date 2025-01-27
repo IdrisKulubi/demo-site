@@ -33,7 +33,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         audio.currentTime = 0;
       };
     }
-  }, [audio]);
+  }, [audio, volume]);
 
   useEffect(() => {
     if (audio) {

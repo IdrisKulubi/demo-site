@@ -50,7 +50,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
       setIsChanged(true);
     });
     return () => subscription.unsubscribe();
-  }, [form.watch]);
+  }, [form, form.watch]);
 
   const handleSubmit = async () => {
     if (!isChanged) return;
