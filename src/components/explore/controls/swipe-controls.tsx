@@ -9,6 +9,7 @@ interface SwipeControlsProps {
   onSwipeRight: () => void;
   onUndo: () => void;
   className?: string;
+  disabled?: boolean;
 }
 
 export function SwipeControls({
@@ -16,13 +17,20 @@ export function SwipeControls({
   onSwipeRight,
   onUndo,
   className,
+  disabled,
 }: SwipeControlsProps) {
   return (
     <div className={cn("flex justify-center gap-6", className)}>
       <Button
         variant="ghost"
         onClick={onUndo}
-        className="rounded-full h-14 w-14 bg-pink-100/50 dark:bg-pink-950/50 hover:bg-pink-200/50 dark:hover:bg-pink-900/50"
+        disabled={disabled}
+        className={cn(
+          "rounded-full h-14 w-14 bg-pink-100/50 dark:bg-pink-950/50",
+          "hover:bg-pink-200/50 dark:hover:bg-pink-900/50",
+          "transition-transform duration-200 hover:scale-110",
+          disabled && "opacity-50 pointer-events-none"
+        )}
         aria-label="Undo last swipe"
       >
         <Undo className="h-8 w-8 text-pink-600 dark:text-pink-400" />

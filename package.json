@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@auth/drizzle-adapter": "^1.7.4",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.2",
@@ -66,6 +67,7 @@
     "react-resizable-panels": "^2.1.7",
     "recharts": "^2.15.0",
     "sonner": "^1.7.2",
+    "swiper": "^11.2.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.172.0",

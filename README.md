@@ -1,129 +1,95 @@
-Requirements Document for "Find Your Valentine" Web App
-
-Overview
-
-This web app will be a Tinder-like platform for university students to find their Valentine. Students can create accounts, add multiple photos, and share details about themselves. The app will allow users to swipe through profiles, match with others, and exchange phone numbers if both parties swipe right. The platform will also enable users to chat with their matches.
-
-Technology Stack
-
-Frontend: Next.js with Tailwind CSS for responsive design
-
-Database: Neon DB
-
-Authentication: NextAuth or a similar solution
-
-Image Storage: Cloudinary or an equivalent service
-
-Real-time Features: WebSockets (e.g., Pusher or Socket.io) for chat and match notifications
-
-Hosting: Vercel for the web app, Neon DB for the database
-
-Features
-
-1. User Authentication
-
-Login/Sign-Up:
-
-Email and password authentication.
-
-Option to sign up using Google or other providers.
-
-Profile Verification:
-
-Email verification after registration.
-
-2. User Profiles
-
-Profile Creation:
-
-Users can add their name, bio, age, and other basic details.
-
-Upload multiple photos (minimum 2, maximum 6).
-
-Add interests or hobbies to enhance matching.
-
-Profile Editing:
-
-Users can edit their details and photos at any time.
-
-3. Swiping Interface
-
-Swipe Functionality:
-
-Display profiles one at a time with photo carousels.
-
-Swipe right (like) or left (dislike) functionality.
-
-Limit to a certain number of swipes per day for non-premium users (optional).
-
-4. Matching and Notifications
-
-Match System:
-
-If two users swipe right on each other, a match is created.
-
-Notifications:
-
-Users are notified of a match in real-time.
-
-Notifications for new messages in chats.
-
-5. Messaging System
-
-Chat Interface:
-
-Users can chat with their matches in real-time.
-
-Typing indicators and read receipts.
-
-Contact Sharing:
-
-Option to share phone numbers securely.
-
-6. Explore Section (Optional)
-
-Browse Nearby:
-
-View profiles of students nearby or from the same university.
-
-7. Settings
-
-Privacy Settings:
-
-Hide profile temporarily.
-
-Block/unmatch users.
-
-Account Settings:
-
-Change password.
-
-Delete account.
-
-8. Admin Panel
-
-User Management:
-
-View and manage user accounts.
-
-Approve or delete suspicious profiles.
-
-Analytics:
-
-Track daily active users, matches, and messages sent.
-
-9. Mobile Responsiveness
-
-Ensure the web app is mobile-friendly for seamless use on smartphones.
-
-10. Theming and Branding
-
-Theme:
-
-Valentine's-themed UI with soft colors (e.g., pink, red, white).
-
-Use hearts and romantic icons in the design.
-
-Branding:
-
-App name: "Find Your Valentine."
+# Find Your Valentine - Web App Requirements
+
+## Overview
+
+A Tinder-like platform designed for university students to find their Valentine. Users can create profiles with multiple photos and personal details, swipe through potential matches, and connect through chat when mutual interest is expressed.
+
+## Technology Stack
+
+### Frontend
+- **Framework**: Next.js
+- **Styling**: Tailwind CSS
+
+### Backend & Infrastructure
+- **Database**: Neon DB
+- **Authentication**: NextAuth.js
+- **Image Storage**: Cloudinary
+- **Real-time Features**: WebSockets (Pusher/Socket.io)
+- **Hosting**: Vercel (web app) + Neon DB (database)
+
+## Core Features
+
+### 1. User Authentication
+- **Login/Sign-Up**
+  - Email/password authentication
+  - OAuth providers (Google, etc.)
+- **Profile Verification**
+  - Email verification system
+
+### 2. User Profiles
+- **Profile Creation**
+  - Basic details (name, bio, age)
+  - Photo management (2-6 photos)
+  - Interests/hobbies selection
+- **Profile Management**
+  - Edit functionality for all profile elements
+
+### 3. Swiping Interface
+- Photo carousel display
+- Right (like) and left (dislike) swipe actions
+- Daily swipe limits for non-premium users (optional)
+
+### 4. Matching System
+- **Match Creation**
+  - Mutual right swipes create matches
+- **Notifications**
+  - Real-time match alerts
+  - Message notifications
+
+### 5. Messaging System
+- **Chat Features**
+  - Real-time messaging
+  - Typing indicators
+  - Read receipts
+- **Contact Exchange**
+  - Secure phone number sharing
+
+### 6. Explore Section (Optional)
+- Proximity-based profile browsing
+- University-specific filtering
+
+### 7. User Settings
+- **Privacy Controls**
+  - Profile visibility toggle
+  - Block/unmatch functionality
+- **Account Management**
+  - Password updates
+  - Account deletion
+
+### 8. Admin Dashboard
+- **User Management**
+  - Profile review system
+  - Account moderation
+- **Analytics**
+  - User activity metrics
+  - Match/message statistics
+
+### 9. Mobile Optimization
+- Responsive design
+- Mobile-first approach
+
+### 10. Design & Branding
+- **Theme**
+  - Valentine's color palette (pink, red, white)
+  - Romantic visual elements
+- **Brand Identity**
+  - App name: "Strathspace"
+  - Consistent branding across platform
+
+## Getting Started
+
+[To be added: Setup instructions, development guidelines, and contribution process]
+
+## License
+
+[To be added: License information]

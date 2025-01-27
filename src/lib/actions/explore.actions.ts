@@ -11,7 +11,7 @@ export async function getSwipableProfiles() {
   if (!session?.user?.id) return [];
 
   try {
-    return await db
+    const results = await db
       .select()
       .from(profiles)
       .leftJoin(
@@ -27,7 +27,13 @@ export async function getSwipableProfiles() {
           eq(profiles.isVisible, true)
         )
       )
-      .limit(20);
+      .limit(10);
+
+    console.log(
+      "Fetched profiles from database:",
+      JSON.stringify(results, null, 2)
+    );
+    return results;
   } catch (error) {
     console.error("OMG bestie, couldn't fetch profiles 😭", error);
     return [];
@@ -40,6 +46,27 @@ export async function recordSwipe(
 ) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
+
+  // Prevent self-swiping
+  if (targetUserId === session.user.id) {
+    return { error: "Can't swipe yourself 😅" };
+  }
+
+  // Check for existing swipe
+  const existingSwipe = await db
+    .select()
+    .from(swipes)
+    .where(
+      and(
+        eq(swipes.swiperId, session.user.id),
+        eq(swipes.swipedId, targetUserId)
+      )
+    )
+    .limit(1);
+
+  if (existingSwipe.length > 0) {
+    return { error: "Already swiped on this profile 💅" };
+  }
 
   // Record the swipe
   await db.insert(swipes).values({
@@ -92,7 +119,7 @@ export async function recordSwipe(
   return { success: true, isMatch };
 }
 
-export async function undoLastSwipe() {
+export async function undoLastSwipe(swipedId: string) {
   const session = await auth();
   if (!session?.user?.id)
     return { error: "Bestie, you need to sign in first 🔐" };
@@ -101,7 +128,9 @@ export async function undoLastSwipe() {
     const lastSwipe = await db
       .select()
       .from(swipes)
-      .where(eq(swipes.swiperId, session.user.id))
+      .where(
+        and(eq(swipes.swiperId, session.user.id), eq(swipes.swipedId, swipedId))
+      )
       .orderBy(swipes.createdAt)
       .limit(1)
       .then(async (rows) => {

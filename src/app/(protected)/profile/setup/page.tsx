@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ProfileFormData, updateProfile } from "@/lib/actions/profile.actions";
+import { ProfileFormData, submitProfile } from "@/lib/actions/profile.actions";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { InterestSelector } from "@/components/shared/profile/interest-selector";
@@ -104,14 +104,15 @@ export default function ProfileSetup() {
   const onSubmit = async (data: ProfileFormData) => {
     setIsSubmitting(true);
     try {
-      const result = await updateProfile(data);
+      const result = await submitProfile(data);
       if (result.success) {
         toast({
           title: "Profile completed bestie ✨",
           description: "Let's check out your amazing profile!",
         });
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        router.push("/profile");
+        router.push("/explore");
+        router.refresh();
       } else {
         setIsSubmitting(false);
         toast({
