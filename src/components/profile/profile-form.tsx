@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema } from "@/lib/validators";
@@ -20,11 +20,13 @@ import {
 } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
 import {
-  updateProfileField,
   updateProfilePhoto,
   removePhoto,
   type ProfileFormData,
+  updateProfile,
 } from "@/lib/actions/profile.actions";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 interface ProfileFormProps {
   initialData: ProfileFormData;
@@ -32,11 +34,57 @@ interface ProfileFormProps {
 
 export function ProfileForm({ initialData }: ProfileFormProps) {
   const { toast } = useToast();
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [isChanged, setIsChanged] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: initialData,
   });
+
+  // Track form changes
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      setIsChanged(true);
+    });
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
+
+  const handleSubmit = async () => {
+    if (!isChanged) return;
+
+    setIsSubmitting(true);
+    try {
+      const formData = form.getValues();
+      const result = await updateProfile(formData);
+
+      if (result.success) {
+        setIsChanged(false);
+        router.refresh();
+        toast({
+          title: "Profile updated! ✨",
+          description: "Your changes have been saved successfully!",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Update failed ☹️",
+          description: result.error || "Please try again",
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Update failed ☹️",
+        description: "Something went wrong. Please try again",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleFieldUpdate = async (
     field: keyof Omit<ProfileFormData, "profilePhoto">,
@@ -44,58 +92,52 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
     value: any
   ) => {
     try {
-      const result = await updateProfileField(field, value);
-      if (result.success) {
-        toast({
-          title: "Profile updated! ✨",
-          description: `Your ${field} has been updated successfully!`,
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Uh oh! Something went wrong 😅",
-          description: result.error,
-        });
-      }
+      form.setValue(field, value);
+      setIsChanged(true);
     } catch (error) {
       console.error(error);
-
       toast({
         variant: "destructive",
-        title: "Uh oh! Something went wrong 😅",
-        description: "Failed to update profile. Please try again!",
+        title: "Error updating field ☹️",
+        description: "Please try again",
       });
     }
   };
 
   const handlePhotoUpdate = async (photos: string[]) => {
     try {
+      form.setValue("photos", photos);
       await handleFieldUpdate("photos", photos);
+      router.refresh();
     } catch (error) {
+      form.setValue("photos", form.getValues("photos"));
       console.error(error);
       toast({
         variant: "destructive",
-        title: "Uh oh! Something went wrong with your photos 😅",
-        description: "Failed to update photos. Please try again!",
+        title: "Uh oh! Something went wrong with your photos ☹️",
+        description: "Failed to update photos. Please try again",
       });
     }
   };
 
   const handleProfilePhotoUpdate = async (photoUrl: string) => {
     try {
+      form.setValue("profilePhoto", photoUrl);
       const result = await updateProfilePhoto(photoUrl);
       if (result.success) {
+        router.refresh();
         toast({
           title: "Profile photo updated! ✨",
-          description: "Looking good bestie! 💝",
+          description: "Looking good bestie 💝",
         });
       }
     } catch (error) {
+      form.setValue("profilePhoto", form.getValues("profilePhoto"));
       console.error(error);
       toast({
         variant: "destructive",
-        title: "Failed to update profile photo 😅",
-        description: "Please try again!",
+        title: "Failed to update profile photo ☹️",
+        description: "Please try again",
       });
     }
   };
@@ -113,7 +155,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
       console.error(error);
       toast({
         variant: "destructive",
-        title: "Failed to remove photo 😅",
+        title: "Failed to remove photo ☹️",
         description: "Please try again",
       });
     }
@@ -267,11 +309,14 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
                 <Sparkles className="w-5 h-5 text-pink-500" />
                 Your Details 📝
               </CardTitle>
-              <CardDescription>Tell us more about you! ✨</CardDescription>
+              <CardDescription>Tell us more about you ✨</CardDescription>
             </CardHeader>
             <CardContent>
               <DetailsInput
+                control={form.control}
                 values={{
+                  firstName: form.watch("firstName"),
+                  lastName: form.watch("lastName"),
                   lookingFor: form.watch("lookingFor"),
                   course: form.watch("course"),
                   yearOfStudy: form.watch("yearOfStudy"),
@@ -357,6 +402,18 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
           ))}
         </div>
       </motion.div>
+
+      {/* Add update button at the bottom */}
+      {isChanged && (
+        <Button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isSubmitting || !isChanged}
+          className="w-full bg-pink-600 hover:bg-pink-700"
+        >
+          {isSubmitting ? "Saving..." : "Save Changes"}
+        </Button>
+      )}
     </div>
   );
 }

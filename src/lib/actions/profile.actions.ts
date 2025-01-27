@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import db from "@/db/drizzle";
@@ -10,6 +11,8 @@ import { deleteUploadThingFile } from "./upload.actions";
 import { z } from "zod";
 
 export type ProfileFormData = z.infer<typeof profileSchema> & {
+  firstName: string;
+  lastName: string;
   photos: string[];
   bio: string;
   interests: string[];
@@ -97,8 +100,9 @@ export async function updateProfile(data: ProfileFormData) {
     const actualUserId = user[0].id;
 
     // Validate the data
-    const validatedData = profileSchema.safeParse(data);
+    const validatedData = await profileSchema.safeParseAsync(data);
     if (!validatedData.success) {
+      console.error("Validation errors:", validatedData.error);
       return {
         success: false,
         error: "Invalid profile data",
@@ -109,8 +113,21 @@ export async function updateProfile(data: ProfileFormData) {
     const updatedProfile = await db
       .update(profiles)
       .set({
-        ...data,
-        profileCompleted: true,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phoneNumber: data.phoneNumber,
+        bio: data.bio,
+        interests: data.interests,
+        lookingFor: data.lookingFor,
+        course: data.course,
+        yearOfStudy: data.yearOfStudy,
+        instagram: data.instagram || null,
+        spotify: data.spotify || null,
+        snapchat: data.snapchat || null,
+        gender: data.gender,
+        age: data.age,
+        photos: data.photos,
+        profilePhoto: data.profilePhoto,
         updatedAt: new Date(),
       })
       .where(eq(profiles.userId, actualUserId))
@@ -123,15 +140,7 @@ export async function updateProfile(data: ProfileFormData) {
       };
     }
 
-    console.log("Profile completed successfully:", {
-      userId: actualUserId,
-      profileId: updatedProfile[0].id,
-      completed: true,
-    });
-
     revalidatePath("/profile");
-    revalidatePath("/dashboard");
-
     return {
       success: true,
       profile: updatedProfile[0],
@@ -155,7 +164,9 @@ export async function submitProfile(data: ProfileFormData) {
     await db
       .update(profiles)
       .set({
-        userId: session.user.id,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phoneNumber: data.phoneNumber,
         photos: data.photos,
         bio: data.bio,
         interests: data.interests,
@@ -167,6 +178,8 @@ export async function submitProfile(data: ProfileFormData) {
         snapchat: data.snapchat || null,
         gender: data.gender,
         age: data.age,
+        profilePhoto: data.profilePhoto,
+        updatedAt: new Date(),
         profileCompleted: true,
       })
       .where(eq(profiles.userId, session.user.id));
@@ -179,40 +192,7 @@ export async function submitProfile(data: ProfileFormData) {
     console.error("Error updating profile:", error);
     return {
       success: false,
-      error: "Failed to update profile. Please try again! 😅",
-    };
-  }
-}
-
-export async function updateProfileField(
-  field: keyof Omit<ProfileFormData, "profilePhoto">,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  value: any
-) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      };
-    }
-
-    // Validate the field
-    const validatedData = await profileSchema.shape[field].parseAsync(value);
-
-    await db
-      .update(profiles)
-      .set({ [field]: validatedData })
-      .where(eq(profiles.userId, session.user.id));
-
-    revalidatePath("/profile");
-    return { success: true };
-  } catch (error) {
-    console.error(`Error updating ${field}:`, error);
-    return {
-      success: false,
-      error: `Failed to update ${field}. Please try again! 😅`,
+      error: "Failed to update profile. Please try again 😅",
     };
   }
 }
@@ -238,7 +218,7 @@ export async function updateProfilePhoto(photoUrl: string) {
     console.error("Error updating profile photo:", error);
     return {
       success: false,
-      error: "Failed to update profile photo. Please try again! 😅",
+      error: "Failed to update profile photo. Please try again 😅",
     };
   }
 }

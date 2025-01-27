@@ -44,6 +44,8 @@ export const profiles = pgTable("profiles", {
   snapchat: text("snapchat"),
   profilePhoto: text("profile_photo"),
   phoneNumber: text("phone_number"),
+  firstName: text("first_name").notNull().default(""),
+  lastName: text("last_name").notNull().default(""),
 });
 
 // Swipes/Likes
@@ -110,3 +112,5 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 export const matchesRelations = relations(matches, ({ many }) => ({
   messages: many(messages, { relationName: "matchMessages" }),
 }));
+
+export type Profile = typeof profiles.$inferSelect;

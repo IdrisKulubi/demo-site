@@ -29,6 +29,13 @@
       "when": 1737938825974,
       "tag": "0003_strange_dormammu",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1737943164092,
+      "tag": "0004_minor_firelord",
+      "breakpoints": true
     }
   ]
 }

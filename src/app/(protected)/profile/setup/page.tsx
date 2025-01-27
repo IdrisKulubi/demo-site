@@ -17,6 +17,8 @@ import { BioInput } from "@/components/shared/profile/bio-input";
 import { SocialInput } from "@/components/shared/profile/social-input";
 import { DetailsInput } from "@/components/shared/profile/details-input";
 import { useSession } from "next-auth/react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 const canProceed = (step: number, formData: ProfileFormData) => {
   switch (step) {
@@ -27,7 +29,13 @@ const canProceed = (step: number, formData: ProfileFormData) => {
     case 2: // Interests
       return formData.interests.length >= 3;
     case 3: // Details
-      return formData.lookingFor && formData.course && formData.yearOfStudy;
+      return (
+        formData.firstName &&
+        formData.lastName &&
+        formData.lookingFor &&
+        formData.course &&
+        formData.yearOfStudy
+      );
     case 4: // Social (optional)
       return true;
     default:
@@ -219,7 +227,10 @@ export default function ProfileSetup() {
           {step === 3 && (
             <div className="space-y-4">
               <DetailsInput
+                control={form.control}
                 values={{
+                  firstName: form.watch("firstName") || "",
+                  lastName: form.watch("lastName") || "",
                   lookingFor: form.watch("lookingFor") || "",
                   course: form.watch("course") || "",
                   yearOfStudy: form.watch("yearOfStudy") || 0,
@@ -227,14 +238,36 @@ export default function ProfileSetup() {
                   age: form.watch("age") || 0,
                 }}
                 onChange={(field, value) => form.setValue(field, value)}
-                errors={{
-                  lookingFor: form.formState.errors.lookingFor?.message,
-                  course: form.formState.errors.course?.message,
-                  yearOfStudy: form.formState.errors.yearOfStudy?.message,
-                  gender: form.formState.errors.gender?.message,
-                  age: form.formState.errors.age?.message,
-                }}
-              />
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>First Name</Label>
+                    <Input
+                      {...form.register("firstName")}
+                      placeholder="Your first name"
+                      className="bg-background"
+                    />
+                    {form.formState.errors.firstName && (
+                      <p className="text-red-500 text-sm">
+                        {form.formState.errors.firstName.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label>Last Name</Label>
+                    <Input
+                      {...form.register("lastName")}
+                      placeholder="Your last name"
+                      className="bg-background"
+                    />
+                    {form.formState.errors.lastName && (
+                      <p className="text-red-500 text-sm">
+                        {form.formState.errors.lastName.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </DetailsInput>
             </div>
           )}
 
