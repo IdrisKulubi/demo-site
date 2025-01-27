@@ -264,7 +264,7 @@ export async function removePhoto(photoUrl: string) {
     console.error("Error removing photo:", error);
     return {
       success: false,
-      error: "Failed to remove photo. Please try again! 😅",
+      error: "Failed to remove photo. Please try again😅",
     };
   }
 }

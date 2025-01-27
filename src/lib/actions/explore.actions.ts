@@ -119,7 +119,7 @@ export async function recordSwipe(
   return { success: true, isMatch };
 }
 
-export async function undoLastSwipe() {
+export async function undoLastSwipe(swipedId: string) {
   const session = await auth();
   if (!session?.user?.id)
     return { error: "Bestie, you need to sign in first 🔐" };
@@ -128,7 +128,9 @@ export async function undoLastSwipe() {
     const lastSwipe = await db
       .select()
       .from(swipes)
-      .where(eq(swipes.swiperId, session.user.id))
+      .where(
+        and(eq(swipes.swiperId, session.user.id), eq(swipes.swipedId, swipedId))
+      )
       .orderBy(swipes.createdAt)
       .limit(1)
       .then(async (rows) => {
