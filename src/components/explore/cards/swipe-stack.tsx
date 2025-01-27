@@ -20,7 +20,6 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
   const [showMatch, setShowMatch] = useState(false);
   const { toast } = useToast();
 
-  // Reset match state when profiles change
   useEffect(() => {
     setShowMatch(false);
     setActiveIndex(0);
@@ -44,8 +43,8 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
       return;
     }
 
-    // Only show match if compatibility check passed
-    if (result.isMatch) {
+    // Only show match if it's a right swipe AND there's a match
+    if (direction === "right" && result.isMatch) {
       setShowMatch(true);
     }
 
@@ -53,6 +52,7 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
     setProfiles((prev) =>
       prev.filter((p) => p.userId !== currentProfile.userId)
     );
+    setActiveIndex((prev) => prev + 1);
   };
 
   const handleUndo = async () => {
@@ -82,7 +82,8 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
         className="absolute bottom-8 left-0 right-0"
       />
 
-      <MatchModal open={showMatch} onOpenChange={setShowMatch} />
+      {/* Only render MatchModal when showMatch is true */}
+      {showMatch && <MatchModal open={showMatch} onOpenChange={setShowMatch} />}
     </div>
   );
 }

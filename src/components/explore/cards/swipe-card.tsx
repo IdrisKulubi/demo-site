@@ -2,8 +2,14 @@
 
 import { motion } from "framer-motion";
 import { Profile } from "@/db/schema";
-
 import { cn } from "@/lib/utils";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+
+// Import Swiper styles
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 interface SwipeCardProps {
   profile: Profile;
@@ -27,18 +33,26 @@ export function SwipeCard({ profile, onSwipe, active }: SwipeCardProps) {
       )}
     >
       <div className="relative h-full">
-        {/* Profile Photos */}
-        <div className="relative h-3/4 overflow-hidden">
-          {profile.photos?.map((photo, index) => (
-            <motion.img
-              key={photo}
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: index === 0 ? 1 : 0 }}
-              className="absolute inset-0 w-full h-full object-cover"
-              src={photo}
-              alt={`Profile ${index + 1}`}
-            />
-          ))}
+        {/* Profile Photos with Swiper */}
+        <div className="relative h-3/4">
+          <Swiper
+            modules={[Navigation, Pagination]}
+            navigation
+            pagination={{ clickable: true }}
+            className="h-full w-full"
+          >
+            {profile.photos?.map((photo, index) => (
+              <SwiperSlide key={photo}>
+                <motion.img
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1 }}
+                  className="w-full h-full object-cover"
+                  src={photo}
+                  alt={`Profile ${index + 1}`}
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
         </div>
 
         {/* Profile Info */}
