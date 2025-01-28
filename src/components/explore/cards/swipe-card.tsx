@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 import { useState } from "react";
-import { ProfileDetails } from "./profile-details";
 
 // Import Swiper styles
 import "swiper/css";
@@ -58,106 +57,96 @@ export function SwipeCard({
     setTouchEnd(null);
   };
 
-  const handleDragEnd = (_, info: any) => {
-    if (Math.abs(info.offset.x) > 100) {
-      onSwipe(info.offset.x > 0 ? "right" : "left");
-    }
-  };
-
   return (
-    <ProfileDetails
-      profile={profile}
-      isMobileSheet={true}
-      trigger={
-        <motion.div
-          drag={active ? "x" : false}
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.7}
-          onDragEnd={handleDragEnd}
-          animate={animate ? variants[animate] : undefined}
-          transition={{ duration: 0.3 }}
-          className={cn(
-            "relative aspect-[3/4] w-full max-w-sm rounded-3xl overflow-hidden cursor-grab active:cursor-grabbing touch-none",
-            !active && "pointer-events-none"
-          )}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
-          <div className="relative h-full">
-            {/* Profile Photos with Swiper */}
-            <div className="relative h-3/4">
-              <Swiper
-                modules={[Navigation, Pagination]}
-                navigation
-                pagination={{ clickable: true }}
-                className="h-full w-full"
-              >
-                {profile.photos?.map((photo, index) => (
-                  <SwiperSlide key={`${photo}-${index}-${profile.userId}`}>
-                    <motion.img
-                      initial={{ opacity: 0, scale: 1.1 }}
-                      animate={{ opacity: 1 }}
-                      className="w-full h-full object-cover"
-                      src={photo}
-                      alt={`Profile ${index + 1}`}
-                    />
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </div>
+    <motion.div
+      drag={active ? "x" : false}
+      dragConstraints={{ left: 0, right: 0 }}
+      onDragEnd={(_, info) => {
+        if (Math.abs(info.offset.x) > 100) {
+          onSwipe(info.offset.x > 0 ? "right" : "left");
+        }
+      }}
+      animate={animate ? variants?.[animate] : ""}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      className={cn(
+        "absolute h-full w-full bg-white dark:bg-background rounded-3xl shadow-xl overflow-hidden",
+        active ? "cursor-grab active:cursor-grabbing" : "pointer-events-none"
+      )}
+    >
+      <div className="relative h-full">
+        {/* Profile Photos with Swiper */}
+        <div className="relative h-3/4">
+          <Swiper
+            modules={[Navigation, Pagination]}
+            navigation
+            pagination={{ clickable: true }}
+            className="h-full w-full"
+          >
+            {profile.photos?.map((photo, index) => (
+              <SwiperSlide key={`${photo}-${index}-${profile.userId}`}>
+                <motion.img
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1 }}
+                  className="w-full h-full object-cover"
+                  src={photo}
+                  alt={`Profile ${index + 1}`}
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
 
-            {/* Profile Info */}
-            <div className="absolute border-sm bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 sm:p-6 text-white">
-              <div className="flex items-center gap-2 sm:gap-4 border-sm">
-                <h2 className=" text-xl sm:text-3xl font-bold">
-                  {profile.firstName} {profile.lastName?.charAt(0)}.{" "}
-                  {profile.age}
-                </h2>
-                <span className="text-xl sm:text-2xl">
-                  {profile.gender === "male" && "👨"}
-                  {profile.gender === "female" && "👩"}
-                  {profile.gender === "non-binary" && "🌈"}
-                </span>
-              </div>
-              <p className="text-base sm:text-sm line-clamp-2 mt-1 sm:mt-2">
-                {profile.bio}
-              </p>
-
-              {/* Social Links */}
-              <div className="flex gap-2 sm:gap-3 mt-2 sm:mt-4 opacity-75">
-                {profile.instagram && (
-                  <a
-                    href={`https://instagram.com/${profile.instagram}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <span className="text-xl sm:text-2xl">📸</span>
-                  </a>
-                )}
-                {profile.spotify && (
-                  <a
-                    href={profile.spotify}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <span className="text-xl sm:text-2xl">🎵</span>
-                  </a>
-                )}
-              </div>
-            </div>
-
-            {/* Swipe Indicators */}
-            <motion.div
-              className="absolute inset-0 border-8 opacity-0"
-              animate={{
-                opacity: active ? 1 : 0,
-                borderColor: ["#ff69b4", "#ff85c8", "#ff69b4"],
-              }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-            />
+        {/* Profile Info */}
+        <div className="absolute border-sm bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 sm:p-6 text-white">
+          <div className="flex items-center gap-2 sm:gap-4 border-sm">
+            <h2 className=" text-xl sm:text-3xl font-bold">
+              {profile.firstName} {profile.lastName?.charAt(0)}. {profile.age}
+            </h2>
+            <span className="text-xl sm:text-2xl">
+              {profile.gender === "male" && "👨"}
+              {profile.gender === "female" && "👩"}
+              {profile.gender === "non-binary" && "🌈"}
+            </span>
           </div>
-        </motion.div>
-      }
-    />
+          <p className="text-base sm:text-sm line-clamp-2 mt-1 sm:mt-2">
+            {profile.bio}
+          </p>
+
+          {/* Social Links */}
+          <div className="flex gap-2 sm:gap-3 mt-2 sm:mt-4 opacity-75">
+            {profile.instagram && (
+              <a
+                href={`https://instagram.com/${profile.instagram}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span className="text-xl sm:text-2xl">📸</span>
+              </a>
+            )}
+            {profile.spotify && (
+              <a
+                href={profile.spotify}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span className="text-xl sm:text-2xl">🎵</span>
+              </a>
+            )}
+          </div>
+        </div>
+
+        {/* Swipe Indicators */}
+        <motion.div
+          className="absolute inset-0 border-8 opacity-0"
+          animate={{
+            opacity: active ? 1 : 0,
+            borderColor: ["#ff69b4", "#ff85c8", "#ff69b4"],
+          }}
+          transition={{ repeat: Infinity, duration: 1.5 }}
+        />
+      </div>
+    </motion.div>
   );
 }

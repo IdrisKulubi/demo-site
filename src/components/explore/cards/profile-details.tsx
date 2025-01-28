@@ -152,7 +152,7 @@ export function ProfileDetails({
       <>
         <div onClick={() => setIsOpen(true)}>{trigger}</div>
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetContent side="bottom" className="h-[80vh] px-0">
+          <SheetContent side="bottom" className="h-[80vh] px-0 z-[900]">
             <SheetHeader className="px-4 mb-4">
               <SheetTitle className="text-lg">Profile Details</SheetTitle>
             </SheetHeader>
@@ -166,7 +166,7 @@ export function ProfileDetails({
   return (
     <HoverCard>
       <HoverCardTrigger asChild>{trigger}</HoverCardTrigger>
-      <HoverCardContent side="right" align="start" className="w-64 p-3">
+      <HoverCardContent side="right" align="start" className="w-64 p-3 z-[100]">
         {content}
       </HoverCardContent>
     </HoverCard>
