@@ -2,17 +2,23 @@
 
 import { Dialog } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { MessageCircle, Share2 } from "lucide-react";
+import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import confetti from "canvas-confetti";
 import { useEffect } from "react";
 
 interface MatchModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  matchedProfile: {
+    phoneNumber: string ;
+  };
 }
 
-export function MatchModal({ open, onOpenChange }: MatchModalProps) {
+export function MatchModal({
+  open,
+  onOpenChange,
+  matchedProfile,
+}: MatchModalProps) {
   useEffect(() => {
     if (open) {
       confetti({
@@ -42,18 +48,11 @@ export function MatchModal({ open, onOpenChange }: MatchModalProps) {
             </p>
           </div>
 
-          <div className="flex justify-center gap-4">
-            <Button className="gap-2 bg-pink-600 hover:bg-pink-700 dark:bg-pink-500 dark:hover:bg-pink-600">
-              <MessageCircle className="h-5 w-5" />
-              Send Message
-            </Button>
-            <Button
-              variant="outline"
-              className="gap-2 border-pink-300 text-pink-600 hover:bg-pink-50 dark:text-pink-400"
-            >
-              <Share2 className="h-5 w-5" />
-              Share Contact
-            </Button>
+          <div className="flex justify-center">
+            <WhatsAppButton
+              phoneNumber={matchedProfile.phoneNumber}
+              className="bg-pink-600 hover:bg-pink-700 dark:bg-pink-500 dark:hover:bg-pink-600"
+            />
           </div>
         </div>
       </motion.div>

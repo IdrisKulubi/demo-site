@@ -125,9 +125,13 @@ export async function recordSwipe(
       // If there's a mutual like, create a match
       if (mutualLike.length > 0) {
         await db.insert(matches).values({
+          id: crypto.randomUUID(),
           user1Id: session.user.id,
           user2Id: targetUserId,
           createdAt: new Date(),
+          lastMessageAt: null,
+          user1Typing: false,
+          user2Typing: false,
         });
         return { success: true, isMatch: true };
       }

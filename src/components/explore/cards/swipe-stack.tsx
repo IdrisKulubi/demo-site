@@ -47,6 +47,7 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
   const [currentSwipeDirection, setCurrentSwipeDirection] = useState<
     "left" | "right" | null
   >(null);
+  const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
   const { toast } = useToast();
 
   // Load liked profiles on mount
@@ -95,6 +96,7 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
         } satisfies Profile;
         setLikedProfiles((prev) => [...prev, updatedProfile]);
         if (result.isMatch) {
+          setMatchedProfile(updatedProfile);
           setShowMatch(true);
         }
       }
@@ -159,10 +161,7 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
         </AnimatePresence>
 
         {profiles.length === 0 && (
-          <NoMoreProfiles
-            initialLikedProfiles={likedProfiles}
-           
-          />
+          <NoMoreProfiles initialLikedProfiles={likedProfiles} />
         )}
       </div>
 
@@ -181,7 +180,13 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
         />
       </div>
 
-      {showMatch && <MatchModal open={showMatch} onOpenChange={setShowMatch} />}
+      {showMatch && (
+        <MatchModal
+          open={showMatch}
+          onOpenChange={setShowMatch}
+          matchedProfile={{ phoneNumber: matchedProfile?.phoneNumber || "" }}
+        />
+      )}
     </div>
   );
 }

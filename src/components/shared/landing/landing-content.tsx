@@ -58,7 +58,7 @@ export function LandingContent() {
           <p className="text-xl text-gray-600 dark:text-gray-400">
             Don&apos;t let this Valentine&apos;s be another Netflix and chill
             alone! Join StrathSpace and find someone who matches your vibe
-            before February 14th! 🌹✨
+            before February 14th 🌹✨
           </p>
           <div className="flex justify-center gap-2 text-pink-600 dark:text-pink-400">
             <span className="animate-pulse">❤️</span>

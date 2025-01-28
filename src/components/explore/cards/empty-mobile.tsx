@@ -10,6 +10,7 @@ import { useState } from "react";
 import { MobileCrushesModal } from "./mobile-crushes-modal";
 import { MobileMatchesModal } from "./mobile-matches-modal";
 import { ShareAppModal } from "@/components/shared/share-app";
+import { NotifyMobile } from "../modals/notify-mobile";
 
 interface EmptyMobileViewProps {
   likedProfiles: Profile[];
@@ -36,6 +37,7 @@ export function EmptyMobileView({
 
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)] bg-gradient-to-b from-pink-50/30 to-white dark:from-pink-950/30 dark:to-background">
+      <NotifyMobile />
       {/* Top Section with Stats */}
       <div className="flex justify-between px-4 py-3 border-b border-pink-100 dark:border-pink-900">
         <button
