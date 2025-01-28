@@ -10,15 +10,13 @@ import { undoLastSwipe } from "@/lib/actions/explore.actions";
 import { useToast } from "@/hooks/use-toast";
 import { EmptyMobileView } from "./cards/empty-mobile";
 import { ShareAppModal } from "../shared/share-app";
+import { NotifyModal } from "./modals/notify";
 
 interface NoMoreProfilesProps {
   initialLikedProfiles: Profile[];
 }
 
-export function NoMoreProfiles({
-  initialLikedProfiles,
-  
-}: NoMoreProfilesProps) {
+export function NoMoreProfiles({ initialLikedProfiles }: NoMoreProfilesProps) {
   const [mounted, setMounted] = useState(false);
   const [likedProfiles, setLikedProfiles] = useState(initialLikedProfiles);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -44,6 +42,10 @@ export function NoMoreProfiles({
 
   return (
     <div className="relative w-full">
+      <div className="absolute top-0 left-0 right-0">
+        <NotifyModal />
+      </div>
+
       {/* Desktop View */}
       <div className="hidden md:block">
         <LikedPanel profiles={likedProfiles} onUnlike={handleUnlike} />
@@ -96,7 +98,8 @@ export function NoMoreProfiles({
             <div className="space-y-4">
               <p className="text-center text-sm text-muted-foreground">
                 Know someone who&apos;d be perfect for StrathSpace? <br />
-                Share the love and help them find their Valentine and stand a chance to win our valentines Day exclusive gift 💝 
+                Share the love and help them find their Valentine and stand a
+                chance to win our valentines Day exclusive gift 💝
               </p>
               <Button
                 onClick={handleShare}

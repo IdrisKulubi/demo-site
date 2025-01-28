@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { SwipeStack } from "@/components/explore/cards/swipe-stack";
 import { NoMoreProfiles } from "@/components/explore/empty-state";
 import { type Profile } from "@/db/schema";
+import { NotifyModal } from "@/components/explore/modals/notify";
 
 export default async function ExplorePage() {
   const session = await auth();
@@ -17,6 +18,7 @@ export default async function ExplorePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white dark:from-pink-950/30 dark:to-background">
+      <NotifyModal />
       <div className="container max-w-4xl mx-auto px-4 pt-24 pb-12">
         <div className="relative mb-12">
           <div
