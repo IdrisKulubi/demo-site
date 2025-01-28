@@ -20,6 +20,9 @@ export const users = pgTable("user", {
   image: text("image"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  lastActive: timestamp("last_active").defaultNow().notNull(),
+  isOnline: boolean("is_online").default(false),
+  profilePhoto: text("profile_photo"),  
 });
 
 // Auth.js tables
@@ -95,6 +98,7 @@ export const profiles = pgTable("profiles", {
   phoneNumber: text("phone_number"),
   firstName: text("first_name").notNull().default(""),
   lastName: text("last_name").notNull().default(""),
+  isMatch: boolean("is_match").default(false),
 });
 
 // Swipes/Likes
@@ -106,7 +110,7 @@ export const swipes = pgTable("swipes", {
   swipedId: text("swiped_id")
     .notNull()
     .references(() => users.id),
-  type: text("type").notNull(), // 'like' or 'pass'
+  isLike: boolean("is_like").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -121,6 +125,8 @@ export const matches = pgTable("matches", {
     .references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   lastMessageAt: timestamp("last_message_at"),
+  user1Typing: boolean("user1_typing").default(false),
+  user2Typing: boolean("user2_typing").default(false),
 });
 
 // Messages
@@ -132,10 +138,20 @@ export const messages = pgTable("messages", {
   senderId: text("sender_id")
     .notNull()
     .references(() => users.id),
+  sender: text("sender").notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  delivered: boolean("delivered").default(false),
   read: boolean("read").default(false),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  sender: one(users, {
+    fields: [messages.senderId],
+    references: [users.id],
+  }),
+}));
 
 // Blocks
 export const blocks = pgTable("blocks", {
@@ -151,7 +167,10 @@ export const blocks = pgTable("blocks", {
 
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
-  profile: one(profiles),
+  profile: one(profiles, {
+    fields: [users.id],
+    references: [profiles.userId],
+  }),
   sentSwipes: many(swipes, { relationName: "swiperRelation" }),
   receivedSwipes: many(swipes, { relationName: "swipedRelation" }),
   matches1: many(matches, { relationName: "user1Relation" }),
@@ -162,4 +181,7 @@ export const matchesRelations = relations(matches, ({ many }) => ({
   messages: many(messages, { relationName: "matchMessages" }),
 }));
 
-export type Profile = typeof profiles.$inferSelect;
+export type Profile = typeof profiles.$inferSelect & {
+  isMatch: boolean | null;
+  userId: string;
+};

@@ -1,5 +1,5 @@
 {
-  "id": "33e05f3c-937a-4e4e-a297-b2c5077e15e2",
+  "id": "7e81f3ab-0cdf-4f35-8b0f-3a1a1db87d54",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -206,6 +206,20 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        },
+        "user1_typing": {
+          "name": "user1_typing",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "user2_typing": {
+          "name": "user2_typing",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {},
@@ -266,6 +280,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "sender": {
+          "name": "sender",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "content": {
           "name": "content",
           "type": "text",
@@ -279,12 +299,26 @@
           "notNull": true,
           "default": "now()"
         },
+        "delivered": {
+          "name": "delivered",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "read": {
           "name": "read",
           "type": "boolean",
           "primaryKey": false,
           "notNull": false,
           "default": false
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -472,6 +506,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "''"
+        },
+        "is_match": {
+          "name": "is_match",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {},
@@ -564,9 +605,9 @@
           "primaryKey": false,
           "notNull": true
         },
-        "type": {
-          "name": "type",
-          "type": "text",
+        "is_like": {
+          "name": "is_like",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true
         },
@@ -660,6 +701,26 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "last_active": {
+          "name": "last_active",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "is_online": {
+          "name": "is_online",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "profile_photo": {
+          "name": "profile_photo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},

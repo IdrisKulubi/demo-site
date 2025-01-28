@@ -17,7 +17,8 @@ export default function NotFoundPage() {
           </div>
 
           <h1 className="text-4xl font-bold mb-4">
-            Oopsie! Page ghosted you 💔
+            Oopsie! Page ghosted you 💔 Just kidding,we are working on this
+            feature🧑‍💻
           </h1>
           <p className="text-xl text-muted-foreground mb-8">
             This link must be in its ~toxic era~ 🌸✨

@@ -13,6 +13,9 @@ interface LikedPanelProps {
 }
 
 export function LikedPanel({ profiles, onUnlike }: LikedPanelProps) {
+  // Filter out profiles that are matches
+  const crushProfiles = profiles.filter((profile) => !profile.isMatch);
+
   return (
     <motion.div
       className="fixed left-4 top-24 bg-white/80 dark:bg-background/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-pink-100 dark:border-pink-950 z-50 w-72"
@@ -27,13 +30,13 @@ export function LikedPanel({ profiles, onUnlike }: LikedPanelProps) {
           <div className="absolute -right-7 -top-1 text-xl">💖</div>
         </div>
         <span className="text-pink-500 dark:text-pink-400 ml-auto text-sm font-medium">
-          {profiles.length}
+          {crushProfiles.length}
         </span>
       </div>
 
       <ScrollArea className="h-[min(30vh,200px)] pr-2">
         <div className="space-y-2">
-          {profiles.map((profile) => (
+          {crushProfiles.map((profile) => (
             <motion.div
               key={profile.userId}
               initial={{ scale: 0.9, opacity: 0 }}
@@ -69,7 +72,7 @@ export function LikedPanel({ profiles, onUnlike }: LikedPanelProps) {
             </motion.div>
           ))}
 
-          {profiles.length === 0 && (
+          {crushProfiles.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

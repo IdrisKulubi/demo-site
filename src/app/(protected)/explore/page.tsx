@@ -1,14 +1,19 @@
-import { getSwipableProfiles } from "@/lib/actions/explore.actions";
+import {
+  getSwipableProfiles,
+  getLikedProfiles,
+} from "@/lib/actions/explore.actions";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { SwipeStack } from "@/components/explore/cards/swipe-stack";
+import { NoMoreProfiles } from "@/components/explore/empty-state";
+import { type Profile } from "@/db/schema";
 
 export default async function ExplorePage() {
   const session = await auth();
   if (!session?.user) redirect("/");
 
-  const profilesResult = await getSwipableProfiles();
-  const profiles = profilesResult.map((p) => p.profiles);
+  const profiles = await getSwipableProfiles();
+  const { profiles: likedProfiles } = await getLikedProfiles();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white dark:from-pink-950/30 dark:to-background">
@@ -39,18 +44,10 @@ export default async function ExplorePage() {
         </div>
 
         <div className="w-full flex justify-center">
-          {profiles.length > 0 ? (
-            <SwipeStack initialProfiles={profiles} />
+          {profiles && profiles.length > 0 ? (
+            <SwipeStack initialProfiles={profiles as Profile[]} />
           ) : (
-            <div className="text-center py-12 space-y-6 max-w-md mx-auto">
-              <p className="text-xl md:text-2xl font-medium text-pink-600/80">
-                No more profiles to swipe... for now 🌹
-              </p>
-              <p className="text-lg text-muted-foreground">
-                Check back later or update your preferences
-              </p>
-              <div className="animate-pulse text-2xl">✨💫✨</div>
-            </div>
+            <NoMoreProfiles initialLikedProfiles={likedProfiles || []} />
           )}
         </div>
       </div>

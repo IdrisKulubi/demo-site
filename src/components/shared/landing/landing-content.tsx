@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
-import { AboutContent } from "../about/about-content";
-import { HowItWorksContent } from "../how-it-works/how-it-works-content";
 
 const features = [
   {
@@ -131,13 +129,9 @@ export function LandingContent() {
         </motion.div>
       </div>
 
-      <div id="about">
-        <AboutContent />
-      </div>
+     
 
-      <div id="how-it-works">
-        <HowItWorksContent />
-      </div>
+     
     </div>
   );
 }
