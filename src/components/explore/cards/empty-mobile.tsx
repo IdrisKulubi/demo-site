@@ -11,6 +11,7 @@ import { MobileCrushesModal } from "./mobile-crushes-modal";
 import { MobileMatchesModal } from "./mobile-matches-modal";
 import { ShareAppModal } from "@/components/shared/share-app";
 import { NotifyMobile } from "../modals/notify-mobile";
+import { ProfileDetails } from "./profile-details";
 
 interface EmptyMobileViewProps {
   likedProfiles: Profile[];
@@ -134,18 +135,29 @@ export function EmptyMobileView({
         <ScrollArea className="w-full">
           <div className="flex gap-2 pb-2">
             {likedProfiles.map((profile) => (
-              <div key={profile.userId} className="flex-shrink-0 relative">
-                <Avatar className="h-12 w-12 border-2 border-pink-200 dark:border-pink-800">
-                  <AvatarImage src={profile.profilePhoto || ""} />
-                  <AvatarFallback className="bg-gradient-to-br from-pink-400 to-pink-600 text-white text-xs">
-                    {profile.firstName?.[0]}
-                    {profile.lastName?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                {profile.isMatch && (
-                  <span className="absolute -top-1 -right-1 text-sm">💘</span>
-                )}
-              </div>
+              <ProfileDetails
+                key={profile.userId}
+                profile={profile}
+                isMatch={profile.isMatch ?? false}
+                trigger={
+                  <div className="flex-shrink-0 relative group cursor-pointer">
+                    <Avatar className="h-12 w-12 border-2 border-pink-200 dark:border-pink-800 transition-transform group-hover:scale-105">
+                      <AvatarImage src={profile.profilePhoto || ""} />
+                      <AvatarFallback className="bg-gradient-to-br from-pink-400 to-pink-600 text-white text-xs">
+                        {profile.firstName?.[0]}
+                        {profile.lastName?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    {profile.isMatch && (
+                      <span className="absolute -top-1 -right-1 text-sm">
+                        💘
+                      </span>
+                    )}
+                    <div className="absolute inset-0 rounded-full bg-pink-500/10 dark:bg-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                }
+                isMobileSheet={true}
+              />
             ))}
           </div>
         </ScrollArea>

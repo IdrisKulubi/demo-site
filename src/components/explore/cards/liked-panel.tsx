@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import type { Profile } from "@/db/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ProfileDetails } from "@/components/explore/cards/profile-details";
 
 interface LikedPanelProps {
   profiles: Profile[];
@@ -37,39 +38,45 @@ export function LikedPanel({ profiles, onUnlike }: LikedPanelProps) {
       <ScrollArea className="h-[min(30vh,200px)] pr-2">
         <div className="space-y-2">
           {crushProfiles.map((profile) => (
-            <motion.div
-              key={profile.userId}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="flex items-center gap-3 group relative bg-white/50 dark:bg-background/50 p-2 rounded-xl hover:bg-pink-50/50 dark:hover:bg-pink-950/50 transition-colors"
-            >
-              <Avatar className="h-12 w-12 border-2 border-pink-200 dark:border-pink-800 shadow-sm">
-                <AvatarImage src={profile.profilePhoto || ""} />
-                <AvatarFallback className="bg-gradient-to-br from-pink-400 to-pink-600 text-white">
-                  {profile.firstName?.[0]}
-                  {profile.lastName?.[0]}
-                </AvatarFallback>
-              </Avatar>
-
-              <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">
-                  {profile.firstName} {profile.lastName?.[0]}.
-                </p>
-                <p className="text-sm text-pink-500 dark:text-pink-400 truncate">
-                  {profile.course}
-                </p>
-              </div>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:bg-red-100/50 dark:hover:bg-red-900/30 rounded-full p-1.5 h-8 w-8 absolute -right-2 -top-2"
-                onClick={() => onUnlike(profile.userId)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </motion.div>
+            <ProfileDetails
+              key={profile.id}
+              profile={profile}
+              trigger={
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="group relative bg-white dark:bg-background rounded-2xl p-3 shadow-sm border border-pink-100 dark:border-pink-900 flex items-center gap-3 cursor-pointer"
+                >
+                  <Avatar className="h-12 w-12 border-2 border-pink-200 dark:border-pink-800">
+                    <AvatarImage src={profile.profilePhoto || ""} />
+                    <AvatarFallback className="bg-gradient-to-br from-pink-400 to-pink-600 text-white">
+                      {profile.firstName?.[0]}
+                      {profile.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">
+                      {profile.firstName} {profile.lastName}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {profile.course}, Year {profile.yearOfStudy}
+                    </p>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUnlike(profile.userId);
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </motion.div>
+              }
+            />
           ))}
 
           {crushProfiles.length === 0 && (
