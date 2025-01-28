@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import Link from "next/link"
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,8 +17,14 @@ import { UserCircle, LogOut, Settings, User, Sparkles } from "lucide-react";
 export function Navbar() {
   const { data: session } = useSession();
   const pathname = usePathname();
-  const showNavigation =
-    pathname === "/" || pathname === "/about" || pathname === "/how-it-works";
+  const showNavigation = pathname === "/";
+
+  const scrollToSection = (sectionId: string) => {
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-background/80 backdrop-blur-sm border-b">
@@ -39,18 +45,18 @@ export function Navbar() {
               >
                 Home
               </Link>
-              <Link
-                href="/about"
+              <button
+                onClick={() => scrollToSection("about")}
                 className="text-sm font-medium text-foreground hover:text-primary transition-colors"
               >
                 About
-              </Link>
-              <Link
-                href="/how-it-works"
+              </button>
+              <button
+                onClick={() => scrollToSection("how-it-works")}
                 className="text-sm font-medium text-foreground hover:text-primary transition-colors"
               >
                 How It Works
-              </Link>
+              </button>
             </div>
           )}
         </div>

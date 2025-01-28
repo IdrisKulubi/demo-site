@@ -7,17 +7,14 @@ import { MusicProvider } from "@/context/music-context";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
 import { Navbar } from "@/components/layout/navbar";
+import { constructMetadata } from "@/lib/metadata";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "StrathSpace - Find Your Perfect Match at Strathspace",
-  description:
-    "Connect with fellow  students and find meaningful relationships",
-};
+export const metadata: Metadata = constructMetadata();
 
 export default async function RootLayout({
   children,
@@ -42,6 +39,7 @@ export default async function RootLayout({
                 <Navbar />
                 <main className="flex-1">{children}</main>
               </div>
+              
               <Toaster />
             </MusicProvider>
           </ThemeProvider>

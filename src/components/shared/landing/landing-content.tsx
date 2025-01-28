@@ -4,6 +4,9 @@ import { Heart, ArrowRight, Shield, Sparkles, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useSession } from "next-auth/react";
+import { AboutContent } from "../about/about-content";
+import { HowItWorksContent } from "../how-it-works/how-it-works-content";
 
 const features = [
   {
@@ -27,6 +30,8 @@ const features = [
 ];
 
 export function LandingContent() {
+  const { data: session } = useSession();
+
   return (
     <div className="container mx-auto px-4 pt-32 pb-16">
       <div className="max-w-3xl mx-auto text-center space-y-8">
@@ -53,9 +58,9 @@ export function LandingContent() {
             <span className="inline-block animate-bounce">💘</span>
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400">
-            Don&apos;t let this Valentine&apos;s be another Netflix and chill alone! Join
-            StrathSpace and find someone who matches your vibe before February
-            14th! 🌹✨
+            Don&apos;t let this Valentine&apos;s be another Netflix and chill
+            alone! Join StrathSpace and find someone who matches your vibe
+            before February 14th! 🌹✨
           </p>
           <div className="flex justify-center gap-2 text-pink-600 dark:text-pink-400">
             <span className="animate-pulse">❤️</span>
@@ -70,23 +75,36 @@ export function LandingContent() {
           transition={{ delay: 0.4 }}
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
-          <Link href="/login">
-            <Button
-              size="lg"
-              className="bg-pink-600 hover:bg-pink-700 dark:bg-pink-500 dark:hover:bg-pink-600 w-full sm:w-auto"
-            >
-              Get Started <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="/how-it-works">
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-pink-200 hover:border-pink-300 dark:border-pink-800 dark:hover:border-pink-700 w-full sm:w-auto"
-            >
-              How it Works
-            </Button>
-          </Link>
+          {session?.user ? (
+            <Link href="/explore">
+              <Button
+                size="lg"
+                className="bg-pink-600 hover:bg-pink-700 dark:bg-pink-500 dark:hover:bg-pink-600 w-full sm:w-auto"
+              >
+                Explore Profiles <Sparkles className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/login">
+              <Button
+                size="lg"
+                className="bg-pink-600 hover:bg-pink-700 dark:bg-pink-500 dark:hover:bg-pink-600 w-full sm:w-auto"
+              >
+                Get Started <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          )}
+          {!session?.user && (
+            <Link href="/how-it-works">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-pink-200 hover:border-pink-300 dark:border-pink-800 dark:hover:border-pink-700 w-full sm:w-auto"
+              >
+                How it Works
+              </Button>
+            </Link>
+          )}
         </motion.div>
 
         <motion.div
@@ -111,6 +129,14 @@ export function LandingContent() {
             </motion.div>
           ))}
         </motion.div>
+      </div>
+
+      <div id="about">
+        <AboutContent />
+      </div>
+
+      <div id="how-it-works">
+        <HowItWorksContent />
       </div>
     </div>
   );
