@@ -1,16 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
 import { SwipeCard } from "./swipe-card";
 import type { Profile } from "@/db/schema";
-import { recordSwipe, undoLastSwipe } from "@/lib/actions/explore.actions";
+import {
+  recordSwipe,
+  undoLastSwipe,
+  getLikedProfiles,
+} from "@/lib/actions/explore.actions";
 import { useToast } from "@/hooks/use-toast";
 
 import { MatchModal } from "../modals/match-modal";
 import { SwipeControls } from "../controls/swipe-controls";
 import { LikedAvatars } from "./liked-avatars";
 import { LikedPanel } from "./liked-panel";
+import { MatchesPanel } from "./matches-panel";
+import { NoMoreProfiles } from "../empty-state";
 
 const swipeAnimationVariants = {
   right: {
@@ -43,6 +49,29 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
   >(null);
   const { toast } = useToast();
 
+  // Load liked profiles on mount
+  useEffect(() => {
+    const loadLikedProfiles = async () => {
+      const { profiles: liked, error } = await getLikedProfiles();
+      if (error) {
+        toast({
+          variant: "destructive",
+          description: "Couldn't load your crushes 😅",
+        });
+        return;
+      }
+      setLikedProfiles(liked);
+
+      // Check if there are any matches to show
+      const hasNewMatch = liked.some((profile) => profile.isMatch);
+      if (hasNewMatch) {
+        setShowMatch(true);
+      }
+    };
+
+    loadLikedProfiles();
+  }, [toast]);
+
   const handleSwipe = async (direction: "left" | "right", profile: Profile) => {
     setCurrentSwipeDirection(direction);
     const swipeType = direction === "right" ? "like" : "pass";
@@ -58,10 +87,13 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
       return;
     }
 
-    // Then update UI after we know the swipe was successful
     setTimeout(() => {
       if (direction === "right") {
-        setLikedProfiles((prev) => [...prev, profile]);
+        const updatedProfile = {
+          ...profile,
+          isMatch: result.isMatch ?? null,
+        } satisfies Profile;
+        setLikedProfiles((prev) => [...prev, updatedProfile]);
         if (result.isMatch) {
           setShowMatch(true);
         }
@@ -105,6 +137,7 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
           }
         }}
       />
+      <MatchesPanel profiles={likedProfiles} />
       <LikedAvatars profiles={likedProfiles} />
 
       <div className="relative h-[500px] w-full flex flex-col items-center">
@@ -126,13 +159,10 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
         </AnimatePresence>
 
         {profiles.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute inset-0 flex items-center justify-center text-xl text-pink-600/80"
-          >
-            No more profiles to swipe ✨
-          </motion.div>
+          <NoMoreProfiles
+            initialLikedProfiles={likedProfiles}
+           
+          />
         )}
       </div>
 

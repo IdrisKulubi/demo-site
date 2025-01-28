@@ -95,6 +95,7 @@ export const profiles = pgTable("profiles", {
   phoneNumber: text("phone_number"),
   firstName: text("first_name").notNull().default(""),
   lastName: text("last_name").notNull().default(""),
+  isMatch: boolean("is_match").default(false),
 });
 
 // Swipes/Likes
@@ -106,7 +107,7 @@ export const swipes = pgTable("swipes", {
   swipedId: text("swiped_id")
     .notNull()
     .references(() => users.id),
-  type: text("type").notNull(), // 'like' or 'pass'
+  isLike: boolean("is_like").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -151,7 +152,10 @@ export const blocks = pgTable("blocks", {
 
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
-  profile: one(profiles),
+  profile: one(profiles, {
+    fields: [users.id],
+    references: [profiles.userId],
+  }),
   sentSwipes: many(swipes, { relationName: "swiperRelation" }),
   receivedSwipes: many(swipes, { relationName: "swipedRelation" }),
   matches1: many(matches, { relationName: "user1Relation" }),
@@ -162,4 +166,6 @@ export const matchesRelations = relations(matches, ({ many }) => ({
   messages: many(messages, { relationName: "matchMessages" }),
 }));
 
-export type Profile = typeof profiles.$inferSelect;
+export type Profile = typeof profiles.$inferSelect & {
+  isMatch: boolean | null;
+};

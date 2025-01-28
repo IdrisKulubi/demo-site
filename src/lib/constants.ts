@@ -65,3 +65,30 @@ export const genders = [
 ] as const;
 
 export const ageRange = Array.from({ length: 8 }, (_, i) => i + 18);
+
+export type Profile = {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  bio: string | null;
+  age: number | null;
+  gender: string | null;
+  interests: string[] | null;
+  photos: string[] | null;
+  course: string | null;
+  yearOfStudy: number | null;
+  profilePhoto: string | null;
+  updatedAt: Date;
+  role: "user" | "admin" | null;
+  isVisible: boolean;
+  lastActive: Date;
+  isComplete: boolean;
+  profileCompleted: boolean;
+  lookingFor: string | null;
+  snapchat: string | null;
+  instagram: string | null;
+  spotify: string | null;
+  phoneNumber: string | null;
+  isMatch?: boolean;
+};
