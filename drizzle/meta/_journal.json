@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1737964368938,
-      "tag": "0000_stiff_chamber",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1738048712882,
-      "tag": "0001_unusual_siren",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1738051953848,
-      "tag": "0002_deep_raza",
+      "when": 1738064546504,
+      "tag": "0000_special_maestro",
       "breakpoints": true
     }
   ]

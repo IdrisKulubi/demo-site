@@ -25,16 +25,21 @@ CREATE TABLE "matches" (
 	"user1_id" text NOT NULL,
 	"user2_id" text NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"last_message_at" timestamp
+	"last_message_at" timestamp,
+	"user1_typing" boolean DEFAULT false,
+	"user2_typing" boolean DEFAULT false
 );
 --> statement-breakpoint
 CREATE TABLE "messages" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"match_id" uuid NOT NULL,
 	"sender_id" text NOT NULL,
+	"sender" text NOT NULL,
 	"content" text NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"read" boolean DEFAULT false
+	"delivered" boolean DEFAULT false,
+	"read" boolean DEFAULT false,
+	"timestamp" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "profiles" (
@@ -60,7 +65,8 @@ CREATE TABLE "profiles" (
 	"profile_photo" text,
 	"phone_number" text,
 	"first_name" text DEFAULT '' NOT NULL,
-	"last_name" text DEFAULT '' NOT NULL
+	"last_name" text DEFAULT '' NOT NULL,
+	"is_match" boolean DEFAULT false
 );
 --> statement-breakpoint
 CREATE TABLE "session" (
@@ -73,7 +79,7 @@ CREATE TABLE "swipes" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"swiper_id" text NOT NULL,
 	"swiped_id" text NOT NULL,
-	"type" text NOT NULL,
+	"is_like" boolean NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -85,6 +91,9 @@ CREATE TABLE "user" (
 	"image" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"last_active" timestamp DEFAULT now() NOT NULL,
+	"is_online" boolean DEFAULT false,
+	"profile_photo" text,
 	CONSTRAINT "user_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
