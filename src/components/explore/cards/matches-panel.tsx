@@ -2,15 +2,12 @@
 
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
 import type { Profile } from "@/db/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Link from "next/link";
+import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 
 interface MatchesPanelProps {
-    profiles: Profile[];
-    
+  profiles: Profile[];
 }
 
 export function MatchesPanel({ profiles }: MatchesPanelProps) {
@@ -59,16 +56,11 @@ export function MatchesPanel({ profiles }: MatchesPanelProps) {
                   {profile.course}, Year {profile.yearOfStudy}
                 </p>
               </div>
-              <Button
-                asChild
-                variant="ghost"
+              <WhatsAppButton
+                phoneNumber={profile.phoneNumber || ""}
                 size="sm"
-                className="opacity-0 group-hover:opacity-100 transition-opacity text-pink-500 hover:bg-pink-100/50 dark:hover:bg-pink-900/30 rounded-full p-1.5 h-8 w-8"
-              >
-                <Link href={`/chat/${profile.userId}`}>
-                  <MessageCircle className="h-4 w-4" />
-                </Link>
-              </Button>
+                className="bg-green-500 rounded-full p-1.5 h-8 w-8"
+              />
             </motion.div>
           ))}
 

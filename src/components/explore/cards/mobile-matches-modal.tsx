@@ -1,7 +1,5 @@
 "use client";
 
-import { MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,7 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import Link from "next/link";
+import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 
 interface MobileMatchesModalProps {
   isOpen: boolean;
@@ -69,16 +67,10 @@ export function MobileMatchesModal({
                       {profile.course} • {profile.yearOfStudy}
                     </p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-purple-600 hover:text-purple-700 hover:bg-purple-100/50"
-                    asChild
-                  >
-                    <Link href={`/chat/${profile.userId}`}>
-                      <MessageCircle className="h-5 w-5" />
-                    </Link>
-                  </Button>
+                  <WhatsAppButton
+                    phoneNumber={profile.phoneNumber || ""}
+                    size="sm"
+                  />
                 </motion.div>
               ))}
             </AnimatePresence>
