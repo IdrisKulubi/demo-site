@@ -38,7 +38,7 @@ const canProceed = (step: number, formData: ProfileFormData) => {
         formData.phoneNumber &&
         formData.phoneNumber.trim() !== "" &&
         /^[0-9+\-\s()]+$/.test(formData.phoneNumber) &&
-        formData.phoneNumber.replace(/[^0-9]/g, '').length >= 10
+        formData.phoneNumber.replace(/[^0-9]/g, '').length === 10
       );
     case 4: // Social (optional)
       return true;
@@ -150,6 +150,7 @@ export default function ProfileSetup() {
   }, [form]);
 
   const isFormValid = (formData: ProfileFormData) => {
+    const digitsOnly = formData.phoneNumber?.replace(/[^0-9]/g, '') || '';
     return (
       formData.photos.length > 0 &&
       formData.bio?.split(/\s+/).filter(Boolean).length >= 10 &&
@@ -160,7 +161,7 @@ export default function ProfileSetup() {
       formData.phoneNumber &&
       formData.phoneNumber.trim() !== "" &&
       /^[0-9+\-\s()]+$/.test(formData.phoneNumber) &&
-      formData.phoneNumber.replace(/[^0-9]/g, '').length === 10
+      digitsOnly.length === 10
     );
   };
 

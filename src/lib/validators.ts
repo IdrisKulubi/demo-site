@@ -53,11 +53,13 @@ export const profileSchema = z
     phoneNumber: z
       .string()
       .trim()
-      .max(10, "Phone number is too long")
       .min(1, "Phone number is required 📱")
       .regex(/^[0-9+\-\s()]+$/, "Please enter a valid phone number format")
-      .refine((phone) => phone.replace(/[^0-9]/g, '').length >= 10, {
-        message: "Phone number must have at least 10 digits"
+      .refine((phone) => {
+        const digitsOnly = phone.replace(/[^0-9]/g, '');
+        return digitsOnly.length === 10;
+      }, {
+        message: "Phone number must be exactly 10 digits"
       })
       .refine((phone) => phone.trim() !== "", {
         message: "Phone number cannot be empty"
