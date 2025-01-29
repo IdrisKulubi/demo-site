@@ -9,7 +9,7 @@ import { auth } from "@/auth";
 import { Navbar } from "@/components/layout/navbar";
 import { MobileNav } from "@/components/explore/mobile/mobile-nav";
 import { constructMetadata } from "@/lib/metadata";
-
+import { Analytics } from "@vercel/analytics/react";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -41,6 +41,7 @@ export default async function RootLayout({
                 <MobileNav className="flex md:hidden" />{" "}
                 {/* Show MobileNav on small screens */}
                 <main className="flex-1">{children}</main>
+                <Analytics/>
               </div>
               <Toaster />
             </MusicProvider>

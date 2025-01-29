@@ -44,6 +44,7 @@
     "@react-three/fiber": "^9.0.0-alpha.8",
     "@types/canvas-confetti": "^1.9.0",
     "@uploadthing/react": "^7.1.5",
+    "@vercel/analytics": "^1.4.1",
     "@vercel/postgres": "^0.10.0",
     "canvas-confetti": "^1.9.3",
     "class-variance-authority": "^0.7.1",
