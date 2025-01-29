@@ -8,9 +8,20 @@ import { auth } from "@/auth";
 
 export async function getSwipableProfiles() {
   const session = await auth();
-  if (!session?.user?.id) return [];
+  if (!session?.user?.id) {
+    return [];
+  }
 
   try {
+    const totalProfiles = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(profiles);
+
+    const visibleProfiles = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(profiles)
+      .where(eq(profiles.isVisible, true));
+
     const results = await db
       .select({
         id: profiles.id,
@@ -25,12 +36,14 @@ export async function getSwipableProfiles() {
         course: profiles.course,
         yearOfStudy: profiles.yearOfStudy,
         profilePhoto: profiles.profilePhoto,
-        phoneNumber: users.phoneNumber,
+        phoneNumber: profiles.phoneNumber,
         lastActive: profiles.lastActive,
         isMatch: matches.id,
+        isVisible: profiles.isVisible,
+        isComplete: profiles.isComplete,
+        profileCompleted: profiles.profileCompleted,
       })
       .from(profiles)
-      .leftJoin(users, eq(users.id, profiles.userId))
       .leftJoin(
         matches,
         and(
@@ -48,24 +61,13 @@ export async function getSwipableProfiles() {
       )
       .where(
         and(
-          // Basic filters
           not(eq(profiles.userId, session.user.id)),
           eq(profiles.isVisible, true),
-          // Required fields
+          eq(profiles.profileCompleted, true),
           not(isNull(profiles.firstName)),
-          not(isNull(profiles.lastName)),
-          not(isNull(profiles.bio)),
-          not(isNull(profiles.age)),
-          not(isNull(profiles.gender)),
-          not(isNull(profiles.interests)),
-          not(isNull(profiles.photos)),
-          not(isNull(profiles.course)),
-          not(isNull(profiles.yearOfStudy)),
-          not(isNull(profiles.profilePhoto)),
-          not(isNull(users.phoneNumber))
+          not(isNull(profiles.lastName))
         )
       )
-      // Order randomly
       .orderBy(sql`RANDOM()`)
       .limit(10);
 
@@ -74,7 +76,6 @@ export async function getSwipableProfiles() {
       isMatch: !!profile.isMatch
     }));
   } catch (error) {
-    console.error("Error fetching profiles:", error);
     return [];
   }
 }
@@ -84,10 +85,24 @@ export async function recordSwipe(
   action: "like" | "pass"
 ) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: "Unauthorized" };
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
 
   try {
-    // Record the swipe
+    const [swiper, swiped] = await Promise.all([
+      db.select().from(users).where(eq(users.id, session.user.id)),
+      db.select().from(users).where(eq(users.id, targetUserId))
+    ]);
+
+    if (!swiper.length) {
+      return { success: false, error: "Swiper user not found" };
+    }
+
+    if (!swiped.length) {
+      return { success: false, error: "Swiped user not found" };
+    }
+
     await db.insert(swipes).values({
       swiperId: session.user.id,
       swipedId: targetUserId,
@@ -95,7 +110,6 @@ export async function recordSwipe(
       createdAt: new Date(),
     });
 
-    // If it's a like, check for mutual like (match)
     if (action === "like") {
       const mutualLike = await db
         .select()
@@ -106,17 +120,14 @@ export async function recordSwipe(
             eq(swipes.swipedId, session.user.id),
             eq(swipes.isLike, true)
           )
-        )
-        .limit(1);
+        );
 
-      // If there's a mutual like, create a match
       if (mutualLike.length > 0) {
         await db.insert(matches).values({
           id: crypto.randomUUID(),
           user1Id: session.user.id,
           user2Id: targetUserId,
           createdAt: new Date(),
-          lastMessageAt: null,
           user1Typing: false,
           user2Typing: false,
         });
@@ -126,15 +137,15 @@ export async function recordSwipe(
 
     return { success: true, isMatch: false };
   } catch (error) {
-    console.error("Error recording swipe:", error);
     return { success: false, error: "Failed to record swipe" };
   }
 }
 
 export async function undoLastSwipe(swipedId: string) {
   const session = await auth();
-  if (!session?.user?.id)
-    return { error: "Bestie, you need to sign in first " };
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" };
+  }
 
   try {
     const lastSwipe = await db
@@ -146,23 +157,25 @@ export async function undoLastSwipe(swipedId: string) {
       .orderBy(swipes.createdAt)
       .limit(1)
       .then(async (rows) => {
-        if (rows.length === 0) return [];
+        if (rows.length === 0) {
+          return [];
+        }
         return db.delete(swipes).where(eq(swipes.id, rows[0].id)).returning();
       });
 
     return { success: true, lastSwipe };
   } catch (error) {
-    console.error("Can't undo that bestie ", error);
-    return { error: "No take-backsies rn, try again later " };
+    return { error: "Failed to undo last swipe" };
   }
 }
 
 export async function getLikedProfiles() {
   const session = await auth();
-  if (!session?.user?.id) return { profiles: [], error: "Unauthorized" };
+  if (!session?.user?.id) {
+    return { profiles: [], error: "Unauthorized" };
+  }
 
   try {
-
     const results = await db
       .select({
         profile: profiles,
@@ -193,24 +206,22 @@ export async function getLikedProfiles() {
         )
       );
 
-   
-
     return {
       profiles: results.map((r) => ({ ...r.profile, isMatch: !!r.isMatch })),
       error: null,
     };
   } catch (error) {
-    console.error("Error fetching liked profiles:", error);
     return { profiles: [], error: "Failed to fetch profiles" };
   }
 }
 
 export async function getLikedByProfiles() {
   const session = await auth();
-  if (!session?.user?.id) return { profiles: [], error: "Unauthorized" };
+  if (!session?.user?.id) {
+    return { profiles: [], error: "Unauthorized" };
+  }
 
   try {
-
     const results = await db
       .select({
         profile: profiles,
@@ -242,14 +253,11 @@ export async function getLikedByProfiles() {
         )
       );
 
-  
-
     return {
       profiles: results.map((r) => ({ ...r.profile, isMatch: !!r.isMatch })),
       error: null,
     };
   } catch (error) {
-    console.error("Error fetching profiles that liked you:", error);
     return { profiles: [], error: "Failed to fetch profiles" };
   }
 }
