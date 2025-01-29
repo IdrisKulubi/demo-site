@@ -54,7 +54,7 @@ A Tinder-like platform designed for university students to find their Valentine.
 - **Contact Exchange**
   - Secure phone number sharing
 
-### 6. Explore Section (Optional)
+### 6. Explore Section 
 - Proximity-based profile browsing
 - University-specific filtering
 
