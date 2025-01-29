@@ -85,13 +85,18 @@ export function SwipeCard({
             className="h-full w-full"
           >
             {profile.photos?.map((photo, index) => (
-              <SwiperSlide key={`${photo}-${index}-${profile.userId}`}>
+              <SwiperSlide key={`${photo}-${index}-${profile.userId}`} className="flex items-center justify-center bg-muted">
                 <motion.img
                   initial={{ opacity: 0, scale: 1.1 }}
                   animate={{ opacity: 1 }}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                   src={photo}
                   alt={`Profile ${index + 1}`}
+                  style={{
+                    maxHeight: "100%",
+                    width: "auto",
+                    margin: "auto"
+                  }}
                 />
               </SwiperSlide>
             ))}
