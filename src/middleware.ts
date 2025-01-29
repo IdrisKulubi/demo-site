@@ -7,6 +7,11 @@ export async function middleware(request: Request & { nextUrl: URL }) {
   const isAuth = !!session?.user;
   const isAuthPage = request.nextUrl.pathname.startsWith("/login");
   const isProfileSetup = request.nextUrl.pathname.startsWith("/profile/setup");
+  const isLandingPage = request.nextUrl.pathname === "/";
+
+  if (isLandingPage) {
+    return NextResponse.next();
+  }
 
   if (isAuthPage) {
     if (isAuth) {
@@ -39,5 +44,5 @@ export async function middleware(request: Request & { nextUrl: URL }) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|landing).*)"],
 };

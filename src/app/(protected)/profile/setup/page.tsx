@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -93,11 +92,86 @@ export default function ProfileSetup() {
 
   const handleNext = () => {
     const currentStepData = form.getValues();
-    if (canProceed(step, currentStepData)) {
-      setStep(step + 1);
+    
+    switch (step) {
+      case 0: // Photos
+        if (currentStepData.photos.length === 0) {
+          toast({
+            variant: "destructive",
+            title: "Upload Required",
+            description: "Please upload at least one photo to continue"
+          });
+          return;
+        }
+        break;
+        
+      case 1: // Bio
+        if (currentStepData.bio.split(/\s+/).filter(Boolean).length < 10) {
+          toast({
+            variant: "destructive",
+            title: "Bio Too Short",
+            description: `Please write at least 10 words (currently ${currentStepData.bio.split(/\s+/).filter(Boolean).length} words)`
+          });
+          return;
+        }
+        break;
+        
+      case 2: // Interests
+        if (currentStepData.interests.length < 3) {
+          toast({
+            variant: "destructive",
+            title: "More Interests Needed",
+            description: `Please select at least 3 interests (currently ${currentStepData.interests.length} selected)`
+          });
+          return;
+        }
+        break;
+        
+      case 3: // Details
+        const missingFields = [];
+        if (!currentStepData.firstName?.trim()) missingFields.push("First Name");
+        if (!currentStepData.lastName?.trim()) missingFields.push("Last Name");
+        if (!currentStepData.course?.trim()) missingFields.push("Course");
+        if (!currentStepData.yearOfStudy) missingFields.push("Year of Study");
+        if (!currentStepData.gender) missingFields.push("Gender");
+        if (!currentStepData.age) missingFields.push("Age");
+        if (!currentStepData.lookingFor) missingFields.push("Looking For");
+        
+        // Special validation for phone number
+        const phoneDigits = currentStepData.phoneNumber?.replace(/[^0-9]/g, '');
+        if (!currentStepData.phoneNumber?.trim()) {
+          missingFields.push("Phone Number");
+        } else if (!/^[0-9+\-\s()]+$/.test(currentStepData.phoneNumber)) {
+          toast({
+            variant: "destructive",
+            title: "Invalid Phone Number",
+            description: "Phone number can only contain numbers, spaces, and these symbols: + - ( )"
+          });
+          return;
+        } else if (phoneDigits?.length !== 10) {
+          toast({
+            variant: "destructive",
+            title: "Invalid Phone Number",
+            description: "Phone number must be exactly 10 digits"
+          });
+          return;
+        }
+        
+        if (missingFields.length > 0) {
+          toast({
+            variant: "destructive",
+            title: "Required Fields Missing",
+            description: `Please fill in: ${missingFields.join(", ")}`
+          });
+          return;
+        }
+        break;
     }
+    
+    setStep(step + 1);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const canProceed = (step: number, formData: ProfileFormData) => {
     switch (step) {
       case 0: // Photos
