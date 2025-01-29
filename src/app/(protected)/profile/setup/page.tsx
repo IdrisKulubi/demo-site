@@ -34,7 +34,8 @@ const canProceed = (step: number, formData: ProfileFormData) => {
         formData.lastName &&
         formData.lookingFor &&
         formData.course &&
-        formData.yearOfStudy
+        formData.yearOfStudy &&
+        formData.phoneNumber
       );
     case 4: // Social (optional)
       return true;

@@ -15,6 +15,7 @@ import { Heart, GraduationCap, Calendar } from "lucide-react";
 import { genders, ageRange } from "@/lib/constants";
 import { ProfileFormData } from "@/lib/actions/profile.actions";
 import { Control } from "react-hook-form";
+import { useEffect } from "react";
 
 interface DetailsInputProps {
   values: {
@@ -62,6 +63,12 @@ export function DetailsInput({
   children,
   control,
 }: DetailsInputProps) {
+  useEffect(() => {
+    if (!values.phoneNumber) {
+      onChange("phoneNumber", "");
+    }
+  }, [values.phoneNumber, onChange]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -218,13 +225,13 @@ export function DetailsInput({
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-pink-500" />
-            Phone Number (Optional) 📱
+            Phone Number (Required) 📱
           </Label>
           <Input
             value={values.phoneNumber || ""}
             onChange={(e) => onChange("phoneNumber", e.target.value)}
             placeholder="e.g., +254 712 345 678"
-            className="bg-pink-50/50 dark:bg-pink-950/50 border-pink-200"
+            className="bg-pink-50/50 dark:bg-pink-950/50 text-white border-pink-200"
           />
           {errors?.phoneNumber && (
             <p className="text-sm text-red-500">{errors.phoneNumber}</p>
