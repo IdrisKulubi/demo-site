@@ -50,14 +50,23 @@ export const profileSchema = z
     gender: z.enum(["male", "female", "non-binary", "other"], {
       required_error: "Please select your gender 💫",
     }),
+    phoneNumber: z
+      .string()
+      .trim()
+      .max(10, "Phone number is too long")
+      .min(1, "Phone number is required 📱")
+      .regex(/^[0-9+\-\s()]+$/, "Please enter a valid phone number format")
+      .refine((phone) => phone.replace(/[^0-9]/g, '').length >= 10, {
+        message: "Phone number must have at least 10 digits"
+      })
+      .refine((phone) => phone.trim() !== "", {
+        message: "Phone number cannot be empty"
+      }),
+      
     age: z
       .number()
       .min(18, "You must be at least 18 years old")
       .max(25, "Age must be between 18 and 25 🎂"),
-    phoneNumber: z
-      .string()
-      .regex(/^\+?[0-9\s-]+$/, "Please enter a valid phone number 📱")
-      .optional(),
     firstName: z
       .string()
       .trim()
@@ -95,6 +104,7 @@ export const profileSchema = z
       data.lookingFor &&
       data.course.trim() !== "" &&
       data.yearOfStudy > 0 &&
-      data.profilePhoto.trim() !== ""
+      data.profilePhoto.trim() !== "" &&
+      data.phoneNumber.trim() !== ""
     );
   }, "All required fields must be filled out properly");

@@ -34,7 +34,11 @@ const canProceed = (step: number, formData: ProfileFormData) => {
         formData.lastName &&
         formData.lookingFor &&
         formData.course &&
-        formData.yearOfStudy
+        formData.yearOfStudy &&
+        formData.phoneNumber &&
+        formData.phoneNumber.trim() !== "" &&
+        /^[0-9+\-\s()]+$/.test(formData.phoneNumber) &&
+        formData.phoneNumber.replace(/[^0-9]/g, '').length >= 10
       );
     case 4: // Social (optional)
       return true;
@@ -63,6 +67,7 @@ export default function ProfileSetup() {
       gender: undefined,
       age: 0,
       profilePhoto: "",
+      phoneNumber: "",
     },
   });
   const { data: session } = useSession();
@@ -151,7 +156,11 @@ export default function ProfileSetup() {
       formData.interests.length >= 3 &&
       formData.lookingFor &&
       formData.course &&
-      formData.yearOfStudy > 0
+      formData.yearOfStudy > 0 &&
+      formData.phoneNumber &&
+      formData.phoneNumber.trim() !== "" &&
+      /^[0-9+\-\s()]+$/.test(formData.phoneNumber) &&
+      formData.phoneNumber.replace(/[^0-9]/g, '').length === 10
     );
   };
 
@@ -236,8 +245,19 @@ export default function ProfileSetup() {
                   yearOfStudy: form.watch("yearOfStudy") || 0,
                   gender: form.watch("gender") || "",
                   age: form.watch("age") || 0,
+                  phoneNumber: form.watch("phoneNumber") || "",
                 }}
                 onChange={(field, value) => form.setValue(field, value)}
+                errors={{
+                  firstName: form.formState.errors.firstName?.message,
+                  lastName: form.formState.errors.lastName?.message,
+                  lookingFor: form.formState.errors.lookingFor?.message,
+                  course: form.formState.errors.course?.message,
+                  yearOfStudy: form.formState.errors.yearOfStudy?.message,
+                  gender: form.formState.errors.gender?.message,
+                  age: form.formState.errors.age?.message,
+                  phoneNumber: form.formState.errors.phoneNumber?.message,
+                }}
               >
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -306,7 +326,7 @@ export default function ProfileSetup() {
                     {step === 0 && "Add at least one photo 📸"}
                     {step === 1 && "Write at least 10 words ✍️"}
                     {step === 2 && "Pick 3+ vibes 🌟"}
-                    {step === 3 && "Fill in all the deets 📝"}
+                    {step === 3 && "Fill in all the deets (including phone number) 📝"}
                     {step === 4 && "Optional - Add your socials 🌟"}
                   </>
                 ) : (

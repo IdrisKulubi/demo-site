@@ -25,7 +25,7 @@ export type ProfileFormData = z.infer<typeof profileSchema> & {
   gender: "male" | "female" | "non-binary" | "other";
   age: number;
   profilePhoto?: string;
-  phoneNumber?: string;
+  phoneNumber: string;
 };
 
 export async function getProfile() {
@@ -38,7 +38,11 @@ export async function getProfile() {
 
     // Find user by email
     const user = await db
-      .select()
+      .select({
+        id: users.id,
+        email: users.email,
+        phoneNumber: users.phoneNumber
+      })
       .from(users)
       .where(eq(users.email, session.user.email))
       .limit(1);
@@ -50,28 +54,19 @@ export async function getProfile() {
 
     const actualUserId = user[0].id;
 
-    // Check for existing profile
-    const existingProfile = await db
+    // Get profile data
+    const profile = await db
       .select()
       .from(profiles)
       .where(eq(profiles.userId, actualUserId))
       .limit(1);
 
-    if (existingProfile?.[0]) {
-      return existingProfile[0];
-    }
+    if (!profile || profile.length === 0) return null;
 
-    // Only create profile if user exists
-    const newProfile = await db
-      .insert(profiles)
-      .values({
-        userId: actualUserId,
-        profileCompleted: false,
-        updatedAt: new Date(),
-      })
-      .returning();
-
-    return newProfile[0];
+    return {
+      ...profile[0],
+      phoneNumber: user[0].phoneNumber
+    };
   } catch (error) {
     console.error("Error in getProfile:", error);
     throw error; // Rethrow to handle in calling functions
@@ -87,7 +82,11 @@ export async function updateProfile(data: ProfileFormData) {
 
     // Find user by email
     const user = await db
-      .select()
+      .select({
+        id: users.id,
+        email: users.email,
+        phoneNumber: users.phoneNumber
+      })
       .from(users)
       .where(eq(users.email, session.user.email))
       .limit(1);

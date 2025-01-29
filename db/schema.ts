@@ -22,7 +22,8 @@ export const users = pgTable("user", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   lastActive: timestamp("last_active").defaultNow().notNull(),
   isOnline: boolean("is_online").default(false),
-  profilePhoto: text("profile_photo"),  
+  profilePhoto: text("profile_photo"),
+  phoneNumber: text("phone_number").notNull(),
 });
 
 // Auth.js tables

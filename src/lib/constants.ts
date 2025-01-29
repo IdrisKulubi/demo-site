@@ -89,6 +89,6 @@ export type Profile = {
   snapchat: string | null;
   instagram: string | null;
   spotify: string | null;
-  phoneNumber: string | null;
+  phoneNumber: string;
   isMatch?: boolean;
 };

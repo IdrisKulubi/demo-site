@@ -64,10 +64,18 @@ export function DetailsInput({
   control,
 }: DetailsInputProps) {
   useEffect(() => {
-    if (!values.phoneNumber) {
-      onChange("phoneNumber", "");
-    }
-  }, [values.phoneNumber, onChange]);
+    return;
+  }, []);
+
+  const validatePhoneNumber = (phone: string) => {
+    const phoneRegex = /^[0-9+\-\s()]+$/;
+    return phoneRegex.test(phone) && phone.length >= 10;
+  };
+
+  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    onChange("phoneNumber", value);
+  };
 
   return (
     <motion.div
@@ -225,16 +233,24 @@ export function DetailsInput({
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-pink-500" />
-            Phone Number (Optional) 📱
+            Phone Number 📱
           </Label>
           <Input
             value={values.phoneNumber || ""}
-            onChange={(e) => onChange("phoneNumber", e.target.value)}
+            onChange={handlePhoneNumberChange}
             placeholder="e.g., +254 712 345 678"
-            className="bg-pink-50/50 dark:bg-pink-950/50 text-white border-pink-200"
+            className={`bg-pink-50/50 dark:bg-pink-950/50 border-pink-200 ${
+              errors?.phoneNumber ? "border-red-500" : ""
+            }`}
+            required
+            type="tel"
+            pattern="[0-9+\-\s()]+"
           />
           {errors?.phoneNumber && (
             <p className="text-sm text-red-500">{errors.phoneNumber}</p>
+          )}
+          {values.phoneNumber && !validatePhoneNumber(values.phoneNumber) && !errors?.phoneNumber && (
+            <p className="text-sm text-yellow-500">Please enter a valid phone number (at least 10 digits)</p>
           )}
         </div>
       </div>
