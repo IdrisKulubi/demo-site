@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
 import db from "@/db/drizzle";
@@ -19,7 +20,6 @@ export async function getSwipableProfiles() {
 
     if (!currentUserProfile.length) return [];
 
-    const userProfile = currentUserProfile[0];
 
     // Get user's recent likes to understand their preferences
     const recentLikes = await db
