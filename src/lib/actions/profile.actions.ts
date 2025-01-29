@@ -7,7 +7,6 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { profileSchema } from "../validators";
 import { deleteUploadThingFile } from "./upload.actions";
-import { z } from "zod";
 
 export type ProfileFormData = {
   photos: string[];
