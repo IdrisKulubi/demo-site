@@ -6,7 +6,7 @@ const f = createUploadthing();
 
 // FileRouter for your app, can contain multiple FileRoutes
 export const ourFileRouter = {
-  imageUploader: f({ image: { maxFileSize: "4MB", maxFileCount: 6 } })
+  imageUploader: f({ image: { maxFileSize: "8MB", maxFileCount: 6 } })
     .middleware(async () => {
       const session = await auth();
 

@@ -7,6 +7,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { deleteUploadThingFile } from "@/lib/actions/upload.actions";
+import { useToast } from "@/hooks/use-toast";
 
 interface ImageUploadProps {
   value: string[];
@@ -23,6 +24,8 @@ export function ImageUpload({
   onProfilePhotoSelect,
   maxFiles = 6,
 }: ImageUploadProps) {
+  const { toast } = useToast();
+
   const removeImage = async (urlToRemove: string) => {
     // First remove from UI for immediate feedback
     onChange(value.filter((url) => url !== urlToRemove));
@@ -43,7 +46,20 @@ export function ImageUpload({
 
   const handleUploadError = async (error: Error) => {
     console.error(error);
-    // You could add a toast notification here
+    if (error.message.includes("FileSizeMismatch")) {
+      toast({
+        variant: "destructive",
+        title: "File too large! 📏",
+        description: "Please upload a file smaller than 8MB.",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Upload Error",
+        description:
+          "An error occurred while uploading your file. Please try again.",
+      });
+    }
   };
 
   return (
