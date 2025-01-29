@@ -34,8 +34,7 @@ const canProceed = (step: number, formData: ProfileFormData) => {
         formData.lastName &&
         formData.lookingFor &&
         formData.course &&
-        formData.yearOfStudy &&
-        formData.phoneNumber
+        formData.yearOfStudy
       );
     case 4: // Social (optional)
       return true;
@@ -339,7 +338,7 @@ export default function ProfileSetup() {
                         }}
                         className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
                       />
-                      Finding Your Match...
+                      Creating Profile...
                     </motion.div>
                   ) : (
                     <motion.span
@@ -347,7 +346,7 @@ export default function ProfileSetup() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      Find Your Match 💝
+                      Create Profile 💝
                     </motion.span>
                   )}
                 </Button>

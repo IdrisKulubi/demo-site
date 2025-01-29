@@ -322,7 +322,6 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
                   yearOfStudy: form.watch("yearOfStudy"),
                   gender: form.watch("gender"),
                   age: form.watch("age"),
-                  phoneNumber: form.watch("phoneNumber"),
                 }}
                 onChange={(field, value) => handleFieldUpdate(field, value)}
                 errors={{
@@ -331,7 +330,6 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
                   yearOfStudy: form.formState.errors.yearOfStudy?.message,
                   gender: form.formState.errors.gender?.message,
                   age: form.formState.errors.age?.message,
-                  phoneNumber: form.formState.errors.phoneNumber?.message,
                 }}
               />
             </CardContent>

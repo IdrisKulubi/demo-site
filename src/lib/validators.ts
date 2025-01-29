@@ -43,7 +43,7 @@ export const profileSchema = z
     phoneNumber: z
       .string()
       .regex(/^\+?[0-9\s-]+$/, "Please enter a valid phone number 📱")
-      .min(1, "Phone number is required"),
+      .optional(),
     firstName: z
       .string()
       .min(2, "First name must be at least 2 characters")
