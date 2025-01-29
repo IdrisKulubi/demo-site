@@ -81,10 +81,7 @@ export async function getSwipableProfiles() {
       )
       .limit(10);
 
-    console.log(
-      "Fetched profiles from database:",
-      JSON.stringify(results, null, 2)
-    );
+  
     return results.map((r) => ({ ...r, isMatch: !!r.isMatch }));
   } catch (error) {
     console.error("Error fetching profiles:", error);
@@ -175,6 +172,7 @@ export async function getLikedProfiles() {
   if (!session?.user?.id) return { profiles: [], error: "Unauthorized" };
 
   try {
+
     const results = await db
       .select({
         profile: profiles,
@@ -198,8 +196,14 @@ export async function getLikedProfiles() {
         )
       )
       .where(
-        and(eq(swipes.swiperId, session.user.id), eq(swipes.isLike, true))
+        and(
+          eq(swipes.swiperId, session.user.id),
+          eq(swipes.isLike, true),
+          isNull(matches.id)
+        )
       );
+
+   
 
     return {
       profiles: results.map((r) => ({ ...r.profile, isMatch: !!r.isMatch })),
@@ -207,6 +211,55 @@ export async function getLikedProfiles() {
     };
   } catch (error) {
     console.error("Error fetching liked profiles:", error);
-    return { profiles: [], error: "Failed to fetch liked profiles" };
+    return { profiles: [], error: "Failed to fetch profiles" };
+  }
+}
+
+export async function getLikedByProfiles() {
+  const session = await auth();
+  if (!session?.user?.id) return { profiles: [], error: "Unauthorized" };
+
+  try {
+
+    const results = await db
+      .select({
+        profile: profiles,
+        isMatch: matches.id,
+        swipe: swipes,
+      })
+      .from(swipes)
+      .innerJoin(profiles, eq(profiles.userId, swipes.swiperId))
+      .leftJoin(
+        matches,
+        and(
+          or(
+            and(
+              eq(matches.user1Id, session.user.id),
+              eq(matches.user2Id, profiles.userId)
+            ),
+            and(
+              eq(matches.user2Id, session.user.id),
+              eq(matches.user1Id, profiles.userId)
+            )
+          )
+        )
+      )
+      .where(
+        and(
+          eq(swipes.swipedId, session.user.id),
+          eq(swipes.isLike, true),
+          isNull(matches.id)
+        )
+      );
+
+  
+
+    return {
+      profiles: results.map((r) => ({ ...r.profile, isMatch: !!r.isMatch })),
+      error: null,
+    };
+  } catch (error) {
+    console.error("Error fetching profiles that liked you:", error);
+    return { profiles: [], error: "Failed to fetch profiles" };
   }
 }

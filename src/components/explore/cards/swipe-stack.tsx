@@ -8,15 +8,15 @@ import {
   recordSwipe,
   undoLastSwipe,
   getLikedProfiles,
+  getLikedByProfiles,
 } from "@/lib/actions/explore.actions";
 import { useToast } from "@/hooks/use-toast";
 
 import { MatchModal } from "../modals/match-modal";
 import { SwipeControls } from "../controls/swipe-controls";
 import { LikedAvatars } from "./liked-avatars";
-import { LikedPanel } from "./liked-panel";
-import { MatchesPanel } from "./matches-panel";
 import { NoMoreProfiles } from "../empty-state";
+import { SidePanels } from "./side-panels";
 
 const swipeAnimationVariants = {
   right: {
@@ -43,6 +43,7 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
   const [profiles, setProfiles] = useState<Profile[]>(initialProfiles);
   const [swipedProfiles, setSwipedProfiles] = useState<Profile[]>([]);
   const [likedProfiles, setLikedProfiles] = useState<Profile[]>([]);
+  const [likedByProfiles, setLikedByProfiles] = useState<Profile[]>([]);
   const [showMatch, setShowMatch] = useState(false);
   const [currentSwipeDirection, setCurrentSwipeDirection] = useState<
     "left" | "right" | null
@@ -50,11 +51,12 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
   const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
   const { toast } = useToast();
 
-  // Load liked profiles on mount
+  // Load both liked and liked-by profiles on mount
   useEffect(() => {
-    const loadLikedProfiles = async () => {
-      const { profiles: liked, error } = await getLikedProfiles();
-      if (error) {
+    const loadProfiles = async () => {
+      // Load liked profiles
+      const { profiles: liked, error: likedError } = await getLikedProfiles();
+      if (likedError) {
         toast({
           variant: "destructive",
           description: "Couldn't load your crushes 😅",
@@ -63,6 +65,10 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
       }
       setLikedProfiles(liked);
 
+      // Load profiles that liked you
+      const { profiles: likedBy } = await getLikedByProfiles();
+      setLikedByProfiles(likedBy);
+
       // Check if there are any matches to show
       const hasNewMatch = liked.some((profile) => profile.isMatch);
       if (hasNewMatch) {
@@ -70,7 +76,7 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
       }
     };
 
-    loadLikedProfiles();
+    loadProfiles();
   }, [toast]);
 
   const handleSwipe = async (direction: "left" | "right", profile: Profile) => {
@@ -127,64 +133,83 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
   };
 
   return (
-    <div className="relative w-full max-w-md mx-auto">
-      <LikedPanel
-        profiles={likedProfiles}
-        onUnlike={async (profileId) => {
-          const result = await undoLastSwipe(profileId);
-          if (result.success) {
-            setLikedProfiles((prev) =>
+    <div className="relative flex flex-col lg:flex-row w-full">
+      {/* Side Panels - Fixed with reduced width */}
+      <div className="lg:w-[320px] lg:fixed lg:left-0 lg:top-[80px] lg:bottom-0 lg:pl-4">
+        <SidePanels
+          profiles={likedProfiles}
+          likedByProfiles={likedByProfiles}
+          onUnlike={async (profileId) => {
+            const result = await undoLastSwipe(profileId);
+            if (result.success) {
+              setLikedProfiles((prev) =>
+                prev.filter((p) => p.userId !== profileId)
+              );
+            }
+          }}
+          onLikeBack={(profileId) => {
+            setLikedByProfiles((prev) =>
               prev.filter((p) => p.userId !== profileId)
             );
-          }
-        }}
-      />
-      <MatchesPanel profiles={likedProfiles} />
-      <LikedAvatars profiles={likedProfiles} />
-
-      <div className="relative h-[500px] w-full flex flex-col items-center">
-        <AnimatePresence mode="popLayout">
-          {profiles.map((profile, index) => (
-            <SwipeCard
-              key={`${profile.userId}-${index}`}
-              profile={profile}
-              active={index === profiles.length - 1}
-              onSwipe={(dir) => handleSwipe(dir, profile)}
-              animate={
-                index === profiles.length - 1
-                  ? currentSwipeDirection
-                  : undefined
-              }
-              variants={swipeAnimationVariants}
-            />
-          ))}
-        </AnimatePresence>
-
-        {profiles.length === 0 && (
-          <NoMoreProfiles initialLikedProfiles={likedProfiles} />
-        )}
-      </div>
-
-      <div className="mt-4">
-        <SwipeControls
-          onSwipeLeft={() =>
-            profiles.length > 0 &&
-            handleSwipe("left", profiles[profiles.length - 1])
-          }
-          onSwipeRight={() =>
-            profiles.length > 0 &&
-            handleSwipe("right", profiles[profiles.length - 1])
-          }
-          onUndo={handleUndo}
-          disabled={swipedProfiles.length === 0}
+          }}
         />
       </div>
 
-      {showMatch && (
+      {/* Main Swipe Area */}
+      <div className="flex-1 lg:ml-[160px] flex flex-col items-center justify-start pt-6">
+        <div className="w-full max-w-[420px] mx-auto px-4">
+          <div className="mb-6">
+            <LikedAvatars profiles={likedProfiles} />
+          </div>
+
+          {/* Card Container - Fixed dimensions with proper centering */}
+          <div className="relative h-[600px] w-full flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <AnimatePresence mode="popLayout">
+                {profiles.map((profile, index) => (
+                  <SwipeCard
+                    key={`${profile.userId}-${index}`}
+                    profile={profile}
+                    active={index === profiles.length - 1}
+                    onSwipe={(dir) => handleSwipe(dir, profile)}
+                    animate={
+                      index === profiles.length - 1
+                        ? currentSwipeDirection
+                        : undefined
+                    }
+                    variants={swipeAnimationVariants}
+                  />
+                ))}
+              </AnimatePresence>
+            </div>
+
+            {profiles.length === 0 && (
+              <NoMoreProfiles initialLikedProfiles={likedProfiles} />
+            )}
+          </div>
+
+          <div className="mt-8 max-w-sm mx-auto">
+            <SwipeControls
+              onSwipeLeft={() =>
+                profiles.length > 0 &&
+                handleSwipe("left", profiles[profiles.length - 1])
+              }
+              onSwipeRight={() =>
+                profiles.length > 0 &&
+                handleSwipe("right", profiles[profiles.length - 1])
+              }
+              onUndo={handleUndo}
+              disabled={swipedProfiles.length === 0}
+            />
+          </div>
+        </div>
+      </div>
+
+      {showMatch && matchedProfile && (
         <MatchModal
           open={showMatch}
           onOpenChange={setShowMatch}
-          matchedProfile={{ phoneNumber: matchedProfile?.phoneNumber || "" }}
+          matchedProfile={matchedProfile}
         />
       )}
     </div>

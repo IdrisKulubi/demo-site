@@ -1,20 +1,29 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import {  X } from "lucide-react";
 import type { Profile } from "@/db/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProfileDetails } from "@/components/explore/cards/profile-details";
+import { ViewMoreCrush } from "./view-more-crush";
 
 interface LikedPanelProps {
   profiles: Profile[];
+  likedByProfiles: Profile[];
   onUnlike: (profileId: string) => void;
+  onLikeBack: (profileId: string) => void;
 }
 
-export function LikedPanel({ profiles, onUnlike }: LikedPanelProps) {
-  // Filter out profiles that are matches
+export function LikedPanel({
+  profiles,
+  likedByProfiles,
+  onUnlike,
+  onLikeBack,
+}: LikedPanelProps) {
+  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const crushProfiles = profiles.filter((profile) => !profile.isMatch);
 
   return (
@@ -23,18 +32,48 @@ export function LikedPanel({ profiles, onUnlike }: LikedPanelProps) {
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
     >
-      <div className="flex items-center gap-2 mb-4">
-        <div className="relative">
-          <h2 className="text-xl font-bold bg-gradient-to-r from-pink-500 to-pink-700 dark:from-pink-400 dark:to-pink-600 bg-clip-text text-transparent">
-            Your Crushes
-          </h2>
-          <div className="absolute -right-7 -top-1 text-xl">💖</div>
+      {/* Profiles that liked you */}
+      {likedByProfiles.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <h2 className="text-lg font-semibold text-pink-500">
+              Likes You{" "}
+              {likedByProfiles.length > 0 && `(${likedByProfiles.length})`}
+            </h2>
+          </div>
+          <ScrollArea className="h-[120px] pr-2">
+            <div className="space-y-2">
+              {likedByProfiles.map((profile) => (
+                <motion.div
+                  key={profile.id}
+                  className="group relative bg-white dark:bg-background rounded-2xl p-3 shadow-sm border border-pink-100 dark:border-pink-900 flex items-center gap-3 cursor-pointer"
+                  onClick={() => setSelectedProfile(profile)}
+                >
+                  <Avatar>
+                    <AvatarImage src={profile.photos?.[0]} />
+                    <AvatarFallback className="bg-gradient-to-br from-pink-400 to-pink-600 text-white">
+                      {profile.firstName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{profile.firstName}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {profile.course}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
-        <span className="text-pink-500 dark:text-pink-400 ml-auto text-sm font-medium">
-          {crushProfiles.length}
-        </span>
-      </div>
+      )}
 
+      {/* Your existing crushes section */}
+      <div className="flex items-center gap-2 mb-4">
+        <h2 className="text-lg font-semibold text-pink-500">
+          Your Crushes {crushProfiles.length > 0 && `(${crushProfiles.length})`}
+        </h2>
+      </div>
       <ScrollArea className="h-[min(30vh,200px)] pr-2">
         <div className="space-y-2">
           {crushProfiles.map((profile) => (
@@ -94,6 +133,16 @@ export function LikedPanel({ profiles, onUnlike }: LikedPanelProps) {
           )}
         </div>
       </ScrollArea>
+
+      {/* View More Modal for profiles that liked you */}
+      {selectedProfile && (
+        <ViewMoreCrush
+          profile={selectedProfile}
+          isOpen={!!selectedProfile}
+          onClose={() => setSelectedProfile(null)}
+          onLikeBack={onLikeBack}
+        />
+      )}
     </motion.div>
   );
 }

@@ -82,7 +82,6 @@ export default function ProfileSetup() {
         const { profileCompleted } = await response.json();
 
         if (isMounted && profileCompleted) {
-          console.log("Valid redirect triggered");
           window.location.href = "/profile";
         }
       } catch (error) {

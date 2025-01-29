@@ -14,7 +14,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { signOut } from "next-auth/react";
 import { UserCircle, LogOut, Settings, User, Sparkles } from "lucide-react";
 
-export function Navbar() {
+interface NavbarProps {
+  className?: string;
+}
+
+export function Navbar({ className }: NavbarProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const showNavigation = pathname === "/";
@@ -27,7 +31,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-background/80 backdrop-blur-sm border-b">
+    <nav className={`fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-background/80 backdrop-blur-sm border-b ${className}`}>
       <div className="container flex items-center justify-between h-16">
         <div className="flex items-center gap-8">
           <Link
