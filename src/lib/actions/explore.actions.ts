@@ -2,7 +2,7 @@
 
 import db from "@/db/drizzle";
 import { profiles, swipes, matches } from "@/db/schema";
-import { eq, and, not, isNull, or } from "drizzle-orm";
+import { eq, and, not, isNull, or, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 
 export async function getSwipableProfiles() {
@@ -10,29 +10,10 @@ export async function getSwipableProfiles() {
   if (!session?.user?.id) return [];
 
   try {
-    // First get the current user's profile to check their gender
-    const currentUserProfile = await db.query.profiles.findFirst({
-      where: eq(profiles.userId, session.user.id),
-    });
-
-    if (!currentUserProfile) return [];
-
-    // Build the gender filter based on user's gender
-    let genderFilter;
-    if (currentUserProfile.gender?.toLowerCase() === "male") {
-      genderFilter = eq(profiles.gender, "female");
-    } else if (currentUserProfile.gender?.toLowerCase() === "female") {
-      genderFilter = eq(profiles.gender, "male");
-    } else {
-      // For other genders, show all profiles
-      genderFilter = not(eq(profiles.userId, session.user.id));
-    }
-
     // Get profiles that:
-    // 1. Match gender preferences
-    // 2. Haven't been swiped on
-    // 3. Are visible
-    // 4. Aren't the current user
+    // 1. Haven't been swiped on
+    // 2. Are visible
+    // 3. Aren't the current user
     const results = await db
       .select({
         id: profiles.id,
@@ -74,14 +55,14 @@ export async function getSwipableProfiles() {
       )
       .where(
         and(
-          genderFilter,
+          not(eq(profiles.userId, session.user.id)), // Not the current user
           eq(profiles.isVisible, true),
           isNull(swipes.id) // No previous swipe exists
         )
       )
+      .orderBy(sql`RANDOM()`)
       .limit(10);
 
-  
     return results.map((r) => ({ ...r, isMatch: !!r.isMatch }));
   } catch (error) {
     console.error("Error fetching profiles:", error);
@@ -144,7 +125,7 @@ export async function recordSwipe(
 export async function undoLastSwipe(swipedId: string) {
   const session = await auth();
   if (!session?.user?.id)
-    return { error: "Bestie, you need to sign in first 🔐" };
+    return { error: "Bestie, you need to sign in first " };
 
   try {
     const lastSwipe = await db
@@ -162,8 +143,8 @@ export async function undoLastSwipe(swipedId: string) {
 
     return { success: true, lastSwipe };
   } catch (error) {
-    console.error("Can't undo that bestie 😩", error);
-    return { error: "No take-backsies rn, try again later 💅" };
+    console.error("Can't undo that bestie ", error);
+    return { error: "No take-backsies rn, try again later " };
   }
 }
 
