@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,65 +12,251 @@ import { useToast } from "@/hooks/use-toast";
 import { profileSchema } from "@/lib/validators";
 import { ImageUpload } from "@/components/shared/profile/image-upload";
 import { steps } from "@/lib/constants";
-import { deleteUploadThingFile } from "@/lib/actions/upload.actions";
 import { BioInput } from "@/components/shared/profile/bio-input";
 import { SocialInput } from "@/components/shared/profile/social-input";
 import { DetailsInput } from "@/components/shared/profile/details-input";
 import { useSession } from "next-auth/react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-
-const canProceed = (step: number, formData: ProfileFormData) => {
-  switch (step) {
-    case 0: // Photos
-      return formData.photos.length > 0;
-    case 1: // Bio
-      return formData.bio?.split(" ").length >= 10;
-    case 2: // Interests
-      return formData.interests.length >= 3;
-    case 3: // Details
-      return (
-        formData.firstName &&
-        formData.lastName &&
-        formData.lookingFor &&
-        formData.course &&
-        formData.yearOfStudy &&
-        formData.phoneNumber &&
-        formData.phoneNumber.trim() !== "" &&
-        /^[0-9+\-\s()]+$/.test(formData.phoneNumber) &&
-        formData.phoneNumber.replace(/[^0-9]/g, '').length === 10
-      );
-    case 4: // Social (optional)
-      return true;
-    default:
-      return true;
-  }
-};
+import { deleteUploadThingFile } from "@/lib/actions/upload.actions";
 
 export default function ProfileSetup() {
   const [step, setStep] = useState(0);
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: session } = useSession();
+
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
+    mode: "onChange",
     defaultValues: {
       photos: [],
       interests: [],
       bio: "",
-      lookingFor: undefined,
+      lookingFor: "friends",
       course: "",
-      yearOfStudy: 0,
+      yearOfStudy: 1,
       instagram: "",
       spotify: "",
       snapchat: "",
-      gender: undefined,
-      age: 0,
-      profilePhoto: "",
+      gender: "other",
+      age: 18,
+      firstName: "",
+      lastName: "",
       phoneNumber: "",
+      profilePhoto: "",
     },
   });
-  const { data: session } = useSession();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+      const data = form.getValues();
+
+      // Set profile photo to first photo if not set
+      if (!data.profilePhoto && data.photos.length > 0) {
+        data.profilePhoto = data.photos[0];
+      }
+
+      const result = await submitProfile(data);
+      
+      if (result.success) {
+        toast({
+          title: "Success!",
+          description: "Profile created successfully",
+        });
+        router.push("/explore");
+        router.refresh();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.validationErrors?.[0]?.message || result.error || "Something went wrong",
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting profile:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create profile. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleNext = () => {
+    const currentStepData = form.getValues();
+    
+    switch (step) {
+      case 0: // Photos
+        if (currentStepData.photos.length === 0) {
+          toast({
+            variant: "destructive",
+            title: "Upload Required",
+            description: "Please upload at least one photo to continue"
+          });
+          return;
+        }
+        break;
+        
+      case 1: // Bio
+        if (currentStepData.bio.split(/\s+/).filter(Boolean).length < 10) {
+          toast({
+            variant: "destructive",
+            title: "Bio Too Short",
+            description: `Please write at least 10 words (currently ${currentStepData.bio.split(/\s+/).filter(Boolean).length} words)`
+          });
+          return;
+        }
+        break;
+        
+      case 2: // Interests
+        if (currentStepData.interests.length < 3) {
+          toast({
+            variant: "destructive",
+            title: "More Interests Needed",
+            description: `Please select at least 3 interests (currently ${currentStepData.interests.length} selected)`
+          });
+          return;
+        }
+        break;
+        
+      case 3: // Details
+        const missingFields = [];
+        if (!currentStepData.firstName?.trim()) missingFields.push("First Name");
+        if (!currentStepData.lastName?.trim()) missingFields.push("Last Name");
+        if (!currentStepData.course?.trim()) missingFields.push("Course");
+        if (!currentStepData.yearOfStudy) missingFields.push("Year of Study");
+        if (!currentStepData.gender) missingFields.push("Gender");
+        if (!currentStepData.age) missingFields.push("Age");
+        if (!currentStepData.lookingFor) missingFields.push("Looking For");
+        
+        // Special validation for phone number
+        const phoneDigits = currentStepData.phoneNumber?.replace(/[^0-9]/g, '');
+        if (!currentStepData.phoneNumber?.trim()) {
+          missingFields.push("Phone Number");
+        } else if (!/^[0-9+\-\s()]+$/.test(currentStepData.phoneNumber)) {
+          toast({
+            variant: "destructive",
+            title: "Invalid Phone Number",
+            description: "Phone number can only contain numbers, spaces, and these symbols: + - ( )"
+          });
+          return;
+        } else if (phoneDigits?.length !== 10) {
+          toast({
+            variant: "destructive",
+            title: "Invalid Phone Number",
+            description: "Phone number must be exactly 10 digits"
+          });
+          return;
+        }
+        
+        if (missingFields.length > 0) {
+          toast({
+            variant: "destructive",
+            title: "Required Fields Missing",
+            description: `Please fill in: ${missingFields.join(", ")}`
+          });
+          return;
+        }
+        break;
+    }
+    
+    setStep(step + 1);
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const canProceed = (step: number, formData: ProfileFormData) => {
+    switch (step) {
+      case 0: // Photos
+        return formData.photos.length > 0;
+      case 1: // Bio
+        return formData.bio?.split(" ").length >= 10;
+      case 2: // Interests
+        return formData.interests.length >= 3;
+      case 3: // Details
+        return (
+          formData.firstName &&
+          formData.lastName &&
+          formData.lookingFor &&
+          formData.course &&
+          formData.yearOfStudy &&
+          formData.phoneNumber &&
+          formData.phoneNumber.trim() !== "" &&
+          /^[0-9+\-\s()]+$/.test(formData.phoneNumber) &&
+          formData.phoneNumber.replace(/[^0-9]/g, '').length === 10
+        );
+      case 4: // Social (optional)
+        return true;
+      default:
+        return true;
+    }
+  };
+  /* eslint-disable  @typescript-eslint/no-unused-vars */
+
+  const isFormValid = (formData: ProfileFormData) => {
+    const digitsOnly = formData.phoneNumber?.replace(/[^0-9]/g, '') || '';
+    
+    // Add console logs to debug validation
+    console.log("Form data:", formData);
+    console.log("Validation checks:", {
+      photos: formData.photos.length > 0,
+      bio: formData.bio?.split(/\s+/).filter(Boolean).length >= 10,
+      interests: formData.interests.length >= 3,
+      lookingFor: !!formData.lookingFor,
+      course: !!formData.course,
+      yearOfStudy: formData.yearOfStudy > 0,
+      gender: !!formData.gender,
+      age: formData.age >= 18 && formData.age <= 25,
+      firstName: formData.firstName?.trim().length >= 2,
+      lastName: formData.lastName?.trim().length >= 2,
+      phoneNumber: {
+        exists: !!formData.phoneNumber,
+        notEmpty: formData.phoneNumber?.trim() !== "",
+        format: /^[0-9+\-\s()]+$/.test(formData.phoneNumber || ""),
+        length: digitsOnly.length === 10
+      }
+    });
+
+    return (
+      // Required fields from schema
+      formData.photos.length > 0 &&
+      formData.bio?.split(/\s+/).filter(Boolean).length >= 10 &&
+      formData.interests.length >= 3 &&
+      formData.lookingFor &&
+      formData.course?.trim() !== "" &&
+      formData.yearOfStudy > 0 &&
+      formData.gender &&
+      formData.age >= 18 &&
+      formData.age <= 25 &&
+      formData.firstName?.trim().length >= 2 &&
+      formData.lastName?.trim().length >= 2 &&
+      // Phone number validation
+      formData.phoneNumber &&
+      formData.phoneNumber.trim() !== "" &&
+      /^[0-9+\-\s()]+$/.test(formData.phoneNumber) &&
+      digitsOnly.length === 10
+    );
+  };
+
+  // Cleanup function for when component unmounts or user navigates away
+  useEffect(() => {
+    return () => {
+      // Cleanup uploaded images if form wasn't submitted
+      const photos = form.getValues("photos");
+      if (photos.length > 0) {
+        photos.forEach(async (url) => {
+          await deleteUploadThingFile(url);
+        });
+      }
+    };
+  }, [form]);
 
   useEffect(() => {
     let isMounted = true;
@@ -87,7 +273,7 @@ export default function ProfileSetup() {
         const { profileCompleted } = await response.json();
 
         if (isMounted && profileCompleted) {
-          window.location.href = "/profile";
+          window.location.href = "/explore";
         }
       } catch (error) {
         console.error("Redirect check failed:", error);
@@ -96,74 +282,14 @@ export default function ProfileSetup() {
 
     if (session?.user) {
       checkAndRedirect();
-      intervalId = setInterval(checkAndRedirect, 5000); // Reduce polling interval
+      intervalId = setInterval(checkAndRedirect, 5000);
     }
 
     return () => {
       isMounted = false;
-      clearInterval(intervalId);
+      if (intervalId) clearInterval(intervalId);
     };
   }, [session]);
-
-  const onSubmit = async (data: ProfileFormData) => {
-    setIsSubmitting(true);
-    try {
-      const result = await submitProfile(data);
-      if (result.success) {
-        toast({
-          title: "Profile completed bestie ✨",
-          description: "Let's check out your amazing profile!",
-        });
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        router.push("/explore");
-        router.refresh();
-      } else {
-        setIsSubmitting(false);
-        toast({
-          variant: "destructive",
-          title: "Uh oh! Something went wrong 😅",
-          description: result.error,
-        });
-      }
-    } catch (error) {
-      setIsSubmitting(false);
-      console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong 😅",
-        description: "Failed to update profile. Please try again!",
-      });
-    }
-  };
-
-  // Cleanup function for when component unmounts or user navigates away
-  useEffect(() => {
-    return () => {
-      // Cleanup uploaded images if form wasn't submitted
-      const photos = form.getValues("photos");
-      if (photos.length > 0) {
-        photos.forEach(async (url) => {
-          await deleteUploadThingFile(url);
-        });
-      }
-    };
-  }, [form]);
-
-  const isFormValid = (formData: ProfileFormData) => {
-    const digitsOnly = formData.phoneNumber?.replace(/[^0-9]/g, '') || '';
-    return (
-      formData.photos.length > 0 &&
-      formData.bio?.split(/\s+/).filter(Boolean).length >= 10 &&
-      formData.interests.length >= 3 &&
-      formData.lookingFor &&
-      formData.course &&
-      formData.yearOfStudy > 0 &&
-      formData.phoneNumber &&
-      formData.phoneNumber.trim() !== "" &&
-      /^[0-9+\-\s()]+$/.test(formData.phoneNumber) &&
-      digitsOnly.length === 10
-    );
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white dark:from-pink-950 dark:to-background p-6 pt-16">
@@ -193,8 +319,7 @@ export default function ProfileSetup() {
           ))}
         </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          {/* Step content here - conditionally render based on current step */}
+        <form onSubmit={handleSubmit} className="space-y-8">
 
           {step === 0 && (
             <div className="space-y-4">
@@ -318,21 +443,10 @@ export default function ProfileSetup() {
             {step < steps.length - 1 ? (
               <Button
                 type="button"
-                onClick={() => setStep(step + 1)}
+                onClick={handleNext}
                 className="ml-auto"
-                disabled={!canProceed(step, form.getValues())}
               >
-                {!canProceed(step, form.getValues()) ? (
-                  <>
-                    {step === 0 && "Add at least one photo 📸"}
-                    {step === 1 && "Write at least 10 words ✍️"}
-                    {step === 2 && "Pick 3+ vibes 🌟"}
-                    {step === 3 && "Fill in all the deets (including phone number) 📝"}
-                    {step === 4 && "Optional - Add your socials 🌟"}
-                  </>
-                ) : (
-                  "Next"
-                )}
+                Next
               </Button>
             ) : (
               <motion.div
@@ -342,7 +456,7 @@ export default function ProfileSetup() {
                 <Button
                   type="submit"
                   className="ml-auto relative"
-                  disabled={!isFormValid(form.getValues()) || isSubmitting}
+                  disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <motion.div
@@ -367,7 +481,7 @@ export default function ProfileSetup() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      Create Profile 💝
+                      Create Profile 
                     </motion.span>
                   )}
                 </Button>

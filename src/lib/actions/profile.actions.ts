@@ -1,18 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-"use server";
+'use server'
 
-import db from "@/db/drizzle";
+import { auth } from "@/auth";
+import  db  from "@/db/drizzle";
 import { profiles, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
-import { deleteUploadThingFile } from "./upload.actions";
-import { z } from "zod";
 import { profileSchema } from "../validators";
+import { deleteUploadThingFile } from "./upload.actions";
 
-export type ProfileFormData = z.infer<typeof profileSchema> & {
-  firstName: string;
-  lastName: string;
+export type ProfileFormData = {
   photos: string[];
   bio: string;
   interests: string[];
@@ -24,8 +20,10 @@ export type ProfileFormData = z.infer<typeof profileSchema> & {
   snapchat?: string;
   gender: "male" | "female" | "non-binary" | "other";
   age: number;
-  profilePhoto?: string;
+  firstName: string;
+  lastName: string;
   phoneNumber: string;
+  profilePhoto?: string;
 };
 
 export async function getProfile() {
@@ -167,38 +165,80 @@ export async function submitProfile(data: ProfileFormData) {
       return { success: false, error: "Not authenticated" };
     }
 
+    // Validate data against schema
+    const validationResult = profileSchema.safeParse(data);
+    if (!validationResult.success) {
+      console.error("Validation errors:", validationResult.error);
+      return { 
+        success: false, 
+        error: "Invalid profile data",
+        validationErrors: validationResult.error.errors 
+      };
+    }
+
+    // First check if profile exists
+    const existingProfile = await db
+      .select()
+      .from(profiles)
+      .where(eq(profiles.userId, session.user.id))
+      .limit(1);
+
+    const profileData = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      phoneNumber: data.phoneNumber,
+      photos: data.photos,
+      bio: data.bio,
+      interests: data.interests,
+      lookingFor: data.lookingFor,
+      course: data.course,
+      yearOfStudy: data.yearOfStudy,
+      instagram: data.instagram || "",
+      spotify: data.spotify || "",
+      snapchat: data.snapchat || "",
+      gender: data.gender,
+      age: data.age,
+      profilePhoto: data.profilePhoto || data.photos[0],
+      updatedAt: new Date(),
+      profileCompleted: true,
+      isComplete: true,
+    };
+
+    // Create or update profile
+    if (!existingProfile || existingProfile.length === 0) {
+      // Create new profile
+      await db.insert(profiles).values({
+        ...profileData,
+        userId: session.user.id,
+        isVisible: true,
+        lastActive: new Date(),
+      });
+    } else {
+      // Update existing profile
+      await db
+        .update(profiles)
+        .set(profileData)
+        .where(eq(profiles.userId, session.user.id));
+    }
+
+    // Update user's phone number and profile photo
     await db
-      .update(profiles)
+      .update(users)
       .set({
-        firstName: data.firstName,
-        lastName: data.lastName,
         phoneNumber: data.phoneNumber,
-        photos: data.photos,
-        bio: data.bio,
-        interests: data.interests,
-        lookingFor: data.lookingFor,
-        course: data.course,
-        yearOfStudy: data.yearOfStudy,
-        instagram: data.instagram || "",
-        spotify: data.spotify || "",
-        snapchat: data.snapchat || "",
-        gender: data.gender,
-        age: data.age,
-        profilePhoto: data.profilePhoto,
-        updatedAt: new Date(),
-        profileCompleted: true,
+        profilePhoto: profileData.profilePhoto,
       })
-      .where(eq(profiles.userId, session.user.id));
+      .where(eq(users.id, session.user.id));
 
     revalidatePath("/explore");
-    revalidatePath("/explore");
+    revalidatePath("/profile");
 
     return { success: true };
   } catch (error) {
     console.error("Error updating profile:", error);
     return {
       success: false,
-      error: "Failed to update profile. Please try again 😢",
+      error: error instanceof Error ? error.message : "Failed to update profile",
     };
   }
 }
