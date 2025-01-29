@@ -1,7 +1,7 @@
 "use server";
 
 import db from "@/db/drizzle";
-import { profiles, swipes, matches } from "@/db/schema";
+import { profiles, swipes, matches, users } from "@/db/schema";
 import { eq, and, not, isNull, or, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 
@@ -28,9 +28,11 @@ export async function getSwipableProfiles() {
         course: profiles.course,
         yearOfStudy: profiles.yearOfStudy,
         profilePhoto: profiles.profilePhoto,
+        phoneNumber: users.phoneNumber,
         isMatch: matches.id,
       })
       .from(profiles)
+      .leftJoin(users, eq(users.id, profiles.userId))
       .leftJoin(
         swipes,
         and(
@@ -57,7 +59,21 @@ export async function getSwipableProfiles() {
         and(
           not(eq(profiles.userId, session.user.id)), // Not the current user
           eq(profiles.isVisible, true),
-          isNull(swipes.id) // No previous swipe exists
+          isNull(swipes.id), // No previous swipe exists
+          not(isNull(profiles.firstName)), // Required fields must not be null
+          not(isNull(profiles.lastName)),
+          not(isNull(profiles.bio)),
+          not(isNull(profiles.age)),
+          not(isNull(profiles.gender)),
+          not(isNull(profiles.interests)),
+          not(isNull(profiles.photos)),
+          not(isNull(profiles.course)),
+          not(isNull(profiles.yearOfStudy)),
+          not(isNull(profiles.profilePhoto)),
+          not(isNull(users.phoneNumber)),
+          sql`jsonb_array_length(${profiles.photos}::jsonb) > 0`, // Photos array must not be empty
+          sql`length(${profiles.bio}) > 0`, // Bio must not be empty
+          sql`jsonb_array_length(${profiles.interests}::jsonb) > 0` // Interests array must not be empty
         )
       )
       .orderBy(sql`RANDOM()`)

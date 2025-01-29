@@ -322,6 +322,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
                   yearOfStudy: form.watch("yearOfStudy"),
                   gender: form.watch("gender"),
                   age: form.watch("age"),
+                  phoneNumber: form.watch("phoneNumber"),
                 }}
                 onChange={(field, value) => handleFieldUpdate(field, value)}
                 errors={{
@@ -330,6 +331,9 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
                   yearOfStudy: form.formState.errors.yearOfStudy?.message,
                   gender: form.formState.errors.gender?.message,
                   age: form.formState.errors.age?.message,
+                  phoneNumber: form.formState.errors.phoneNumber?.message,
+                  firstName: form.formState.errors.firstName?.message,
+                  lastName: form.formState.errors.lastName?.message,
                 }}
               />
             </CardContent>
@@ -406,7 +410,14 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
         <Button
           type="button"
           onClick={handleSubmit}
-          disabled={isSubmitting || !isChanged}
+          disabled={
+            isSubmitting ||
+            !isChanged ||
+            !form.watch("phoneNumber") ||
+            !!form.formState.errors.phoneNumber ||
+            !/^[0-9+\-\s()]+$/.test(form.watch("phoneNumber") || "") ||
+            (form.watch("phoneNumber") || "").length < 10
+          }
           className="w-full bg-pink-600 hover:bg-pink-700"
         >
           {isSubmitting ? "Saving..." : "Save Changes"}
