@@ -166,6 +166,18 @@ export const blocks = pgTable("blocks", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Starred Profiles
+export const starredProfiles = pgTable("starred_profiles", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  starredId: text("starred_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(profiles, {
@@ -176,6 +188,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   receivedSwipes: many(swipes, { relationName: "swipedRelation" }),
   matches1: many(matches, { relationName: "user1Relation" }),
   matches2: many(matches, { relationName: "user2Relation" }),
+  starredProfiles: many(starredProfiles, { relationName: "userStarredProfiles" }),
 }));
 
 export const matchesRelations = relations(matches, ({ many }) => ({
