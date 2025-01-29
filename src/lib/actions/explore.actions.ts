@@ -3,7 +3,7 @@
 
 import db from "@/db/drizzle";
 import { profiles, swipes, matches, users } from "@/db/schema";
-import { eq, and, not, isNull, or, sql, inArray } from "drizzle-orm";
+import { eq, and, not, isNull, or, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 
 export async function getSwipableProfiles() {
@@ -11,60 +11,6 @@ export async function getSwipableProfiles() {
   if (!session?.user?.id) return [];
 
   try {
-    // Get current user's profile for preferences
-    const currentUserProfile = await db
-      .select()
-      .from(profiles)
-      .where(eq(profiles.userId, session.user.id))
-      .limit(1);
-
-    if (!currentUserProfile.length) return [];
-
-
-    // Get user's recent likes to understand their preferences
-    const recentLikes = await db
-      .select({
-        swipedId: swipes.swipedId,
-      })
-      .from(swipes)
-      .where(
-        and(
-          eq(swipes.swiperId, session.user.id),
-          eq(swipes.isLike, true)
-        )
-      )
-      .orderBy(swipes.createdAt)
-      .limit(50);
-
-    // Get profiles of recently liked users to analyze patterns
-    const likedProfiles = recentLikes.length > 0 
-      ? await db
-          .select({
-            interests: profiles.interests,
-            course: profiles.course,
-            yearOfStudy: profiles.yearOfStudy,
-          })
-          .from(profiles)
-          .where(
-            inArray(
-              profiles.userId,
-              recentLikes.map(like => like.swipedId)
-            )
-          )
-      : [];
-
-    // Extract common patterns from liked profiles
-    const likedInterests = new Set(
-      likedProfiles.flatMap(p => p.interests as string[])
-    );
-    const likedCourses = new Set(
-      likedProfiles.map(p => p.course)
-    );
-
-    // Get potential matches prioritizing:
-    // 1. Active users (most important factor per Tinder)
-    // 2. Users with similar interests to those previously liked
-    // 3. Users with similar academic background to those previously liked
     const results = await db
       .select({
         id: profiles.id,
@@ -86,13 +32,6 @@ export async function getSwipableProfiles() {
       .from(profiles)
       .leftJoin(users, eq(users.id, profiles.userId))
       .leftJoin(
-        swipes,
-        and(
-          eq(swipes.swiperId, session.user.id),
-          eq(swipes.swipedId, profiles.userId)
-        )
-      )
-      .leftJoin(
         matches,
         and(
           or(
@@ -112,8 +51,6 @@ export async function getSwipableProfiles() {
           // Basic filters
           not(eq(profiles.userId, session.user.id)),
           eq(profiles.isVisible, true),
-          isNull(swipes.id),
-          
           // Required fields
           not(isNull(profiles.firstName)),
           not(isNull(profiles.lastName)),
@@ -125,63 +62,17 @@ export async function getSwipableProfiles() {
           not(isNull(profiles.course)),
           not(isNull(profiles.yearOfStudy)),
           not(isNull(profiles.profilePhoto)),
-          not(isNull(users.phoneNumber)),
-          
-          // Quality filters
-          sql`jsonb_array_length(${profiles.photos}::jsonb) > 0`,
-          sql`length(${profiles.bio}) > 0`,
-          sql`jsonb_array_length(${profiles.interests}::jsonb) > 0`,
-          
-          // Activity filter - only show profiles active in last 7 days
-          sql`${profiles.lastActive} > NOW() - INTERVAL '2 days'`
+          not(isNull(users.phoneNumber))
         )
       )
-      // Order by most recently active first (Tinder's primary factor)
-      .orderBy(
-        sql`
-          CASE
-            -- Super active users (active in last 24 hours)
-            WHEN ${profiles.lastActive} > NOW() - INTERVAL '9 hours' 
-            THEN 1
-            -- Active users (active in last 1 day)
-            WHEN ${profiles.lastActive} > NOW() - INTERVAL '1 day' 
-            THEN 2
-            -- Less active users (active in last week)
-            ELSE 3
-          END,
-          -- Add some randomization within each activity group
-          RANDOM()
-        `
-      )
-      .limit(25);
+      // Order randomly
+      .orderBy(sql`RANDOM()`)
+      .limit(10);
 
-    // Post-process results to prioritize matches based on user preferences
-    const processedResults = results
-      .map(profile => {
-        // Calculate similarity to liked profiles
-        const interestOverlap = likedInterests.size > 0
-          ? (profile.interests as string[]).filter(i => likedInterests.has(i)).length / likedInterests.size
-          : 0;
-        
-        const courseMatch = likedCourses.size > 0
-          ? likedCourses.has(profile.course)
-          : false;
-
-        return {
-          ...profile,
-          isMatch: !!profile.isMatch,
-          // Use these factors for sorting but don't send to client
-          _matchScore: interestOverlap + (courseMatch ? 0.5 : 0)
-        };
-      })
-      // Sort by match score within each activity group
-      .sort((a, b) => b._matchScore - a._matchScore)
-      // Remove internal scoring before sending to client
-      .map(({ _matchScore, ...profile }) => profile)
-      // Limit to 10 final results
-      .slice(0, 10);
-
-    return processedResults;
+    return results.map(profile => ({
+      ...profile,
+      isMatch: !!profile.isMatch
+    }));
   } catch (error) {
     console.error("Error fetching profiles:", error);
     return [];
