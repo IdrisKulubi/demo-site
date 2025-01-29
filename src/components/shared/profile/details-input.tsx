@@ -225,7 +225,7 @@ export function DetailsInput({
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-pink-500" />
-            Phone Number (Required) 📱
+            Phone Number (Optional) 📱
           </Label>
           <Input
             value={values.phoneNumber || ""}
