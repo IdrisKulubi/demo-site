@@ -62,7 +62,6 @@ export async function getProfile() {
     }
 
     // Only create profile if user exists
-    console.log("Creating profile for verified user:", actualUserId);
     const newProfile = await db
       .insert(profiles)
       .values({

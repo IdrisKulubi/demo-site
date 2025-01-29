@@ -7,6 +7,7 @@ import { MusicProvider } from "@/context/music-context";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
 import { Navbar } from "@/components/layout/navbar";
+import { MobileNav } from "@/components/explore/mobile/mobile-nav";
 import { constructMetadata } from "@/lib/metadata";
 
 const geistSans = Geist({
@@ -23,7 +24,6 @@ export default async function RootLayout({
 }>) {
   const session = await auth();
 
- 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} antialiased`}>
@@ -36,10 +36,12 @@ export default async function RootLayout({
           >
             <MusicProvider>
               <div className="flex min-h-screen flex-col">
-                <Navbar />
+                <Navbar className="hidden md:flex" />{" "}
+                {/* Show Navbar on medium and larger screens */}
+                <MobileNav className="flex md:hidden" />{" "}
+                {/* Show MobileNav on small screens */}
                 <main className="flex-1">{children}</main>
               </div>
-              
               <Toaster />
             </MusicProvider>
           </ThemeProvider>

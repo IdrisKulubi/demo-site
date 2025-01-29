@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Profile } from "@/db/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
+import { ProfileDetails } from "@/components/explore/cards/profile-details";
 
 interface MatchesPanelProps {
   profiles: Profile[];
@@ -34,34 +35,41 @@ export function MatchesPanel({ profiles }: MatchesPanelProps) {
       <ScrollArea className="h-[200px] pr-4 -mr-4">
         <div className="space-y-3">
           {matchedProfiles.map((profile) => (
-            <motion.div
+            <ProfileDetails
               key={profile.id}
-              layout
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="group relative bg-white dark:bg-background rounded-2xl p-3 shadow-sm border border-pink-100 dark:border-pink-900 flex items-center gap-3"
-            >
-              <Avatar className="h-12 w-12 border-2 border-pink-500">
-                <AvatarImage src={profile.profilePhoto || ""} />
-                <AvatarFallback className="bg-pink-500 text-white">
-                  {profile.firstName?.[0]}
-                  {profile.lastName?.[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">
-                  {profile.firstName} {profile.lastName}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {profile.course}, Year {profile.yearOfStudy}
-                </p>
-              </div>
-              <WhatsAppButton
-                phoneNumber={profile.phoneNumber || ""}
-                size="sm"
-                className="bg-green-500 rounded-full p-1.5 h-8 w-8"
-              />
-            </motion.div>
+              profile={profile}
+              isMatch={true}
+              trigger={
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="group relative bg-white dark:bg-background rounded-2xl p-3 shadow-sm border border-pink-100 dark:border-pink-900 flex items-center gap-3 cursor-pointer"
+                >
+                  <Avatar className="h-12 w-12 border-2 border-pink-500">
+                    <AvatarImage src={profile.profilePhoto || ""} />
+                    <AvatarFallback className="bg-pink-500 text-white">
+                      {profile.firstName?.[0]}
+                      {profile.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">
+                      {profile.firstName} {profile.lastName}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {profile.course}, Year {profile.yearOfStudy}
+                    </p>
+                  </div>
+
+                  <WhatsAppButton
+                    phoneNumber={profile.phoneNumber || ""}
+                    size="sm"
+                    className="bg-green-500 rounded-full p-1.5 h-8 w-8"
+                  />
+                </motion.div>
+              }
+            />
           ))}
 
           {matchedProfiles.length === 0 && (

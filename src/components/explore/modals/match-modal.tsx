@@ -5,13 +5,13 @@ import { motion } from "framer-motion";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import confetti from "canvas-confetti";
 import { useEffect } from "react";
+import { Profile } from "@/db/schema";
 
 interface MatchModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  matchedProfile: {
-    phoneNumber: string ;
-  };
+  matchedProfile: Profile;
+  children?: React.ReactNode;
 }
 
 export function MatchModal({
@@ -50,7 +50,7 @@ export function MatchModal({
 
           <div className="flex justify-center">
             <WhatsAppButton
-              phoneNumber={matchedProfile.phoneNumber}
+              phoneNumber={matchedProfile.phoneNumber || ""}
               className="bg-pink-600 hover:bg-pink-700 dark:bg-pink-500 dark:hover:bg-pink-600"
             />
           </div>

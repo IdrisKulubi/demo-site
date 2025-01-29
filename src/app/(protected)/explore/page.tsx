@@ -1,6 +1,7 @@
 import {
   getSwipableProfiles,
   getLikedProfiles,
+  getLikedByProfiles,
 } from "@/lib/actions/explore.actions";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -8,6 +9,7 @@ import { SwipeStack } from "@/components/explore/cards/swipe-stack";
 import { NoMoreProfiles } from "@/components/explore/empty-state";
 import { type Profile } from "@/db/schema";
 import { NotifyModal } from "@/components/explore/modals/notify";
+import { ExploreMobile } from "@/components/explore/mobile/explore-mobile";
 
 export default async function ExplorePage() {
   const session = await auth();
@@ -15,12 +17,15 @@ export default async function ExplorePage() {
 
   const profiles = await getSwipableProfiles();
   const { profiles: likedProfiles } = await getLikedProfiles();
+  const { profiles: likedByProfiles } = await getLikedByProfiles();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white dark:from-pink-950/30 dark:to-background">
       <NotifyModal />
-      <div className="container max-w-4xl mx-auto px-4 pt-24 pb-12">
-        <div className="relative mb-12">
+
+      {/* Desktop Header - Hidden on Mobile */}
+      <div className="hidden md:block container mx-auto px-4 pt-24 pb-2">
+        <div className="relative mb-4 max-w-4xl mx-auto">
           <div
             aria-hidden="true"
             className="absolute -top-6 right-1/4 text-pink-500/10 text-7xl select-none animate-float"
@@ -44,10 +49,22 @@ export default async function ExplorePage() {
             </p>
           </div>
         </div>
+      </div>
 
-        <div className="w-full flex justify-center">
+      {/* Conditional Rendering based on screen size */}
+      <div className="md:hidden">
+        <ExploreMobile
+          initialProfiles={profiles as Profile[]}
+          likedProfiles={likedProfiles}
+          likedByProfiles={likedByProfiles}
+        />
+      </div>
+      <div className="hidden md:block">
+        <div className="container mx-auto px-4 flex justify-center">
           {profiles && profiles.length > 0 ? (
-            <SwipeStack initialProfiles={profiles as Profile[]} />
+            <div className="w-full max-w-[640px] -ml-32">
+              <SwipeStack initialProfiles={profiles as Profile[]} />
+            </div>
           ) : (
             <NoMoreProfiles initialLikedProfiles={likedProfiles || []} />
           )}
