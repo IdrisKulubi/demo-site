@@ -9,6 +9,7 @@ export type CreateUserInput = {
   name: string;
   email: string;
   image?: string | null;
+  phoneNumber: string;
 };
 
 export async function createUser(userData: CreateUserInput) {
@@ -31,6 +32,7 @@ export async function createUser(userData: CreateUserInput) {
         email: userData.email,
         image: userData.image ?? null,
         emailVerified: new Date(),
+        phoneNumber: userData.phoneNumber,
       })
       .returning();
 
