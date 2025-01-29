@@ -73,36 +73,28 @@ export function LandingContent() {
           transition={{ delay: 0.4 }}
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
-          {session?.user ? (
-            <Link href="/explore">
-              <Button
-                size="lg"
-                className="bg-pink-600 hover:bg-pink-700 dark:bg-pink-500 dark:hover:bg-pink-600 w-full sm:w-auto"
-              >
-                Explore Profiles <Sparkles className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          ) : (
-            <Link href="/login">
-              <Button
-                size="lg"
-                className="bg-pink-600 hover:bg-pink-700 dark:bg-pink-500 dark:hover:bg-pink-600 w-full sm:w-auto"
-              >
-                Get Started <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          )}
-          {!session?.user && (
-            <Link href="/how-it-works">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-pink-200 hover:border-pink-300 dark:border-pink-800 dark:hover:border-pink-700 w-full sm:w-auto"
-              >
-                How it Works
-              </Button>
-            </Link>
-          )}
+          <Link href={session?.user ? "/explore" : "/login"}>
+            <Button
+              size="lg"
+              className="bg-pink-600 hover:bg-pink-700 dark:bg-pink-500 dark:hover:bg-pink-600 w-full sm:w-auto"
+            >
+              {session?.user ? "Explore Profiles" : "Get Started"}
+              {session?.user ? (
+                <Sparkles className="ml-2 h-4 w-4" />
+              ) : (
+                <ArrowRight className="ml-2 h-4 w-4" />
+              )}
+            </Button>
+          </Link>
+          <Link href="/how-it-works">
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-pink-200 hover:border-pink-300 dark:border-pink-800 dark:hover:border-pink-700 w-full sm:w-auto"
+            >
+              How it Works
+            </Button>
+          </Link>
         </motion.div>
 
         <motion.div
@@ -128,10 +120,6 @@ export function LandingContent() {
           ))}
         </motion.div>
       </div>
-
-     
-
-     
     </div>
   );
 }
