@@ -5,6 +5,7 @@ import db from "@/db/drizzle";
 import { profiles, swipes, matches, users } from "@/db/schema";
 import { eq, and, not, isNull, or, sql } from "drizzle-orm";
 import { auth } from "@/auth";
+import { revalidatePath } from "next/cache";
 
 export async function getSwipableProfiles() {
   const session = await auth();
@@ -148,23 +149,36 @@ export async function undoLastSwipe(swipedId: string) {
   }
 
   try {
-    const lastSwipe = await db
-      .select()
-      .from(swipes)
+    // Delete the swipe directly
+    await db
+      .delete(swipes)
       .where(
-        and(eq(swipes.swiperId, session.user.id), eq(swipes.swipedId, swipedId))
-      )
-      .orderBy(swipes.createdAt)
-      .limit(1)
-      .then(async (rows) => {
-        if (rows.length === 0) {
-          return [];
-        }
-        return db.delete(swipes).where(eq(swipes.id, rows[0].id)).returning();
-      });
+        and(
+          eq(swipes.swiperId, session.user.id),
+          eq(swipes.swipedId, swipedId),
+          eq(swipes.isLike, true)
+        )
+      );
 
-    return { success: true, lastSwipe };
+    // Delete any potential match
+    await db
+      .delete(matches)
+      .where(
+        or(
+          and(
+            eq(matches.user1Id, session.user.id),
+            eq(matches.user2Id, swipedId)
+          ),
+          and(
+            eq(matches.user2Id, session.user.id),
+            eq(matches.user1Id, swipedId)
+          )
+        )
+      );
+
+    return { success: true };
   } catch (error) {
+    console.error("Error in undoLastSwipe:", error);
     return { error: "Failed to undo last swipe" };
   }
 }
