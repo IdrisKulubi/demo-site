@@ -70,7 +70,7 @@ export async function getSwipableProfiles() {
         )
       )
       .orderBy(sql`RANDOM()`)
-      .limit(30);
+      .limit(150);
 
     return results.map(profile => ({
       ...profile,
