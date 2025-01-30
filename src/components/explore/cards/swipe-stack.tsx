@@ -11,6 +11,7 @@ import {
   getLikedByProfiles,
 } from "@/lib/actions/explore.actions";
 import { useToast } from "@/hooks/use-toast";
+import { useSwipeCounter } from "@/context/swipe-counter-context";
 
 import { MatchModal } from "../modals/match-modal";
 import { SwipeControls } from "../controls/swipe-controls";
@@ -50,6 +51,7 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
   >(null);
   const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
   const { toast } = useToast();
+  const { incrementSwipeCount } = useSwipeCounter();
 
   // Load both liked and liked-by profiles on mount
   useEffect(() => {
@@ -81,35 +83,39 @@ export function SwipeStack({ initialProfiles }: SwipeStackProps) {
 
   const handleSwipe = async (direction: "left" | "right", profile: Profile) => {
     setCurrentSwipeDirection(direction);
-    const swipeType = direction === "right" ? "like" : "pass";
+    const action = direction === "right" ? "like" : "pass";
 
-    // First make the API call
-    const result = await recordSwipe(profile.userId, swipeType);
+    try {
+      incrementSwipeCount(); // Increment the swipe counter
+      const result = await recordSwipe(profile.userId, action);
 
-    if (!result.success) {
-      toast({
-        variant: "destructive",
-        description: result.error || "Couldn't record swipe 😅",
-      });
-      return;
-    }
-
-    setTimeout(() => {
-      if (direction === "right") {
-        const updatedProfile = {
-          ...profile,
-          isMatch: result.isMatch ?? null,
-        } satisfies Profile;
-        setLikedProfiles((prev) => [...prev, updatedProfile]);
-        if (result.isMatch) {
-          setMatchedProfile(updatedProfile);
-          setShowMatch(true);
-        }
+      if (!result.success) {
+        toast({
+          variant: "destructive",
+          description: result.error || "Couldn't record swipe 😅",
+        });
+        return;
       }
-      setSwipedProfiles((prev) => [...prev, profile]);
-      setProfiles((prev) => prev.slice(0, -1));
-      setCurrentSwipeDirection(null);
-    }, 500);
+
+      setTimeout(() => {
+        if (direction === "right") {
+          const updatedProfile = {
+            ...profile,
+            isMatch: result.isMatch ?? null,
+          } satisfies Profile;
+          setLikedProfiles((prev) => [...prev, updatedProfile]);
+          if (result.isMatch) {
+            setMatchedProfile(updatedProfile);
+            setShowMatch(true);
+          }
+        }
+        setSwipedProfiles((prev) => [...prev, profile]);
+        setProfiles((prev) => prev.slice(0, -1));
+        setCurrentSwipeDirection(null);
+      }, 500);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleUndo = async () => {

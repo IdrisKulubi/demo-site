@@ -298,3 +298,18 @@ export async function getLikedByProfiles() {
     return { profiles: [], error: "Failed to fetch profiles" };
   }
 }
+
+export async function getTotalSwipes() {
+  try {
+    const result = await db
+      .select({
+        count: sql<number>`count(*)`,
+      })
+      .from(swipes);
+
+    return { success: true, count: result[0].count };
+  } catch (error) {
+    console.error("Error getting total swipes:", error);
+    return { success: false, count: 0 };
+  }
+}
