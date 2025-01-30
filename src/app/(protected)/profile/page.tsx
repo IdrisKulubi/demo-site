@@ -11,7 +11,8 @@ export default async function ProfilePage() {
 
   const profile = await getProfile();
 
-  if (!profile?.profileCompleted) {
+  // Check if profile exists and has required fields
+  if (!profile || !profile.profileCompleted|| !profile.email) {
     redirect("/profile/setup");
   }
 

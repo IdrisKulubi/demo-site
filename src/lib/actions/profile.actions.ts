@@ -35,51 +35,76 @@ export async function getProfile() {
       return null;
     }
 
-    // Find user by email
+    // Find user by email with all user fields
     const user = await db
       .select({
         id: users.id,
         email: users.email,
+        name: users.name,
         phoneNumber: users.phoneNumber,
-        photos: profiles.photos,
+        emailVerified: users.emailVerified,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastActive: users.lastActive,
+        isOnline: users.isOnline,
+        photos: users.image
       })
       .from(users)
-      .leftJoin(profiles, eq(users.id, profiles.userId))
       .where(eq(users.email, session.user.email))
       .limit(1);
 
     if (!user || user.length === 0) {
       console.error("User not found by email:", session.user.email);
-      throw new Error("User not found"); // Prevent profile creation for non-existent user
+      throw new Error("User not found");
     }
 
     const actualUserId = user[0].id;
 
-    // Try to get profile photo from cache first
-    const cachedProfilePhoto = await getCachedProfilePicture(user[0].id);
-    if (cachedProfilePhoto) {
-      return {
-        ...user[0],
-        profilePhoto: cachedProfilePhoto
-      };
-    }
-
-    // Get profile data
+    // Get complete profile data
     const profile = await db
       .select()
       .from(profiles)
       .where(eq(profiles.userId, actualUserId))
       .limit(1);
 
-    if (!profile || profile.length === 0) return null;
+    // Try to get profile photo from cache first
+    const cachedProfilePhoto = await getCachedProfilePicture(actualUserId);
+    
+    // If no profile exists yet, return basic user info
+    if (!profile || profile.length === 0) {
+      return {
+        ...user[0],
+        profilePhoto: cachedProfilePhoto || user[0].photos,
+        profileCompleted: false
+      };
+    }
 
-    return {
+    // Combine user and profile data
+    const combinedProfile = {
+      ...user[0],
       ...profile[0],
-      phoneNumber: user[0].phoneNumber
+      profilePhoto: cachedProfilePhoto || profile[0].profilePhoto || user[0].photos,
+      // Check if all required fields are completed
+      profileCompleted: Boolean(
+        profile[0].firstName &&
+        profile[0].lastName &&
+        profile[0].bio &&
+        profile[0].age &&
+        profile[0].gender &&
+        profile[0].lookingFor &&
+        profile[0].course &&
+        profile[0].yearOfStudy &&
+        profile[0].photos &&
+        profile[0].isVisible &&
+        profile[0].lastActive &&
+        profile[0].isComplete
+      )
     };
+
+    return combinedProfile;
   } catch (error) {
     console.error("Error in getProfile:", error);
-    throw error; // Rethrow to handle in calling functions
+    throw error;
   }
 }
 
@@ -297,20 +322,21 @@ export async function removePhoto(photoUrl: string) {
     const profile = await getProfile();
     if (!profile) {
       return {
+        
         success: false,
         error: "Profile not found",
       };
     }
 
     // Ensure at least one photo remains
-    if (profile.photos && profile.photos.length <= 1) {
+    if (!Array.isArray(profile.photos) || profile.photos.length <= 1) {
       return {
         success: false,
         error: "You must keep at least one photo 📸",
       };
     }
 
-    const updatedPhotos = profile.photos?.filter((p) => p !== photoUrl);
+    const updatedPhotos = profile.photos.filter((p) => p !== photoUrl);
     await db
       .update(profiles)
       .set({ photos: updatedPhotos })
