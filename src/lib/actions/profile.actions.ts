@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { profileSchema } from "../validators";
 import { deleteUploadThingFile } from "./upload.actions";
+import { cacheProfilePicture, getCachedProfilePicture } from "../redis";
 
 export type ProfileFormData = {
   photos: string[];
@@ -39,7 +40,8 @@ export async function getProfile() {
       .select({
         id: users.id,
         email: users.email,
-        phoneNumber: users.phoneNumber
+        phoneNumber: users.phoneNumber,
+        photos:profiles.photos,
       })
       .from(users)
       .where(eq(users.email, session.user.email))
@@ -51,6 +53,15 @@ export async function getProfile() {
     }
 
     const actualUserId = user[0].id;
+
+    // Try to get profile photo from cache first
+    const cachedProfilePhoto = await getCachedProfilePicture(user[0].id);
+    if (cachedProfilePhoto) {
+      return {
+        ...user[0],
+        profilePhoto: cachedProfilePhoto
+      };
+    }
 
     // Get profile data
     const profile = await db
@@ -257,6 +268,9 @@ export async function updateProfilePhoto(photoUrl: string) {
       .update(profiles)
       .set({ profilePhoto: photoUrl })
       .where(eq(profiles.userId, session.user.id));
+
+    // Cache the profile photo URL
+    await cacheProfilePicture(session.user.id, photoUrl);
 
     revalidatePath("/profile");
     return { success: true };

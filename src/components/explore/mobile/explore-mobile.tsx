@@ -95,10 +95,15 @@ export function ExploreMobile({
       setLikedProfiles((prev) =>
         prev.filter((p) => p.userId !== lastSwiped.userId)
       );
+      toast({
+        title: "Undo successful",
+        description: "Your last swipe has been undone",
+      });
     } else {
       toast({
+        title: "Error",
+        description: "Failed to undo swipe. Please try again.",
         variant: "destructive",
-        description: result.error || "Couldn't undo swipe 😅",
       });
     }
   };
@@ -244,6 +249,16 @@ export function ExploreMobile({
               setLikedProfiles((prev) =>
                 prev.filter((p) => p.userId !== profileId)
               );
+              toast({
+                title: "Profile unliked",
+                description: "The profile has been removed from your likes",
+              });
+            } else {
+              toast({
+                title: "Error",
+                description: "Failed to unlike profile. Please try again.",
+                variant: "destructive",
+              });
             }
           }}
         />
@@ -260,6 +275,16 @@ export function ExploreMobile({
             setLikedProfiles((prev) =>
               prev.filter((p) => p.userId !== profileId)
             );
+            toast({
+              title: "Profile unliked",
+              description: "The profile has been removed from your likes",
+            });
+          } else {
+            toast({
+              title: "Error",
+              description: "Failed to unlike profile. Please try again.",
+              variant: "destructive",
+            });
           }
         }}
       />
