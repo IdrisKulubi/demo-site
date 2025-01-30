@@ -14,7 +14,7 @@ export const GenderUpdateNotification = () => {
 
   const handleClose = () => {
     setIsVisible(false);
-    console.log("Notification ghosted 👻"); // Easter egg for devs
+    console.log("Notification ghosted 👻"); 
   };
 
   return (
@@ -65,7 +65,7 @@ export const GenderUpdateNotification = () => {
                   <p className="text-[10px] sm:text-xs flex gap-2 items-center">
                     <span className="text-base sm:text-lg">📢</span>
                     &quot;B-but why?&quot; Bc y&apos;all were matching like 
-                    Netflix shows & WiFi passwords 🤦♀️ Time to glow up your DMs!
+                    Netflix shows & WiFi passwords 🤦♀️ Time to glow up your DMs, Untill we meet again ,Byeeeee👋
                   </p>
                 </div>
 
