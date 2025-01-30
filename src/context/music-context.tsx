@@ -41,6 +41,19 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     }
   }, [volume, audio]);
 
+  // Auto-play music when component mounts
+  useEffect(() => {
+    if (audio) {
+      audio.play()
+        .then(() => setIsPlaying(true))
+        .catch((error) => {
+          console.error('Failed to auto-play music:', error);
+          // Most browsers require user interaction before allowing auto-play
+          setIsPlaying(false);
+        });
+    }
+  }, [audio]);
+
   const toggleMusic = () => {
     if (audio) {
       if (!isPlaying) {
