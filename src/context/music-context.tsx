@@ -49,6 +49,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
           await audio.play();
           setIsPlaying(true);
         } catch (error) {
+          console.error('Failed to play audio:', error);
           // Silent fail - will require user interaction
           console.log('Music will play after user interaction');
         }
