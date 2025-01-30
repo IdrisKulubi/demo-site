@@ -10,10 +10,17 @@ import { NoMoreProfiles } from "@/components/explore/empty-state";
 import { type Profile } from "@/db/schema";
 import { NotifyModal } from "@/components/explore/modals/notify";
 import { ExploreMobile } from "@/components/explore/mobile/explore-mobile";
+import { isAllowedEmail } from "@/lib/utils/email-validator";
 
 export default async function ExplorePage() {
   const session = await auth();
   if (!session?.user) redirect("/");
+
+  // Check if user has Strathmore email or existing profile
+  const isAllowed = await isAllowedEmail(session.user.email || "", session.user.id);
+  if (!isAllowed) {
+    redirect("/no-access");
+  }
 
   const profiles = await getSwipableProfiles();
   const { profiles: likedProfiles } = await getLikedProfiles();
