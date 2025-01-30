@@ -14,6 +14,37 @@ export async function getSwipableProfiles() {
   }
 
   try {
+    // First, get the current user's profile to know their gender
+    const currentUserProfile = await db
+      .select({
+        gender: profiles.gender,
+      })
+      .from(profiles)
+      .where(eq(profiles.userId, session.user.id))
+      .limit(1);
+
+    if (!currentUserProfile.length || !currentUserProfile[0].gender) {
+      return []; // Return empty if user hasn't set their gender
+    }
+
+    const userGender = currentUserProfile[0].gender;
+    // Determine gender filter conditions based on user's gender
+    const whereConditions = [
+      not(eq(profiles.userId, session.user.id)),
+      eq(profiles.isVisible, true),
+      eq(profiles.profileCompleted, true),
+      not(isNull(profiles.firstName)),
+      not(isNull(profiles.lastName))
+    ];
+
+    // Only apply gender filter for binary genders (male/female)
+    if (userGender === 'male') {
+      whereConditions.push(eq(profiles.gender, 'female'));
+    } else if (userGender === 'female') {
+      whereConditions.push(eq(profiles.gender, 'male'));
+    }
+    // For non-binary and other genders, show all profiles (no gender filter)
+
     const totalProfiles = await db
       .select({ count: sql<number>`count(*)` })
       .from(profiles);
@@ -60,15 +91,7 @@ export async function getSwipableProfiles() {
           )
         )
       )
-      .where(
-        and(
-          not(eq(profiles.userId, session.user.id)),
-          eq(profiles.isVisible, true),
-          eq(profiles.profileCompleted, true),
-          not(isNull(profiles.firstName)),
-          not(isNull(profiles.lastName))
-        )
-      )
+      .where(and(...whereConditions))
       .orderBy(sql`RANDOM()`)
       .limit(150);
 
