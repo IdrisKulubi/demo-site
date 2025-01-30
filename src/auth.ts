@@ -9,6 +9,7 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
+      email: string;
       role?: string;
       profileCompleted?: boolean;
     } & DefaultSession["user"];
@@ -56,6 +57,7 @@ export const {
     async session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
+        session.user.email = token.email as string;
         try {
           const profile = await db
             .select()
