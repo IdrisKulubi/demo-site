@@ -68,7 +68,27 @@ export const GenderUpdateNotification = () => {
                     Netflix shows & WiFi passwords 🤦♀️ Time to glow up your DMs, Untill we meet again ,Byeeeee👋
                   </p>
                 </div>
-
+{/* Girl Power Section */}
+<div className="mt-4 p-3 bg-pink-600/20 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <span className="text-xl">👯♀️</span>
+                    <div>
+                      <p className="text-sm font-medium">
+                        PSA: We need more queens in the squad 👑
+                      </p>
+                      <p className="text-xs opacity-90 mt-1">
+                        The girlies-to-boys ratio&apos;s looking sus rn 😬 
+                        Share the app like it&apos;s gossip to help us slay 
+                        the gender balance Tag your besties, slide in 
+                        DMs, do whatever it takes to recruit your girlies 💅
+                      </p>
+                      <div className="mt-2 text-xs opacity-75">
+                        #GirlsSupportGirls #SquadGoals
+                      </div>
+                    </div>
+                    <span className="text-xl animate-bounce">🚨</span>
+                  </div>
+                </div>
                 <div className="text-[10px] sm:text-xs opacity-75 flex flex-wrap gap-x-2 gap-y-1">
                   <span>#NotADrill</span>
                   <span className="hidden sm:inline">•</span>
