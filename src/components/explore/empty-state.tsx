@@ -101,7 +101,7 @@ export function NoMoreProfiles({ initialLikedProfiles }: NoMoreProfilesProps) {
                   {/* Fun header */}
                   <div className="text-center space-y-2">
                     <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-                      Bestie, you&apos;re all caught up
+                      Bestie, you&apos;re all caught up,Reload again
                     </h2>
                     <span>🎉</span>
                     <p className="text-lg text-muted-foreground">

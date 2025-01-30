@@ -101,7 +101,7 @@ export function EmptyMobileView({
         {/* Message */}
         <div className="text-center space-y-2 px-6">
           <h2 className="text-xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-            All Caught Up 🎉
+            All Caught Up 🎉,Reload to view again
           </h2>
           <p className="text-sm text-muted-foreground">
             No more profiles to show right now... Share StrathSpace to find more

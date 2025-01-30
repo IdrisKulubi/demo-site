@@ -49,7 +49,7 @@ export function LoginCard() {
               StrathSpace
             </h1>
             <p className="text-lg text-muted-foreground">
-              Find your perfect match at Strathmore 💖
+              Find your perfect match at Strathspace 💖
             </p>
           </div>
 

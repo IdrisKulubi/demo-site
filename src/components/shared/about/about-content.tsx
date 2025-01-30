@@ -21,7 +21,7 @@ export function AboutContent() {
           </motion.div>
           <h1 className="text-4xl font-bold">Not Your Average  App 💝</h1>
           <p className="text-xl text-gray-600 dark:text-gray-400">
-            We&apos;re bringing the butterflies back to Strathmore this
+            We&apos;re bringing the butterflies back to strathspace this
             Valentine&apos;s 🦋
           </p>
         </div>
@@ -56,7 +56,7 @@ export function AboutContent() {
             Ready to Find Your Valentine? 💘
           </h2>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Join hundreds of Strathmore students already making meaningful
+            Join hundreds of Strathspace students  already making meaningful
             connections. Whether you&apos;re looking for your soulmate or just want
             to meet new people, StrathSpace is your go-to spot this Valentine&apos;s!
             🌟
@@ -71,7 +71,7 @@ const aboutSections = [
   {
     title: "For Students, By Students",
     description:
-      "Created exclusively for Strathmore's community. We get it - finding your perfect match on campus can be tough. That's why we've made it fun, safe, and totally stress-free! 🎓",
+      "Created exclusively for students community. We get it - finding your perfect match on campus can be tough. That's why we've made it fun, safe, and totally stress-free! 🎓",
     icon: Users,
   },
   {

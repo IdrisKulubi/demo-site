@@ -17,7 +17,7 @@ interface ShareAppModalProps {
 
 const SHARE_TEXT = `✨ Friend You NEED to check out StrathSpace 🌸
 
-It's giving main character energy fr fr! Find your perfect match at Strathmore 💖
+It's giving main character energy fr fr! Find your perfect match at Strathspace 💖
 
 Join the vibe: strathspace.com
 

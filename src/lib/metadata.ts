@@ -11,7 +11,7 @@ const twitterSite = TWITTER_SITE
   ? ensureStartsWith(TWITTER_SITE, "https://")
   : undefined;
 export function constructMetadata({
-  title = "Strathspace - Find Your Perfect Match at Strathmore",
+  title = "Strathspace - Find Your Perfect Match at Strathspace",
   description = "Connect with fellow students and find meaningful relationships",
   image = "https://res.cloudinary.com/db0i0umxn/image/upload/v1738012417/Screenshot_2025-01-28_001115_kbxwsw.png",
   icons = "/favicon.ico",
