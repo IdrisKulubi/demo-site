@@ -1,15 +1,19 @@
-'use server'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use server";
 
-import { auth } from "@/auth";
-import  db  from "@/db/drizzle";
+import db from "@/db/drizzle";
 import { profiles, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { profileSchema } from "../validators";
+import { auth } from "@/auth";
 import { deleteUploadThingFile } from "./upload.actions";
+import { z } from "zod";
+import { profileSchema } from "../validators";
 import { cacheProfilePicture, getCachedProfilePicture } from "../redis";
 
-export type ProfileFormData = {
+export type ProfileFormData = z.infer<typeof profileSchema> & {
+  firstName: string;
+  lastName: string;
   photos: string[];
   bio: string;
   interests: string[];
@@ -21,10 +25,8 @@ export type ProfileFormData = {
   snapchat?: string;
   gender: "male" | "female" | "non-binary" | "other";
   age: number;
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
   profilePhoto?: string;
+  phoneNumber: string;
 };
 
 export async function getProfile() {
@@ -40,11 +42,9 @@ export async function getProfile() {
       .select({
         id: users.id,
         email: users.email,
-        phoneNumber: users.phoneNumber,
-        photos: profiles.photos,
+        phoneNumber: users.phoneNumber
       })
       .from(users)
-      .leftJoin(profiles, eq(users.id, profiles.userId))
       .where(eq(users.email, session.user.email))
       .limit(1);
 
@@ -55,15 +55,6 @@ export async function getProfile() {
 
     const actualUserId = user[0].id;
 
-    // Try to get profile photo from cache first
-    const cachedProfilePhoto = await getCachedProfilePicture(user[0].id);
-    if (cachedProfilePhoto) {
-      return {
-        ...user[0],
-        profilePhoto: cachedProfilePhoto
-      };
-    }
-
     // Get profile data
     const profile = await db
       .select()
@@ -73,9 +64,13 @@ export async function getProfile() {
 
     if (!profile || profile.length === 0) return null;
 
+    // Try to get profile photo from cache first
+    const cachedProfilePhoto = await getCachedProfilePicture(actualUserId);
+    
     return {
       ...profile[0],
-      phoneNumber: user[0].phoneNumber
+      phoneNumber: user[0].phoneNumber,
+      profilePhoto: cachedProfilePhoto || profile[0].profilePhoto
     };
   } catch (error) {
     console.error("Error in getProfile:", error);
@@ -156,6 +151,11 @@ export async function updateProfile(data: ProfileFormData) {
       };
     }
 
+    // Update the profile photo in cache if it changed
+    if (processedData.profilePhoto) {
+      await cacheProfilePicture(actualUserId, processedData.profilePhoto);
+    }
+
     revalidatePath("/profile");
     return {
       success: true,
@@ -177,80 +177,44 @@ export async function submitProfile(data: ProfileFormData) {
       return { success: false, error: "Not authenticated" };
     }
 
-    // Validate data against schema
-    const validationResult = profileSchema.safeParse(data);
-    if (!validationResult.success) {
-      console.error("Validation errors:", validationResult.error);
-      return { 
-        success: false, 
-        error: "Invalid profile data",
-        validationErrors: validationResult.error.errors 
-      };
-    }
-
-    // First check if profile exists
-    const existingProfile = await db
-      .select()
-      .from(profiles)
-      .where(eq(profiles.userId, session.user.id))
-      .limit(1);
-
-    const profileData = {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      phoneNumber: data.phoneNumber,
-      photos: data.photos,
-      bio: data.bio,
-      interests: data.interests,
-      lookingFor: data.lookingFor,
-      course: data.course,
-      yearOfStudy: data.yearOfStudy,
-      instagram: data.instagram || "",
-      spotify: data.spotify || "",
-      snapchat: data.snapchat || "",
-      gender: data.gender,
-      age: data.age,
-      profilePhoto: data.profilePhoto || data.photos[0],
-      updatedAt: new Date(),
-      profileCompleted: true,
-      isComplete: true,
-    };
-
-    // Create or update profile
-    if (!existingProfile || existingProfile.length === 0) {
-      // Create new profile
-      await db.insert(profiles).values({
-        ...profileData,
-        userId: session.user.id,
-        isVisible: true,
-        lastActive: new Date(),
-      });
-    } else {
-      // Update existing profile
-      await db
-        .update(profiles)
-        .set(profileData)
-        .where(eq(profiles.userId, session.user.id));
-    }
-
-    // Update user's phone number and profile photo
     await db
-      .update(users)
+      .update(profiles)
       .set({
+        firstName: data.firstName,
+        lastName: data.lastName,
         phoneNumber: data.phoneNumber,
-        profilePhoto: profileData.profilePhoto,
+        photos: data.photos,
+        bio: data.bio,
+        interests: data.interests,
+        lookingFor: data.lookingFor,
+        course: data.course,
+        yearOfStudy: data.yearOfStudy,
+        instagram: data.instagram || "",
+        spotify: data.spotify || "",
+        snapchat: data.snapchat || "",
+        gender: data.gender,
+        age: data.age,
+        profilePhoto: data.profilePhoto,
+        updatedAt: new Date(),
+        profileCompleted: true,
       })
-      .where(eq(users.id, session.user.id));
+      .where(eq(profiles.userId, session.user.id));
+
+    // Cache the profile photo if provided
+    if (data.profilePhoto) {
+      await cacheProfilePicture(session.user.id, data.profilePhoto);
+    }
 
     revalidatePath("/explore");
-    revalidatePath("/profile");
+    revalidatePath("/explore");
 
     return { success: true };
   } catch (error) {
     console.error("Error updating profile:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update profile",
+      error: "Failed to update profile. Please try again 😢",
+      validationErrors: error instanceof Error ? [error] : [],
     };
   }
 }
@@ -270,7 +234,7 @@ export async function updateProfilePhoto(photoUrl: string) {
       .set({ profilePhoto: photoUrl })
       .where(eq(profiles.userId, session.user.id));
 
-    // Cache the profile photo URL
+    // Update the cache with the new photo URL
     await cacheProfilePicture(session.user.id, photoUrl);
 
     revalidatePath("/profile");
