@@ -11,6 +11,7 @@ import { constructMetadata } from "@/lib/metadata";
 import { Analytics } from "@vercel/analytics/react";
 import { SwipeCounterProvider } from "@/context/swipe-counter-context";
 import { SwipeCounter } from "@/components/shared/swipe-counter";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
