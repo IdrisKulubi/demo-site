@@ -33,6 +33,7 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+
             <MusicProvider>
               <div className="flex min-h-screen flex-col">
                 <Navbar />

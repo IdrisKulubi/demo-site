@@ -11,6 +11,7 @@ import { type Profile } from "@/db/schema";
 import { NotifyModal } from "@/components/explore/modals/notify";
 import { ExploreMobile } from "@/components/explore/mobile/explore-mobile";
 import { isAllowedEmail } from "@/lib/utils/email-validator";
+import { GenderUpdateNotification } from "@/components/notifications/GenderUpdateNotification";
 
 export default async function ExplorePage() {
   const session = await auth();
@@ -28,6 +29,7 @@ export default async function ExplorePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white dark:from-pink-950/30 dark:to-background">
+      <GenderUpdateNotification />
       <NotifyModal />
 
       {/* Desktop Header - Hidden on Mobile */}

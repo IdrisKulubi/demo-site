@@ -5,10 +5,13 @@ import { FloatingHearts } from "@/components/ui/floating-hearts";
 import { Scene3DWrapper } from "@/components/shared/3d/scene-wrapper";
 import { AnimatedSection } from "@/components/shared/sections/animated-section";
 import { Footer } from "@/components/shared/layout/footer";
+import { GenderUpdateNotification } from "@/components/notifications/GenderUpdateNotification";
 
 export default function Home() {
   return (
     <main className="relative min-h-screen bg-gradient-to-b from-pink-50 to-white dark:from-pink-950 dark:to-background overflow-x-hidden">
+            <GenderUpdateNotification />
+
       <Scene3DWrapper />
       <FloatingHearts />
       {/* Content sections */}
