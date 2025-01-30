@@ -27,6 +27,17 @@ export default function ProfileSetup() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { data: session } = useSession();
 
+  useEffect(() => {
+    // Check if user has a Strathmore email
+    const email = session?.user?.email;
+    const existingProfile = session?.user?.profileCompleted;
+    
+    // Only check new users (those without completed profiles)
+    if (!existingProfile && email && !email.endsWith("@strathmore.edu")) {
+      router.replace("/no-access");
+    }
+  }, [session, router]);
+
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     mode: "onChange",
