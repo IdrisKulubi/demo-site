@@ -39,7 +39,14 @@ export function NoMoreProfiles({ initialLikedProfiles }: NoMoreProfilesProps) {
     if (result.success) {
       setLikedProfiles((prev) => prev.filter((p) => p.userId !== profileId));
       toast({
-        description: "Removed from your crushes 💔",
+        title: "Profile unliked",
+        description: "The profile has been removed from your likes",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to unlike profile. Please try again.",
+        variant: "destructive",
       });
     }
   };

@@ -20,7 +20,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 
 interface ViewMoreModalProps {
-  profile: Profile;
+  profile?: Profile | null;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -31,6 +31,10 @@ export function ViewMoreModal({
   onClose,
 }: ViewMoreModalProps) {
   const isMobile = useMediaQuery("(max-width: 768px)");
+
+  if (!profile) {
+    return null;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -49,25 +53,31 @@ export function ViewMoreModal({
               isMobile ? "aspect-[4/3]" : "aspect-[16/9]"
             )}
           >
-            <Swiper
-              modules={[Navigation, Pagination, EffectFade]}
-              effect="fade"
-              navigation
-              pagination={{ clickable: true }}
-              className="h-full w-full"
-            >
-              {profile.photos?.map((photo, index) => (
-                <SwiperSlide key={index}>
-                  <Image
-                    src={photo}
-                    alt={`${profile.firstName}'s photo ${index + 1}`}
-                    className="h-full w-full object-cover"
-                    width={600}
-                    height={400}
-                  />
-                </SwiperSlide>
-              ))}
-            </Swiper>
+            {profile.photos && profile.photos.length > 0 ? (
+              <Swiper
+                modules={[Navigation, Pagination, EffectFade]}
+                effect="fade"
+                navigation
+                pagination={{ clickable: true }}
+                className="h-full w-full"
+              >
+                {profile.photos.map((photo, index) => (
+                  <SwiperSlide key={`${profile.userId}-${photo}-${index}`}>
+                    <Image
+                      src={photo}
+                      alt={`${profile.firstName}'s photo ${index + 1}`}
+                      className="h-full w-full object-cover"
+                      width={600}
+                      height={400}
+                    />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            ) : (
+              <div className="h-full w-full flex items-center justify-center bg-muted">
+                <p className="text-muted-foreground">No photos available</p>
+              </div>
+            )}
           </div>
 
           {/* Profile Info */}
