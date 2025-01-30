@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "next-auth/react";
 import { User, LogOut } from "lucide-react";
+import { FeedbackModal } from "@/components/shared/feedback-modal";
 
 interface MobileNavProps {
   className?: string;
@@ -19,7 +20,6 @@ interface MobileNavProps {
 
 export function MobileNav({ className = '' }: MobileNavProps) {
   const { data: session } = useSession();
-  const user = session?.user;
 
   return (
     <div className={`fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-background/80 backdrop-blur-lg border-b border-pink-100 dark:border-pink-900 ${className}`}>
@@ -51,9 +51,9 @@ export function MobileNav({ className = '' }: MobileNavProps) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.image || ""} />
+                  <AvatarImage src={session?.user?.image || ""} />
                   <AvatarFallback className="bg-gradient-to-br from-pink-400 to-pink-600 text-white">
-                    {user?.name?.[0]}
+                    {session?.user?.name?.[0]}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -80,6 +80,9 @@ export function MobileNav({ className = '' }: MobileNavProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <FeedbackModal />
+          </div>
         </div>
       </div>
     </div>

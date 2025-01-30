@@ -130,6 +130,13 @@ export const matches = pgTable("matches", {
   user2Typing: boolean("user2_typing").default(false),
 });
 
+export const feedback = pgTable("feedback", {
+  id: text("id").primaryKey().notNull(),
+  message: text("message").notNull(),
+  status: text("status").notNull().default("new"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Messages
 export const messages = pgTable("messages", {
   id: uuid("id").defaultRandom().primaryKey(),
