@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { signOut } from "next-auth/react";
 import { UserCircle, LogOut, Settings, User, Sparkles } from "lucide-react";
+import { FeedbackModal } from "@/components/shared/feedback-modal";
 
 interface NavbarProps {
   className?: string;
@@ -66,7 +67,7 @@ export function Navbar({ className }: NavbarProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Explore Button - Only shown for signed in users and not on explore page */}
+          <FeedbackModal />
           {session?.user && pathname !== "/explore" && (
             <Button
               asChild
