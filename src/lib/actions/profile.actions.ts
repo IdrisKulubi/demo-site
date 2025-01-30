@@ -41,9 +41,10 @@ export async function getProfile() {
         id: users.id,
         email: users.email,
         phoneNumber: users.phoneNumber,
-        photos:profiles.photos,
+        photos: profiles.photos,
       })
       .from(users)
+      .leftJoin(profiles, eq(users.id, profiles.userId))
       .where(eq(users.email, session.user.email))
       .limit(1);
 
