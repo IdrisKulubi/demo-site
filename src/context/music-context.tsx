@@ -41,34 +41,66 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     }
   }, [volume, audio]);
 
-  // Auto-play music when component mounts
+  // Try to autoplay music
   useEffect(() => {
     if (audio) {
-      audio.play()
-        .then(() => setIsPlaying(true))
-        .catch((error) => {
-          console.error('Failed to auto-play music:', error);
-          // Most browsers require user interaction before allowing auto-play
-          setIsPlaying(false);
-        });
+      const attemptPlay = async () => {
+        try {
+          await audio.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error('Failed to play audio:', error);
+          // Silent fail - will require user interaction
+          console.log('Music will play after user interaction');
+        }
+      };
+
+      attemptPlay();
+
+      // Also try to play on first interaction
+      const handleInteraction = async () => {
+        try {
+          await audio.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error('Failed to play audio:', error);
+        }
+        // Remove listeners after first attempt
+        document.removeEventListener('click', handleInteraction);
+        document.removeEventListener('touchstart', handleInteraction);
+        document.removeEventListener('keydown', handleInteraction);
+      };
+
+      document.addEventListener('click', handleInteraction);
+      document.addEventListener('touchstart', handleInteraction);
+      document.addEventListener('keydown', handleInteraction);
+
+      return () => {
+        document.removeEventListener('click', handleInteraction);
+        document.removeEventListener('touchstart', handleInteraction);
+        document.removeEventListener('keydown', handleInteraction);
+      };
     }
   }, [audio]);
 
-  const toggleMusic = () => {
+  const toggleMusic = async () => {
     if (audio) {
       if (!isPlaying) {
-        audio.play().catch(console.error);
+        try {
+          await audio.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error('Failed to play audio:', error);
+        }
       } else {
         audio.pause();
+        setIsPlaying(false);
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
   return (
-    <MusicContext.Provider
-      value={{ isPlaying, volume, toggleMusic, setVolume }}
-    >
+    <MusicContext.Provider value={{ isPlaying, volume, toggleMusic, setVolume }}>
       {children}
     </MusicContext.Provider>
   );

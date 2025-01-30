@@ -9,6 +9,9 @@ import { auth } from "@/auth";
 import { Navbar } from "@/components/layout/navbar";
 import { constructMetadata } from "@/lib/metadata";
 import { Analytics } from "@vercel/analytics/react";
+import { SwipeCounterProvider } from "@/context/swipe-counter-context";
+import { SwipeCounter } from "@/components/shared/swipe-counter";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -35,13 +38,15 @@ export default async function RootLayout({
           >
 
             <MusicProvider>
-              <div className="flex min-h-screen flex-col">
-                <Navbar />
-               
-                <main className="flex-1">{children}</main>
-                <Analytics/>
-              </div>
-              <Toaster />
+              <SwipeCounterProvider>
+                <div className="flex min-h-screen flex-col">
+                  <Navbar />
+                  <main className="flex-1">{children}</main>
+                  <SwipeCounter />
+                  <Analytics/>
+                  <Toaster/>
+                </div>
+              </SwipeCounterProvider>
             </MusicProvider>
           </ThemeProvider>
         </SessionProvider>
