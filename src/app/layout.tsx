@@ -12,6 +12,7 @@ import { SwipeCounterProvider } from "@/context/swipe-counter-context";
 import { SwipeCounter } from "@/components/shared/swipe-counter";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { FeedbackModal } from "@/components/shared/maintenance-modal";
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -37,7 +38,7 @@ export default async function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
@@ -45,11 +46,14 @@ export default async function RootLayout({
             <MusicProvider>
               <SwipeCounterProvider>
                 <div className="relative min-h-screen">
-                  <Navbar />
-                  <main className="flex-1">{children}</main>
-                  <SwipeCounter />
-                  <Analytics />
-                  <Toaster />
+                  <FeedbackModal />
+                  <div className="pointer-events-none">
+                    <Navbar />
+                    <main className="flex-1">{children}</main>
+                    <SwipeCounter />
+                    <Analytics />
+                    <Toaster />
+                  </div>
                 </div>
               </SwipeCounterProvider>
             </MusicProvider>

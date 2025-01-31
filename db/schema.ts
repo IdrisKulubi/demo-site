@@ -132,6 +132,8 @@ export const matches = pgTable("matches", {
 
 export const feedback = pgTable("feedback", {
   id: text("id").primaryKey().notNull(),
+  name: text("name"),
+  phoneNumber: text("phone_number"),
   message: text("message").notNull(),
   status: text("status").notNull().default("new"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
