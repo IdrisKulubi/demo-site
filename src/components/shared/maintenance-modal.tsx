@@ -149,7 +149,7 @@ export function FeedbackModal() {
   <span className="text-[0.7rem] sm:text-xs opacity-75">
     (Skip the &quot;pls fix&quot; - we&apos;re already deep in code-sorcery mode 🔮)
   </span>
-  Leave your feedback below or text .
+  Leave your feedback below or text .Byeee ,Let&apos; catch up tomorow🥰
 </p>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4">
