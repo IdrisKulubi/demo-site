@@ -113,7 +113,7 @@ export function FeedbackModal() {
                     Valentine&apos;s Crisis Mode
                   </h2>
                   <p className="text-xs sm:text-sm text-rose-200/90">
-                    App&apos;s being fixed - back tomorrow 10AM
+                    App&apos;s being fixed and chat feature added- back tomorrow 10AM
                   </p>
                 </div>
               </div>
