@@ -44,6 +44,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   // Try to autoplay music
   useEffect(() => {
     if (audio) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const attemptPlay = async () => {
         try {
           await audio.play();
@@ -55,7 +56,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         }
       };
 
-      attemptPlay();
+      // attemptPlay(); // Commented out to stop auto-play
 
       // Also try to play on first interaction
       const handleInteraction = async () => {
