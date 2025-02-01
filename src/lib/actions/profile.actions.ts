@@ -50,7 +50,7 @@ export async function getProfile() {
 
     if (!user || user.length === 0) {
       console.error("User not found by email:", session.user.email);
-      throw new Error("User not found"); // Prevent profile creation for non-existent user
+      throw new Error("User not found");
     }
 
     const actualUserId = user[0].id;
@@ -64,8 +64,15 @@ export async function getProfile() {
 
     if (!profile || profile.length === 0) return null;
 
-    // Try to get profile photo from cache first
-    const cachedProfilePhoto = await getCachedProfilePicture(actualUserId);
+    let cachedProfilePhoto = null;
+    try {
+      // Only attempt to get cached photo if Redis is configured
+      if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+        cachedProfilePhoto = await getCachedProfilePicture(actualUserId);
+      }
+    } catch (redisError) {
+      console.warn("Redis cache unavailable:", redisError);
+    }
     
     return {
       ...profile[0],
@@ -74,7 +81,7 @@ export async function getProfile() {
     };
   } catch (error) {
     console.error("Error in getProfile:", error);
-    throw error; // Rethrow to handle in calling functions
+    throw error;
   }
 }
 
@@ -151,9 +158,15 @@ export async function updateProfile(data: ProfileFormData) {
       };
     }
 
-    // Update the profile photo in cache if it changed
-    if (processedData.profilePhoto) {
-      await cacheProfilePicture(actualUserId, processedData.profilePhoto);
+    // Only attempt to cache if Redis is configured
+    if (processedData.profilePhoto && 
+        process.env.UPSTASH_REDIS_REST_URL && 
+        process.env.UPSTASH_REDIS_REST_TOKEN) {
+      try {
+        await cacheProfilePicture(actualUserId, processedData.profilePhoto);
+      } catch (redisError) {
+        console.warn("Failed to cache profile picture:", redisError);
+      }
     }
 
     revalidatePath("/profile");
@@ -292,4 +305,15 @@ export async function removePhoto(photoUrl: string) {
       error: "Failed to remove photo. Please try again😢",
     };
   }
+}
+
+export async function getCurrentUserProfile() {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+
+  const userProfile = await db.query.profiles.findFirst({
+    where: eq(profiles.userId, session.user.id),
+  });
+
+  return userProfile;
 }

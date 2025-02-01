@@ -3,17 +3,19 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { X, Heart } from "lucide-react";
+import { Heart, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Profile } from "@/db/schema";
-import { ViewMoreCrush } from "./view-more-crush";
 import { useState } from "react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ViewMoreProfile } from "./view-more-profile";
 
 interface SidePanelsProps {
   profiles: Profile[];
   likedByProfiles: Profile[];
-  onUnlike: (profileId: string) => void;
-  onLikeBack: (profileId: string) => void;
+  onUnlike: (profileId: string) => Promise<void>;
+  onLikeBack: (profileId: string) => Promise<void>;
 }
 
 export function SidePanels({
@@ -23,232 +25,190 @@ export function SidePanels({
   onLikeBack,
 }: SidePanelsProps) {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-  const matchedProfiles = profiles.filter((p) => p.isMatch);
-  const crushProfiles = profiles.filter((p) => !p.isMatch);
+  const [activeTab, setActiveTab] = useState<"likes" | "matches">("likes");
 
   return (
-    <div className="hidden lg:flex flex-col gap-4 h-[calc(100vh-6rem)] w-full">
-      {/* Liked By Section */}
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="flex-1 min-h-0 bg-white/50 dark:bg-background/50 rounded-2xl p-4 border border-pink-100 dark:border-pink-900 backdrop-blur-sm"
+    <div className="hidden lg:block w-[380px] h-[calc(100vh-6rem)]">
+      <Tabs
+        defaultValue="likes"
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as "likes" | "matches")}
+        className="h-full"
       >
-        <div className="flex items-center gap-2 mb-4">
-          <h2 className="text-lg font-semibold text-pink-500">
-            Likes You{" "}
-            {likedByProfiles.length > 0 && `(${likedByProfiles.length})`}
-          </h2>
-          <span className="text-xl">💘</span>
-        </div>
-        <ScrollArea className="h-[calc(33vh-8rem)] pr-4">
-          <div className="space-y-3">
-            <AnimatePresence>
-              {likedByProfiles.map((profile) => (
-                <motion.div
-                  key={profile.userId}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  className="group relative bg-white dark:bg-background rounded-xl p-3 shadow-sm border border-pink-100 dark:border-pink-900 hover:border-pink-300 dark:hover:border-pink-700 transition-colors cursor-pointer"
-                  onClick={() => setSelectedProfile(profile)}
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12 border-2 border-pink-200 dark:border-pink-800">
-                      <AvatarImage
-                        src={profile.profilePhoto || profile.photos?.[0]}
-                      />
-                      <AvatarFallback className="bg-gradient-to-br from-pink-400 to-pink-600 text-white">
-                        {profile.firstName?.[0]}
-                        {profile.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <h3 className="font-medium">
-                        {profile.firstName} {profile.lastName}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {profile.course} • Year {profile.yearOfStudy}
-                      </p>
+        <TabsList className="w-full grid grid-cols-2 h-12 bg-white/50 dark:bg-background/50 backdrop-blur-sm">
+          <TabsTrigger
+            value="likes"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500/20 data-[state=active]:to-pink-600/20"
+          >
+            <div className="flex items-center gap-2">
+              <Heart className="w-4 h-4" />
+              <span>Likes You</span>
+              {likedByProfiles.length > 0 && (
+                <span className="bg-pink-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {likedByProfiles.length}
+                </span>
+              )}
+            </div>
+          </TabsTrigger>
+          <TabsTrigger
+            value="matches"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-purple-600/20"
+          >
+            <div className="flex items-center gap-2">
+              <MessageCircle className="w-4 h-4" />
+              <span>Matches</span>
+              {profiles.length > 0 && (
+                <span className="bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {profiles.length}
+                </span>
+              )}
+            </div>
+          </TabsTrigger>
+        </TabsList>
+
+        <div className="mt-4 h-[calc(100%-4rem)]">
+          <TabsContent
+            value="likes"
+            className="h-full m-0 rounded-xl bg-white/50 dark:bg-background/50 backdrop-blur-sm border border-pink-100 dark:border-pink-900"
+          >
+            <ScrollArea className="h-full p-4">
+              <AnimatePresence mode="popLayout">
+                {likedByProfiles.map((profile) => (
+                  <motion.div
+                    key={profile.userId}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -100 }}
+                    className="group relative bg-white dark:bg-background rounded-xl p-3 mb-3 shadow-sm border border-pink-100 dark:border-pink-900 hover:border-pink-300 dark:hover:border-pink-700 transition-all cursor-pointer"
+                    onClick={() => setSelectedProfile(profile)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <Avatar className="h-14 w-14 border-2 border-pink-200 dark:border-pink-800">
+                          <AvatarImage src={profile.profilePhoto || profile.photos?.[0]} />
+                          <AvatarFallback className="bg-gradient-to-br from-pink-400 to-pink-600 text-white">
+                            {profile.firstName?.[0]}
+                            {profile.lastName?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <motion.div
+                          className="absolute -right-1 -bottom-1 text-lg"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.2 }}
+                        >
+                          💝
+                        </motion.div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-base">
+                          {profile.firstName}, {profile.age}
+                        </h3>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {profile.course}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onUnlike(profile.userId);
+                        }}
+                      >
+                        <Heart className="w-4 h-4 mr-1" />
+                        Unlike
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-pink-600 hover:text-pink-700 hover:bg-pink-100/50"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onLikeBack(profile.userId);
-                      }}
-                    >
-                      <Heart className="h-5 w-5" />
-                    </Button>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                  </motion.div>
+                ))}
 
-            {likedByProfiles.length === 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-6 text-pink-400/80 space-y-2"
-              >
-                <div className="text-4xl mb-3">💘</div>
-                <p className="text-sm font-medium">No likes yet</p>
-                <p className="text-xs text-muted-foreground">
-                  Keep your profile active to get more likes! 💖
-                </p>
-              </motion.div>
-            )}
-          </div>
-        </ScrollArea>
-      </motion.div>
+                {likedByProfiles.length === 0 && (
+                  <EmptyState
+                    icon="💝"
+                    title="No likes yet"
+                    description="Keep your profile active to get more likes! ✨"
+                  />
+                )}
+              </AnimatePresence>
+            </ScrollArea>
+          </TabsContent>
 
-      {/* Matches Section */}
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="flex-1 min-h-0 bg-white/50 dark:bg-background/50 rounded-2xl p-4 border border-purple-100 dark:border-purple-900 backdrop-blur-sm"
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <h2 className="text-lg font-semibold text-purple-500">
-            Your Matches{" "}
-            {matchedProfiles.length > 0 && `(${matchedProfiles.length})`}
-          </h2>
-          <span className="text-xl">✨</span>
-        </div>
-        <ScrollArea className="h-[calc(33vh-8rem)] pr-4">
-          <div className="space-y-3">
-            <AnimatePresence>
-              {matchedProfiles.map((profile) => (
-                <motion.div
-                  key={profile.userId}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  className="group relative bg-white dark:bg-background rounded-xl p-3 shadow-sm border border-purple-100 dark:border-purple-900 hover:border-purple-300 dark:hover:border-purple-700 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12 border-2 border-purple-200 dark:border-purple-800">
-                      <AvatarImage
-                        src={profile.profilePhoto || profile.photos?.[0]}
-                      />
-                      <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white">
-                        {profile.firstName?.[0]}
-                        {profile.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-medium">
-                        {profile.firstName} {profile.lastName}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {profile.course} • Year {profile.yearOfStudy}
-                      </p>
+          <TabsContent
+            value="matches"
+            className="h-full m-0 rounded-xl bg-white/50 dark:bg-background/50 backdrop-blur-sm border border-purple-100 dark:border-purple-900"
+          >
+            <ScrollArea className="h-full p-4">
+              <AnimatePresence mode="popLayout">
+                {profiles.map((profile) => (
+                  <motion.div
+                    key={profile.userId}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -100 }}
+                    className="group relative bg-white dark:bg-background rounded-xl p-3 mb-3 shadow-sm border border-purple-100 dark:border-purple-900 hover:border-purple-300 dark:hover:border-purple-700 transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <Avatar className="h-14 w-14 border-2 border-purple-200 dark:border-purple-800">
+                          <AvatarImage src={profile.profilePhoto || profile.photos?.[0]} />
+                          <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white">
+                            {profile.firstName?.[0]}
+                            {profile.lastName?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <motion.div
+                          className="absolute -right-1 -bottom-1 text-lg"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.2 }}
+                        >
+                          ✨
+                        </motion.div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-base">
+                          {profile.firstName}, {profile.age}
+                        </h3>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {profile.course}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        asChild
+                      >
+                        <a href={`/messages/${profile.userId}`}>
+                          <MessageCircle className="w-4 h-4" />
+                        </a>
+                      </Button>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                  </motion.div>
+                ))}
 
-            {matchedProfiles.length === 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-6 text-purple-400/80 space-y-2"
-              >
-                <div className="text-4xl mb-3">💫</div>
-                <p className="text-sm font-medium">No matches yet</p>
-                <p className="text-xs text-muted-foreground">
-                  Keep swiping to find your perfect match! ✨
-                </p>
-              </motion.div>
-            )}
-          </div>
-        </ScrollArea>
-      </motion.div>
-
-      {/* Crushes Section */}
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="flex-1 min-h-0 bg-white/50 dark:bg-background/50 rounded-2xl p-4 border border-pink-100 dark:border-pink-900 backdrop-blur-sm"
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <h2 className="text-lg font-semibold text-pink-500">
-            Your Crushes{" "}
-            {crushProfiles.length > 0 && `(${crushProfiles.length})`}
-          </h2>
-          <span className="text-xl">💝</span>
+                {profiles.length === 0 && (
+                  <EmptyState
+                    icon="✨"
+                    title="No matches yet"
+                    description="Keep swiping to find your perfect match! 💫"
+                  />
+                )}
+              </AnimatePresence>
+            </ScrollArea>
+          </TabsContent>
         </div>
-        <ScrollArea className="h-[calc(33vh-8rem)] pr-4">
-          <div className="space-y-3">
-            <AnimatePresence>
-              {crushProfiles.map((profile) => (
-                <motion.div
-                  key={profile.userId}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  className="group relative bg-white dark:bg-background rounded-xl p-3 shadow-sm border border-pink-100 dark:border-pink-900 hover:border-pink-300 dark:hover:border-pink-700 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12 border-2 border-pink-200 dark:border-pink-800">
-                      <AvatarImage
-                        src={profile.profilePhoto || profile.photos?.[0]}
-                      />
-                      <AvatarFallback className="bg-gradient-to-br from-pink-400 to-pink-600 text-white">
-                        {profile.firstName?.[0]}
-                        {profile.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <h3 className="font-medium">
-                        {profile.firstName} {profile.lastName}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {profile.course} • Year {profile.yearOfStudy}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-pink-600 hover:text-pink-700 hover:bg-pink-100/50"
-                      onClick={() => onUnlike(profile.userId)}
-                    >
-                      <X className="h-5 w-5" />
-                    </Button>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-
-            {crushProfiles.length === 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-6 text-pink-400/80 space-y-2"
-              >
-                <div className="text-4xl mb-3">💝</div>
-                <p className="text-sm font-medium">No crushes yet</p>
-                <p className="text-xs text-muted-foreground">
-                  Start swiping to find your match! 💖
-                </p>
-              </motion.div>
-            )}
-          </div>
-        </ScrollArea>
-      </motion.div>
+      </Tabs>
 
       {selectedProfile && (
-        <ViewMoreCrush
+        <ViewMoreProfile
           profile={selectedProfile}
           isOpen={!!selectedProfile}
           onClose={() => setSelectedProfile(null)}
-          onLikeBack={onLikeBack}
+          onLike={() => onLikeBack(selectedProfile.userId)}
         />
       )}
     </div>

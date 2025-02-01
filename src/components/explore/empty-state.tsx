@@ -8,15 +8,18 @@ import { undoLastSwipe } from "@/lib/actions/explore.actions";
 import { useToast } from "@/hooks/use-toast";
 import { EmptyMobileView } from "./cards/empty-mobile";
 import { ShareAppModal } from "../shared/share-app";
-import { NotifyModal } from "./modals/notify";
 import { getLikedByProfiles } from "@/lib/actions/explore.actions";
 import { SidePanels } from "./cards/side-panels";
 
 interface NoMoreProfilesProps {
   initialLikedProfiles: Profile[];
+  currentUser: { id: string };
 }
 
-export function NoMoreProfiles({ initialLikedProfiles }: NoMoreProfilesProps) {
+export function NoMoreProfiles({
+  initialLikedProfiles,
+  currentUser,
+}: NoMoreProfilesProps) {
   const [mounted, setMounted] = useState(false);
   const [likedProfiles, setLikedProfiles] = useState(initialLikedProfiles);
   const [likedByProfiles, setLikedByProfiles] = useState<Profile[]>([]);
@@ -60,10 +63,10 @@ export function NoMoreProfiles({ initialLikedProfiles }: NoMoreProfilesProps) {
       {/* Side Panels - Fixed with reduced width */}
       <div className="lg:w-[320px] lg:fixed lg:left-0 lg:top-[80px] lg:bottom-0 lg:pl-4">
         <SidePanels
-          profiles={likedProfiles}
+          profiles={likedByProfiles}
           likedByProfiles={likedByProfiles}
           onUnlike={handleUnlike}
-          onLikeBack={(profileId) => {
+          onLikeBack={async (profileId) => {
             setLikedByProfiles((prev) =>
               prev.filter((p) => p.userId !== profileId)
             );
@@ -76,7 +79,6 @@ export function NoMoreProfiles({ initialLikedProfiles }: NoMoreProfilesProps) {
         <div className="w-full max-w-[420px] mx-auto px-4">
           <div className="relative w-full">
             <div className="absolute top-0 left-0 right-0">
-              <NotifyModal />
             </div>
 
             {/* Desktop View */}
@@ -158,6 +160,7 @@ export function NoMoreProfiles({ initialLikedProfiles }: NoMoreProfilesProps) {
             <div className="block md:hidden">
               <EmptyMobileView
                 likedProfiles={likedProfiles}
+                currentUser={currentUser}
                 onShare={handleShare}
                 onUnlike={handleUnlike}
               />
