@@ -4,17 +4,19 @@ import {  useCallback, useState } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeCard } from "./swipe-card";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, X, ArrowLeft } from "lucide-react";
-import { BiUndo } from "react-icons/bi"; 
-
-
+import { Heart, X, ArrowUturnLeft } from "lucide-react";
 import { recordSwipe, undoLastSwipe } from "@/lib/actions/explore.actions";
 import { Button } from "@/components/ui/button";
 import { MatchModal } from "@/components/explore/modals/match-modal";
+import { NoMoreProfiles } from "../empty-state";
+
+import { useToast } from "@/hooks/use-toast";
+import { SidePanels } from "./side-panels";
 
 interface SwipeStackProps {
   initialProfiles: Profile[];
   currentUserProfile: Profile;
+  likedByProfiles: Profile[];
   onMatch?: (profile: Profile) => void;
 }
 
@@ -33,13 +35,14 @@ const swipeVariants = {
   },
 };
 
-export function SwipeStack({ initialProfiles, currentUserProfile }: SwipeStackProps) {
+export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfiles }: SwipeStackProps) {
   const [profiles, setProfiles] = useState(initialProfiles);
   const [currentIndex, setCurrentIndex] = useState(initialProfiles.length - 1);
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
   const [swipedProfiles, setSwipedProfiles] = useState<Profile[]>([]);
+  const { toast } = useToast();
 
   const handleSwipe = useCallback(async (direction: "left" | "right") => {
     if (isAnimating || !profiles[currentIndex]) return;
@@ -52,18 +55,27 @@ export function SwipeStack({ initialProfiles, currentUserProfile }: SwipeStackPr
       direction === "right" ? "like" : "pass"
     );
 
-    if (direction === "right" && result.isMatch) {
-      setMatchedProfile(profiles[currentIndex]);
+    if (direction === "right") {
+      if (result.isMatch) {
+        setMatchedProfile(profiles[currentIndex]);
+      } else {
+        toast({
+          title: "Yasss! 💖",
+          description: `You liked ${profiles[currentIndex].firstName}! Fingers crossed for a match!`,
+          variant: "default",
+          className: "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-none",
+        });
+      }
     }
 
     setSwipedProfiles(prev => [...prev, profiles[currentIndex]]);
-    
+
     setTimeout(() => {
       setCurrentIndex(prev => prev - 1);
       setSwipeDirection(null);
       setIsAnimating(false);
     }, 300);
-  }, [currentIndex, isAnimating, profiles]);
+  }, [currentIndex, isAnimating, profiles, toast]);
 
   const handleRevert = useCallback(async () => {
     if (swipedProfiles.length === 0) return;
@@ -88,10 +100,10 @@ export function SwipeStack({ initialProfiles, currentUserProfile }: SwipeStackPr
             animate={swipeDirection}
             variants={swipeVariants}
             style={{
-              position: "absolute",
-              width: "100%",
-              height: "100%",
-              borderRadius: "8px",
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              borderRadius: '8px',
             }}
           />
         )}
@@ -103,21 +115,23 @@ export function SwipeStack({ initialProfiles, currentUserProfile }: SwipeStackPr
           <Button
             size="lg"
             variant="outline"
-            className="h-12 w-12 rounded-full border-2 shadow-lg hover:border-blue-500 hover:bg-blue-500/10"
-            onClick={handleRevert}
-            disabled={swipedProfiles.length === 0 || isAnimating}
-          >
-            <ArrowLeft className="h-5 w-5 text-blue-500" />
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
             className="h-14 w-14 rounded-full border-2 shadow-lg hover:border-red-500 hover:bg-red-500/10"
             onClick={() => handleSwipe("left")}
             disabled={isAnimating}
           >
             <X className="h-6 w-6 text-red-500" />
           </Button>
+
+          <Button
+            size="lg"
+            variant="outline"
+            className="h-12 w-12 rounded-full border-2 shadow-lg hover:border-blue-500 hover:bg-blue-500/10"
+            onClick={handleRevert}
+            disabled={swipedProfiles.length === 0 || isAnimating}
+          >
+            <ArrowUturnLeft className="h-5 w-5 text-blue-500" />
+          </Button>
+
           <Button
             size="lg"
             variant="outline"
@@ -142,7 +156,7 @@ export function SwipeStack({ initialProfiles, currentUserProfile }: SwipeStackPr
             No more profiles
           </h3>
           <p className="text-muted-foreground mt-2">
-            Check back later for more potential matches! or Reload
+            Check back later for more potential matches!
           </p>
         </motion.div>
       )}

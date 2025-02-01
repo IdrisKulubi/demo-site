@@ -22,6 +22,7 @@ interface SwipeCardProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   variants?: Record<string, any>;
   style?: React.CSSProperties;
+  children?: React.ReactNode;
 }
 
 export function SwipeCard({
