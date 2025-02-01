@@ -42,6 +42,7 @@ export const interests = [
   "🎮 Gaming",
   "🎵 Music",
   "📚 Reading",
+
   "🎨 Art",
   "🏃‍♂️ Sports",
   "🎬 Movies",
@@ -53,8 +54,9 @@ export const interests = [
   "🌱 Nature",
   "💻 Tech",
   "🎭 Theatre",
+  
   "🎪 Events",
-  "�� Board Games",
+    "🎲 Board Games",
 ];
 
 export const genders = [

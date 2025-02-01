@@ -40,14 +40,15 @@ export function MessageBubble({
         <p>{message.content}</p>
         <div className="flex items-center gap-1.5 mt-1.5 justify-end">
           <span className="text-xs opacity-70">
-            {new Date(message.timestamp).toLocaleTimeString([], {
+            {new Date(message.createdAt).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
             })}
+
           </span>
           {isOwn && (
             <span className="text-xs">
-              {message.read ? "👁️✔️" : message.delivered ? "✔️" : "🕒"}
+              {message.isRead ? "👁️✔️" : message.id? "✔️" : "🕒"}
             </span>
           )}
         </div>

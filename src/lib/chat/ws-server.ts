@@ -111,9 +111,8 @@ export const ChatWSServer = {
       .insert(messages)
       .values({
         ...message,
-        delivered: false,
-        read: false,
-        timestamp: new Date(),
+        isRead: false,
+        createdAt: new Date(),
       })
       .returning();
 
@@ -129,7 +128,7 @@ export const ChatWSServer = {
         );
 
         db.update(messages)
-          .set({ delivered: true })
+          .set({ isRead: true })
           .where(eq(messages.id, newMessage[0].id));
       }
     });

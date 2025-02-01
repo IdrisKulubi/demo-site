@@ -7,11 +7,11 @@ import { Heart } from "lucide-react";
 import type { Profile } from "@/db/schema";
 import Image from "next/image";
 import { useState } from "react";
-import { confetti } from "@/lib/confetti";
+import confetti from "canvas-confetti";
 
 interface MobileLikesProps {
   profiles: Profile[];
-  onLikeBack: (profileId: string) => void;
+  onLikeBack: (profileId: string) => Promise<{ isMatch?: boolean }>;
   onViewProfile: (profile: Profile) => void;
 }
 

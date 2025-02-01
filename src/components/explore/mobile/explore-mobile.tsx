@@ -162,6 +162,7 @@ export function ExploreMobile({
                           prev.filter((p) => p.userId !== profileId)
                         );
                       }
+                      return { isMatch: true };
                     }}
                     onViewProfile={(profile) => setSelectedProfile(profile)}
                   />
