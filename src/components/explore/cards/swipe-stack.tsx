@@ -4,7 +4,10 @@ import {  useCallback, useState } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeCard } from "./swipe-card";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, X, ArrowUturnLeft } from "lucide-react";
+import { Heart, X, ArrowLeft } from "lucide-react";
+import { BiUndo } from "react-icons/bi"; 
+
+
 import { recordSwipe, undoLastSwipe } from "@/lib/actions/explore.actions";
 import { Button } from "@/components/ui/button";
 import { MatchModal } from "@/components/explore/modals/match-modal";
@@ -85,10 +88,10 @@ export function SwipeStack({ initialProfiles, currentUserProfile }: SwipeStackPr
             animate={swipeDirection}
             variants={swipeVariants}
             style={{
-              position: 'absolute',
-              width: '100%',
-              height: '100%',
-              borderRadius: '8px',
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              borderRadius: "8px",
             }}
           />
         )}
@@ -100,23 +103,21 @@ export function SwipeStack({ initialProfiles, currentUserProfile }: SwipeStackPr
           <Button
             size="lg"
             variant="outline"
+            className="h-12 w-12 rounded-full border-2 shadow-lg hover:border-blue-500 hover:bg-blue-500/10"
+            onClick={handleRevert}
+            disabled={swipedProfiles.length === 0 || isAnimating}
+          >
+            <ArrowLeft className="h-5 w-5 text-blue-500" />
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
             className="h-14 w-14 rounded-full border-2 shadow-lg hover:border-red-500 hover:bg-red-500/10"
             onClick={() => handleSwipe("left")}
             disabled={isAnimating}
           >
             <X className="h-6 w-6 text-red-500" />
           </Button>
-
-          <Button
-            size="lg"
-            variant="outline"
-            className="h-12 w-12 rounded-full border-2 shadow-lg hover:border-blue-500 hover:bg-blue-500/10"
-            onClick={handleRevert}
-            disabled={swipedProfiles.length === 0 || isAnimating}
-          >
-            <ArrowUturnLeft className="h-5 w-5 text-blue-500" />
-          </Button>
-
           <Button
             size="lg"
             variant="outline"
@@ -141,7 +142,7 @@ export function SwipeStack({ initialProfiles, currentUserProfile }: SwipeStackPr
             No more profiles
           </h3>
           <p className="text-muted-foreground mt-2">
-            Check back later for more potential matches!
+            Check back later for more potential matches! or Reload
           </p>
         </motion.div>
       )}
