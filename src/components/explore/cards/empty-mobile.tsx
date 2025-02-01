@@ -17,12 +17,14 @@ interface EmptyMobileViewProps {
   likedProfiles: Profile[];
   onShare: () => void;
   onUnlike: (profileId: string) => void;
+  currentUser: { id: string };
 }
 
 export function EmptyMobileView({
   likedProfiles,
   onShare,
   onUnlike,
+  currentUser,
 }: EmptyMobileViewProps) {
   const [crushesOpen, setCrushesOpen] = useState(false);
   const [matchesOpen, setMatchesOpen] = useState(false);
@@ -182,6 +184,7 @@ export function EmptyMobileView({
         isOpen={matchesOpen}
         onClose={() => setMatchesOpen(false)}
         profiles={likedProfiles}
+        currentUser={currentUser}
       />
       <ShareAppModal isOpen={shareOpen} onClose={() => setShareOpen(false)} />
     </div>
