@@ -4,8 +4,8 @@ import {  useCallback, useState } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeCard } from "./swipe-card";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, X } from "lucide-react";
-import { recordSwipe } from "@/lib/actions/explore.actions";
+import { Heart, X, ArrowUturnLeft } from "lucide-react";
+import { recordSwipe, undoLastSwipe } from "@/lib/actions/explore.actions";
 import { Button } from "@/components/ui/button";
 import { MatchModal } from "@/components/explore/modals/match-modal";
 
@@ -31,12 +31,12 @@ const swipeVariants = {
 };
 
 export function SwipeStack({ initialProfiles, currentUserProfile }: SwipeStackProps) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [profiles, setProfiles] = useState(initialProfiles);
   const [currentIndex, setCurrentIndex] = useState(initialProfiles.length - 1);
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
+  const [swipedProfiles, setSwipedProfiles] = useState<Profile[]>([]);
 
   const handleSwipe = useCallback(async (direction: "left" | "right") => {
     if (isAnimating || !profiles[currentIndex]) return;
@@ -53,6 +53,8 @@ export function SwipeStack({ initialProfiles, currentUserProfile }: SwipeStackPr
       setMatchedProfile(profiles[currentIndex]);
     }
 
+    setSwipedProfiles(prev => [...prev, profiles[currentIndex]]);
+    
     setTimeout(() => {
       setCurrentIndex(prev => prev - 1);
       setSwipeDirection(null);
@@ -60,29 +62,41 @@ export function SwipeStack({ initialProfiles, currentUserProfile }: SwipeStackPr
     }, 300);
   }, [currentIndex, isAnimating, profiles]);
 
+  const handleRevert = useCallback(async () => {
+    if (swipedProfiles.length === 0) return;
+    
+    const lastProfile = swipedProfiles[swipedProfiles.length - 1];
+    await undoLastSwipe(lastProfile.userId);
+    
+    setProfiles(prev => [...prev, lastProfile]);
+    setSwipedProfiles(prev => prev.slice(0, -1));
+    setCurrentIndex(prev => prev + 1);
+  }, [swipedProfiles]);
+
   return (
-    <div className="relative max-w-sm mx-auto h-[calc(100vh-4rem)]">
+    <div className="relative max-w-[400px] mx-auto h-[600px]">
       <AnimatePresence>
         {profiles[currentIndex] && (
           <SwipeCard
             key={profiles[currentIndex].userId}
             profile={profiles[currentIndex]}
             onSwipe={handleSwipe}
-            active={true}
+            active={false}
             animate={swipeDirection}
             variants={swipeVariants}
             style={{
               position: 'absolute',
               width: '100%',
-              height: 'calc(100% - 5rem)',
+              height: '100%',
+              borderRadius: '8px',
             }}
           />
         )}
       </AnimatePresence>
 
-      {/* Tinder-style Controls - Moved closer to card */}
+      {/* Tinder-style Controls */}
       {profiles[currentIndex] && (
-        <div className="absolute bottom-0 left-0 right-0 flex justify-center items-center gap-6 pb-4">
+        <div className="absolute -bottom-20 left-0 right-0 flex justify-center items-center gap-4">
           <Button
             size="lg"
             variant="outline"
@@ -96,11 +110,21 @@ export function SwipeStack({ initialProfiles, currentUserProfile }: SwipeStackPr
           <Button
             size="lg"
             variant="outline"
-            className="h-16 w-16 rounded-full border-2 shadow-lg hover:border-pink-500 hover:bg-pink-500/10"
+            className="h-12 w-12 rounded-full border-2 shadow-lg hover:border-blue-500 hover:bg-blue-500/10"
+            onClick={handleRevert}
+            disabled={swipedProfiles.length === 0 || isAnimating}
+          >
+            <ArrowUturnLeft className="h-5 w-5 text-blue-500" />
+          </Button>
+
+          <Button
+            size="lg"
+            variant="outline"
+            className="h-14 w-14 rounded-full border-2 shadow-lg hover:border-pink-500 hover:bg-pink-500/10"
             onClick={() => handleSwipe("right")}
             disabled={isAnimating}
           >
-            <Heart className="h-8 w-8 text-pink-500" />
+            <Heart className="h-6 w-6 text-pink-500" />
           </Button>
         </div>
       )}
