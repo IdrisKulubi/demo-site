@@ -250,7 +250,7 @@ export function DetailsInput({
             <p className="text-sm text-red-500">{errors.phoneNumber}</p>
           )}
           {values.phoneNumber && !validatePhoneNumber(values.phoneNumber) && !errors?.phoneNumber && (
-            <p className="text-sm text-yellow-500">Please enter a valid phone number (at least 10 digits)</p>
+            <p className="text-sm text-yellow-500">Please enter a valid phone number,<span className="text-xs animate-pulse text-gray-500">It will be used for matching purposes</span> (at least 10 digits)</p>
           )}
         </div>
       </div>
