@@ -12,7 +12,7 @@ import {
 import { type AdapterAccount } from "@auth/core/adapters";
 
 // First define all tables
-export const users = pgTable("users", {
+export const users = pgTable("user", {
   id: text("id").primaryKey(), // Maps to Auth.js user id
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
