@@ -1,19 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
+import { auth } from "@/auth";
 import db from "@/db/drizzle";
 import { profiles, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
-import { deleteUploadThingFile } from "./upload.actions";
-import { z } from "zod";
 import { profileSchema } from "../validators";
+import { deleteUploadThingFile } from "./upload.actions";
 import { cacheProfilePicture, getCachedProfilePicture } from "../redis";
 
-export type ProfileFormData = z.infer<typeof profileSchema> & {
-  firstName: string;
-  lastName: string;
+export type ProfileFormData = {
   photos: string[];
   bio: string;
   interests: string[];
@@ -25,8 +21,10 @@ export type ProfileFormData = z.infer<typeof profileSchema> & {
   snapchat?: string;
   gender: "male" | "female" | "non-binary" | "other";
   age: number;
-  profilePhoto?: string;
+  firstName: string;
+  lastName: string;
   phoneNumber: string;
+  profilePhoto?: string;
 };
 
 export async function getProfile() {
@@ -37,12 +35,19 @@ export async function getProfile() {
       return null;
     }
 
-    // Find user by email
+    // Find user by email with all user fields
     const user = await db
       .select({
         id: users.id,
         email: users.email,
-        phoneNumber: users.phoneNumber
+        name: users.name,
+        phoneNumber: users.phoneNumber,
+        emailVerified: users.emailVerified,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastActive: users.lastActive,
+        isOnline: users.isOnline,
+        photos: users.image,
       })
       .from(users)
       .where(eq(users.email, session.user.email))
@@ -55,30 +60,49 @@ export async function getProfile() {
 
     const actualUserId = user[0].id;
 
-    // Get profile data
+    // Get complete profile data
     const profile = await db
       .select()
       .from(profiles)
       .where(eq(profiles.userId, actualUserId))
       .limit(1);
 
-    if (!profile || profile.length === 0) return null;
+    // Try to get profile photo from cache first
+    const cachedProfilePhoto = await getCachedProfilePicture(actualUserId);
 
-    let cachedProfilePhoto = null;
-    try {
-      // Only attempt to get cached photo if Redis is configured
-      if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-        cachedProfilePhoto = await getCachedProfilePicture(actualUserId);
-      }
-    } catch (redisError) {
-      console.warn("Redis cache unavailable:", redisError);
+    // If no profile exists yet, return basic user info
+    if (!profile || profile.length === 0) {
+      return {
+        ...user[0],
+        profilePhoto: cachedProfilePhoto || user[0].photos,
+        profileCompleted: false,
+      };
     }
-    
-    return {
+
+    // Combine user and profile data
+    const combinedProfile = {
+      ...user[0],
       ...profile[0],
-      phoneNumber: user[0].phoneNumber,
-      profilePhoto: cachedProfilePhoto || profile[0].profilePhoto
+      profilePhoto:
+        cachedProfilePhoto || profile[0].profilePhoto || user[0].photos,
+      // Check if all required fields are completed
+      profileCompleted: Boolean(
+        profile[0].firstName &&
+          profile[0].lastName &&
+          profile[0].bio &&
+          profile[0].age &&
+          profile[0].gender &&
+          profile[0].lookingFor &&
+          profile[0].course &&
+          profile[0].yearOfStudy &&
+          profile[0].photos &&
+          profile[0].isVisible &&
+          profile[0].lastActive &&
+          profile[0].isComplete
+      ),
     };
+
+    return combinedProfile;
   } catch (error) {
     console.error("Error in getProfile:", error);
     throw error;
@@ -97,7 +121,7 @@ export async function updateProfile(data: ProfileFormData) {
       .select({
         id: users.id,
         email: users.email,
-        phoneNumber: users.phoneNumber
+        phoneNumber: users.phoneNumber,
       })
       .from(users)
       .where(eq(users.email, session.user.email))
@@ -158,17 +182,6 @@ export async function updateProfile(data: ProfileFormData) {
       };
     }
 
-    // Only attempt to cache if Redis is configured
-    if (processedData.profilePhoto && 
-        process.env.UPSTASH_REDIS_REST_URL && 
-        process.env.UPSTASH_REDIS_REST_TOKEN) {
-      try {
-        await cacheProfilePicture(actualUserId, processedData.profilePhoto);
-      } catch (redisError) {
-        console.warn("Failed to cache profile picture:", redisError);
-      }
-    }
-
     revalidatePath("/profile");
     return {
       success: true,
@@ -190,44 +203,81 @@ export async function submitProfile(data: ProfileFormData) {
       return { success: false, error: "Not authenticated" };
     }
 
-    await db
-      .update(profiles)
-      .set({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phoneNumber: data.phoneNumber,
-        photos: data.photos,
-        bio: data.bio,
-        interests: data.interests,
-        lookingFor: data.lookingFor,
-        course: data.course,
-        yearOfStudy: data.yearOfStudy,
-        instagram: data.instagram || "",
-        spotify: data.spotify || "",
-        snapchat: data.snapchat || "",
-        gender: data.gender,
-        age: data.age,
-        profilePhoto: data.profilePhoto,
-        updatedAt: new Date(),
-        profileCompleted: true,
-      })
-      .where(eq(profiles.userId, session.user.id));
-
-    // Cache the profile photo if provided
-    if (data.profilePhoto) {
-      await cacheProfilePicture(session.user.id, data.profilePhoto);
+    // Validate data against schema
+    const validationResult = profileSchema.safeParse(data);
+    if (!validationResult.success) {
+      console.error("Validation errors:", validationResult.error);
+      return {
+        success: false,
+        error: "Invalid profile data",
+        validationErrors: validationResult.error.errors,
+      };
     }
 
+    // First check if profile exists
+    const existingProfile = await db
+      .select()
+      .from(profiles)
+      .where(eq(profiles.userId, session.user.id))
+      .limit(1);
+
+    const profileData = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      phoneNumber: data.phoneNumber,
+      photos: data.photos,
+      bio: data.bio,
+      interests: data.interests,
+      lookingFor: data.lookingFor,
+      course: data.course,
+      yearOfStudy: data.yearOfStudy,
+      instagram: data.instagram || "",
+      spotify: data.spotify || "",
+      snapchat: data.snapchat || "",
+      gender: data.gender,
+      age: data.age,
+      profilePhoto: data.profilePhoto || data.photos[0],
+      updatedAt: new Date(),
+      profileCompleted: true,
+      isComplete: true,
+    };
+
+    // Create or update profile
+    if (!existingProfile || existingProfile.length === 0) {
+      // Create new profile
+      await db.insert(profiles).values({
+        ...profileData,
+        userId: session.user.id,
+        isVisible: true,
+        lastActive: new Date(),
+      });
+    } else {
+      // Update existing profile
+      await db
+        .update(profiles)
+        .set(profileData)
+        .where(eq(profiles.userId, session.user.id));
+    }
+
+    // Update user's phone number and profile photo
+    await db
+      .update(users)
+      .set({
+        phoneNumber: data.phoneNumber,
+        profilePhoto: profileData.profilePhoto,
+      })
+      .where(eq(users.id, session.user.id));
+
     revalidatePath("/explore");
-    revalidatePath("/explore");
+    revalidatePath("/profile");
 
     return { success: true };
   } catch (error) {
     console.error("Error updating profile:", error);
     return {
       success: false,
-      error: "Failed to update profile. Please try again 😢",
-      validationErrors: error instanceof Error ? [error] : [],
+      error:
+        error instanceof Error ? error.message : "Failed to update profile",
     };
   }
 }
@@ -247,7 +297,7 @@ export async function updateProfilePhoto(photoUrl: string) {
       .set({ profilePhoto: photoUrl })
       .where(eq(profiles.userId, session.user.id));
 
-    // Update the cache with the new photo URL
+    // Cache the profile photo URL
     await cacheProfilePicture(session.user.id, photoUrl);
 
     revalidatePath("/profile");
@@ -280,14 +330,14 @@ export async function removePhoto(photoUrl: string) {
     }
 
     // Ensure at least one photo remains
-    if (profile.photos && profile.photos.length <= 1) {
+    if (!Array.isArray(profile.photos) || profile.photos.length <= 1) {
       return {
         success: false,
         error: "You must keep at least one photo 📸",
       };
     }
 
-    const updatedPhotos = profile.photos?.filter((p) => p !== photoUrl);
+    const updatedPhotos = profile.photos.filter((p) => p !== photoUrl);
     await db
       .update(profiles)
       .set({ photos: updatedPhotos })
@@ -305,15 +355,4 @@ export async function removePhoto(photoUrl: string) {
       error: "Failed to remove photo. Please try again😢",
     };
   }
-}
-
-export async function getCurrentUserProfile() {
-  const session = await auth();
-  if (!session?.user?.id) return null;
-
-  const userProfile = await db.query.profiles.findFirst({
-    where: eq(profiles.userId, session.user.id),
-  });
-
-  return userProfile;
 }
