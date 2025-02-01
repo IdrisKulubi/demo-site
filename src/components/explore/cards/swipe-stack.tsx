@@ -50,30 +50,29 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
     setIsAnimating(true);
     setSwipeDirection(direction);
 
-    const result = await recordSwipe(
-      profiles[currentIndex].userId,
-      direction === "right" ? "like" : "pass"
-    );
-
+    // Only record like when swiping right
     if (direction === "right") {
-      if (result.isMatch) {
-        setMatchedProfile(profiles[currentIndex]);
-      } else {
-        toast({
-          title: "Yasss! 💖",
-          description: `You liked ${profiles[currentIndex].firstName}! Fingers crossed for a match!`,
-          variant: "default",
-          className: "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-none",
-        });
+      const result = await recordSwipe(
+        profiles[currentIndex].userId,
+        "like"
+      );
+
+      if (result.success) {
+        if (result.isMatch) {
+          setMatchedProfile(profiles[currentIndex]);
+        } else {
+          toast({
+            title: "Yasss! 💖",
+            description: `You liked ${profiles[currentIndex].firstName}! Fingers crossed for a match!`,
+            variant: "default",
+            className: "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-none",
+          });
+        }
       }
     }
 
-    if (result.success && result.isMatch && result.matchedProfile) {
-      setMatchedProfile(result.matchedProfile);
-    }
-
     setSwipedProfiles(prev => [...prev, profiles[currentIndex]]);
-
+    
     setTimeout(() => {
       setCurrentIndex(prev => prev - 1);
       setSwipeDirection(null);
@@ -92,35 +91,25 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
     setCurrentIndex(prev => prev + 1);
   }, [swipedProfiles]);
 
+  const handleLikeBack = async (profileId: string) => {
+    await handleSwipe("right");
+  };
+
   return (
-    <div className="flex flex-col lg:flex-row w-full">
-      {/* Side Panels - Fixed at top left */}
-      <div className="hidden lg:block lg:fixed lg:left-4 lg:top-24 lg:w-80">
+    <div className="flex w-full max-w-7xl mx-auto relative">
+      {/* Side Panel */}
+      <div className="hidden lg:block w-80 fixed left-4 top-24">
         <SidePanels
-          profiles={swipedProfiles}
+          profiles={swipedProfiles.filter(p => p.isMatch)}
           likedByProfiles={likedByProfiles}
-          onUnlike={async (profileId) => {
-            const result = await undoLastSwipe(profileId);
-            if (result.success) {
-              setProfiles(prev => prev.filter(p => p.userId !== profileId));
-              toast({
-                title: "Profile unliked",
-                description: "The profile has been removed from your likes",
-              });
-            }
-          }}
-          onLikeBack={async (profileId) => {
-            const result = await recordSwipe(profileId, "like");
-            if (result.success && result.isMatch) {
-              setMatchedProfile(profiles.find(p => p.userId === profileId)!);
-            }
-          }}
+          onUnlike={handleRevert}
+          onLikeBack={handleLikeBack}
         />
       </div>
 
-      {/* Main Card Area - Centered with offset for side panel */}
-      <div className="flex-1 lg:ml-96">
-        <div className="max-w-[400px] mx-auto">
+      {/* Main Card Area */}
+      <div className="flex-1 flex justify-center lg:ml-96">
+        <div className="w-full max-w-[400px]">
           <div className="relative h-[600px]">
             <AnimatePresence>
               {profiles[currentIndex] && (
@@ -143,48 +132,11 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
                 />
               )}
             </AnimatePresence>
-
-            {/* Desktop Controls - Hidden on Mobile */}
-            <div className="hidden lg:flex absolute -bottom-20 left-0 right-0 justify-center items-center gap-6">
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-14 w-14 rounded-full border-2 shadow-lg hover:border-red-500 hover:bg-red-500/10"
-                onClick={() => handleSwipe("left")}
-                disabled={isAnimating}
-              >
-                <X className="h-6 w-6 text-red-500" />
-              </Button>
-
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-12 w-12 rounded-full border-2 shadow-lg hover:border-blue-500 hover:bg-blue-500/10"
-                onClick={handleRevert}
-                disabled={swipedProfiles.length === 0 || isAnimating}
-              >
-                <ArrowLeft className="h-5 w-5 text-blue-500" />
-              </Button>
-
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-14 w-14 rounded-full border-2 shadow-lg hover:border-pink-500 hover:bg-pink-500/10"
-                onClick={() => handleSwipe("right")}
-                disabled={isAnimating}
-              >
-                <Heart className="h-6 w-6 text-pink-500" />
-              </Button>
-            </div>
           </div>
-
-          {!profiles[currentIndex] && (
-            <NoMoreProfiles initialLikedProfiles={profiles} />
-          )}
         </div>
       </div>
 
-        <MatchModal
+      <MatchModal
         isOpen={!!matchedProfile}
         onClose={() => setMatchedProfile(null)}
         matchedProfile={matchedProfile!}

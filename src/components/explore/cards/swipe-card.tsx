@@ -6,8 +6,9 @@ import { cn } from "@/lib/utils";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 import { useState } from "react";
-import { GraduationCap, Instagram, Music } from "lucide-react";
+import { GraduationCap, Instagram, Music, X, ArrowLeft, Heart } from "lucide-react";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
 // Import Swiper styles
 import "swiper/css";
 import "swiper/css/navigation";
@@ -31,12 +32,13 @@ interface SwipeCardProps {
 export function SwipeCard({
   profile,
   onSwipe,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onRevert,
   active,
   animate,
   variants,
   style,
+  isAnimating,
+  canRevert,
 }: SwipeCardProps) {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
@@ -185,6 +187,41 @@ export function SwipeCard({
           }}
           transition={{ repeat: Infinity, duration: 1.5 }}
         />
+
+        {/* Controls overlay - show on both mobile and desktop */}
+        <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-4 z-20">
+          <Button
+            size="icon"
+            variant="outline"
+            className="h-14 w-14 rounded-full border-2 shadow-lg bg-white/90 hover:border-red-500 hover:bg-red-500/10"
+            onClick={() => onSwipe("left")}
+            disabled={isAnimating}
+          >
+            <X className="h-6 w-6 text-red-500" />
+          </Button>
+
+          {canRevert && (
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-12 w-12 rounded-full border-2 shadow-lg bg-white/90 hover:border-blue-500 hover:bg-blue-500/10"
+              onClick={onRevert}
+              disabled={isAnimating}
+            >
+              <ArrowLeft className="h-5 w-5 text-blue-500" />
+            </Button>
+          )}
+
+          <Button
+            size="icon"
+            variant="outline"
+            className="h-14 w-14 rounded-full border-2 shadow-lg bg-white/90 hover:border-pink-500 hover:bg-pink-500/10"
+            onClick={() => onSwipe("right")}
+            disabled={isAnimating}
+          >
+            <Heart className="h-6 w-6 text-pink-500" />
+          </Button>
+        </div>
       </div>
     </motion.div>
   );
