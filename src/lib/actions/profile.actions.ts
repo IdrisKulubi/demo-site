@@ -306,3 +306,14 @@ export async function removePhoto(photoUrl: string) {
     };
   }
 }
+
+export async function getCurrentUserProfile() {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+
+  const userProfile = await db.query.profiles.findFirst({
+    where: eq(profiles.userId, session.user.id),
+  });
+
+  return userProfile;
+}

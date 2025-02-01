@@ -6,18 +6,20 @@ import { cn } from "@/lib/utils";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 import { useState } from "react";
-import { GraduationCap, MapPin, Instagram, Music } from "lucide-react";
-
+import { GraduationCap, Instagram, Music } from "lucide-react";
+import Image from "next/image";
 // Import Swiper styles
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import Link from "next/link";
 
 interface SwipeCardProps {
   profile: Profile;
   onSwipe: (direction: "left" | "right") => void;
   active: boolean;
   animate?: "left" | "right" | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   variants?: Record<string, any>;
   style?: React.CSSProperties;
 }
@@ -32,6 +34,7 @@ export function SwipeCard({
 }: SwipeCardProps) {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // Handle touch swipe
@@ -58,51 +61,50 @@ export function SwipeCard({
 
   return (
     <motion.div
+      className={cn(
+        "absolute w-full aspect-[3/4] rounded-3xl overflow-hidden shadow-xl",
+        "bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-black",
+        active && "cursor-grab active:cursor-grabbing"
+      )}
+      animate={animate ? variants?.[animate] : undefined}
+      style={{
+        ...style,
+        backgroundImage: 'none',
+        touchAction: 'none',
+      }}
       drag={active ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
-      onDragEnd={(_, info) => {
-        if (Math.abs(info.offset.x) > 100) {
-          onSwipe(info.offset.x > 0 ? "right" : "left");
-        }
+      onDragEnd={(e, { offset, velocity }) => {
+        const swipe = offset.x * velocity.x;
+        if (swipe < -20000) onSwipe("left");
+        if (swipe > 20000) onSwipe("right");
       }}
-      animate={animate ? variants?.[animate] : ""}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      className={cn(
-        "absolute h-full w-full bg-white dark:bg-background rounded-3xl shadow-xl overflow-hidden",
-        active ? "cursor-grab active:cursor-grabbing" : "pointer-events-none"
-      )}
-      style={style}
     >
-      <div className="relative h-full">
-        {/* Photos Swiper */}
+      <div className="relative w-full h-full">
         <Swiper
           modules={[Navigation, Pagination]}
           navigation
           pagination={{ clickable: true }}
-          className="h-full w-full"
+          className="w-full h-full group"
           onSlideChange={(swiper) => setCurrentSlide(swiper.activeIndex)}
         >
-          {profile.photos?.map((photo, index) => (
-            <SwiperSlide 
-              key={`${photo}-${index}`} 
-              className="relative"
-            >
-              <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60 z-10" />
-              <motion.img
-                initial={{ opacity: 0, scale: 1.1 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-full h-full object-cover"
-                src={photo}
+          {[profile.profilePhoto, ...(profile.photos || [])].map((photo, index) => (
+            <SwiperSlide key={index} className="relative">
+              <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/60" />
+              <Image
+                src={photo || ""}
                 alt={`${profile.firstName}'s photo ${index + 1}`}
+                className="w-full h-full object-cover"
               />
             </SwiperSlide>
           ))}
         </Swiper>
 
         {/* Profile Info Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 z-20 text-white">
+        <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-10">
           <div className="space-y-2">
             {/* Name, Age & Verification */}
             <div className="flex items-center gap-2">
@@ -142,24 +144,24 @@ export function SwipeCard({
             {/* Social Links */}
             <div className="flex gap-3 pt-2">
               {profile.instagram && (
-                <a
+                <Link
                   href={`https://instagram.com/${profile.instagram}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-pink-400 hover:text-pink-300"
                 >
                   <Instagram className="h-5 w-5" />
-                </a>
+                </Link>
               )}
               {profile.spotify && (
-                <a
+                <Link
                   href={profile.spotify}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-green-400 hover:text-green-300"
                 >
                   <Music className="h-5 w-5" />
-                </a>
+                </Link>
               )}
             </div>
           </div>

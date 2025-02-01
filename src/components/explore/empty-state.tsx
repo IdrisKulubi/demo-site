@@ -60,10 +60,10 @@ export function NoMoreProfiles({ initialLikedProfiles }: NoMoreProfilesProps) {
       {/* Side Panels - Fixed with reduced width */}
       <div className="lg:w-[320px] lg:fixed lg:left-0 lg:top-[80px] lg:bottom-0 lg:pl-4">
         <SidePanels
-          profiles={likedProfiles}
+          profiles={likedByProfiles}
           likedByProfiles={likedByProfiles}
           onUnlike={handleUnlike}
-          onLikeBack={(profileId) => {
+          onLikeBack={async (profileId) => {
             setLikedByProfiles((prev) =>
               prev.filter((p) => p.userId !== profileId)
             );

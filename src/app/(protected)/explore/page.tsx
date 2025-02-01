@@ -9,13 +9,18 @@ import { SwipeStack } from "@/components/explore/cards/swipe-stack";
 import { NoMoreProfiles } from "@/components/explore/empty-state";
 import { type Profile } from "@/db/schema";
 import { NotifyModal } from "@/components/explore/modals/notify";
-import { ExploreMobile } from "@/components/explore/mobile/explore-mobile";
 import { isAllowedEmail } from "@/lib/utils/email-validator";
 import { GenderUpdateNotification } from "@/components/notifications/GenderUpdateNotification";
+import { ExploreMobileV2 } from "@/components/explore/mobile/explore-mobile-v2";
+import { getCurrentUserProfile } from "@/lib/actions/profile.actions";
 
 export default async function ExplorePage() {
   const session = await auth();
   if (!session?.user) redirect("/");
+
+  // Add this line to get the full profile
+  const currentUserProfile = await getCurrentUserProfile();
+  if (!currentUserProfile) redirect("/profile/setup");
 
   // Check if user has Strathmore email or existing profile
   const isAllowed = await isAllowedEmail(session.user.email || "", session.user.id);
@@ -62,10 +67,9 @@ export default async function ExplorePage() {
 
       {/* Conditional Rendering based on screen size */}
       <div className="md:hidden">
-        <ExploreMobile
+        <ExploreMobileV2
           initialProfiles={profiles as Profile[]}
-          likedProfiles={likedProfiles}
-          likedByProfiles={likedByProfiles}
+          currentUserProfile={currentUserProfile}
         />
       </div>
       <div className="hidden md:block">

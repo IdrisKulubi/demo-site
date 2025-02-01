@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, Heart } from "lucide-react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
+import Image from "next/image";
 
 interface MatchModalProps {
   isOpen: boolean;
@@ -90,9 +91,11 @@ export function MatchModal({
                   className="relative"
                 >
                   <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-pink-200 dark:ring-pink-800">
-                    <img
-                      src={currentUserProfile.profilePhoto || currentUserProfile.photos?.[0]}
+                    <Image
+                      src={currentUserProfile.profilePhoto || currentUserProfile.photos?.[0] || ""}
                       alt="Your photo"
+                      width={96}
+                      height={96}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -123,9 +126,11 @@ export function MatchModal({
                   className="relative"
                 >
                   <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-pink-200 dark:ring-pink-800">
-                    <img
-                      src={matchedProfile.profilePhoto || matchedProfile.photos?.[0]}
+                    <Image
+                      src={matchedProfile.profilePhoto || matchedProfile.photos?.[0] || ""}
                       alt={`${matchedProfile.firstName}'s photo`}
+                      width={96}
+                      height={96}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -147,7 +152,7 @@ export function MatchModal({
                 className="space-y-4"
               >
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-                  It's a Match! 💝
+                  It&apos;s a Match 💝
                 </h2>
                 <p className="text-muted-foreground">
                   You and {matchedProfile.firstName} liked each other
