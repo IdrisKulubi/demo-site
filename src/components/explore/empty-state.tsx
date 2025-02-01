@@ -8,7 +8,6 @@ import { undoLastSwipe } from "@/lib/actions/explore.actions";
 import { useToast } from "@/hooks/use-toast";
 import { EmptyMobileView } from "./cards/empty-mobile";
 import { ShareAppModal } from "../shared/share-app";
-import { NotifyModal } from "./modals/notify";
 import { getLikedByProfiles } from "@/lib/actions/explore.actions";
 import { SidePanels } from "./cards/side-panels";
 
@@ -76,7 +75,6 @@ export function NoMoreProfiles({ initialLikedProfiles }: NoMoreProfilesProps) {
         <div className="w-full max-w-[420px] mx-auto px-4">
           <div className="relative w-full">
             <div className="absolute top-0 left-0 right-0">
-              <NotifyModal />
             </div>
 
             {/* Desktop View */}

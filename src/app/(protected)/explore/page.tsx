@@ -7,7 +7,6 @@ import { redirect } from "next/navigation";
 import { SwipeStack } from "@/components/explore/cards/swipe-stack";
 import { NoMoreProfiles } from "@/components/explore/empty-state";
 import { type Profile } from "@/db/schema";
-import { NotifyModal } from "@/components/explore/modals/notify";
 import { getCurrentUserProfile } from "@/lib/actions/profile.actions";
 import { ExploreMobileV2 } from "@/components/explore/mobile/explore-mobile-v2";
 
@@ -22,7 +21,6 @@ export default async function ExplorePage() {
 
   return (
     <div className="min-h-screen">
-      <NotifyModal/>
       
       {/* Mobile View */}
       <div className="md:hidden">

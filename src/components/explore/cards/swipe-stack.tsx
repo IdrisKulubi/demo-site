@@ -1,12 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import {  useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeCard } from "./swipe-card";
 import { AnimatePresence } from "framer-motion";
-import { Heart, X, ArrowLeft } from "lucide-react";
 import { recordSwipe, undoLastSwipe } from "@/lib/actions/explore.actions";
-import { Button } from "@/components/ui/button";
 import { MatchModal } from "@/components/explore/modals/match-modal";
 
 import { useToast } from "@/hooks/use-toast";
@@ -35,60 +34,67 @@ const swipeVariants = {
   },
 };
 
-export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfiles }: SwipeStackProps) {
+export function SwipeStack({
+  initialProfiles,
+  currentUserProfile,
+  likedByProfiles,
+}: SwipeStackProps) {
   const [profiles, setProfiles] = useState(initialProfiles);
   const [currentIndex, setCurrentIndex] = useState(initialProfiles.length - 1);
-  const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
+  const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(
+    null
+  );
   const [isAnimating, setIsAnimating] = useState(false);
   const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
   const [swipedProfiles, setSwipedProfiles] = useState<Profile[]>([]);
   const { toast } = useToast();
 
-  const handleSwipe = useCallback(async (direction: "left" | "right") => {
-    if (isAnimating || !profiles[currentIndex]) return;
+  const handleSwipe = useCallback(
+    async (direction: "left" | "right") => {
+      if (isAnimating || !profiles[currentIndex]) return;
 
-    setIsAnimating(true);
-    setSwipeDirection(direction);
+      setIsAnimating(true);
+      setSwipeDirection(direction);
 
-    // Only record like when swiping right
-    if (direction === "right") {
-      const result = await recordSwipe(
-        profiles[currentIndex].userId,
-        "like"
-      );
+      // Only record like when swiping right
+      if (direction === "right") {
+        const result = await recordSwipe(profiles[currentIndex].userId, "like");
 
-      if (result.success) {
-        if (result.isMatch) {
-          setMatchedProfile(profiles[currentIndex]);
-        } else {
-          toast({
-            title: "Yasss! 💖",
-            description: `You liked ${profiles[currentIndex].firstName}! Fingers crossed for a match!`,
-            variant: "default",
-            className: "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-none",
-          });
+        if (result.success) {
+          if (result.isMatch) {
+            setMatchedProfile(profiles[currentIndex]);
+          } else {
+            toast({
+              title: "Yasss 💖",
+              description: `You liked ${profiles[currentIndex].firstName}! Fingers crossed for a match`,
+              variant: "default",
+              className:
+                "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-none",
+            });
+          }
         }
       }
-    }
 
-    setSwipedProfiles(prev => [...prev, profiles[currentIndex]]);
-    
-    setTimeout(() => {
-      setCurrentIndex(prev => prev - 1);
-      setSwipeDirection(null);
-      setIsAnimating(false);
-    }, 300);
-  }, [currentIndex, isAnimating, profiles, toast]);
+      setSwipedProfiles((prev) => [...prev, profiles[currentIndex]]);
+
+      setTimeout(() => {
+        setCurrentIndex((prev) => prev - 1);
+        setSwipeDirection(null);
+        setIsAnimating(false);
+      }, 300);
+    },
+    [currentIndex, isAnimating, profiles, toast]
+  );
 
   const handleRevert = useCallback(async () => {
     if (swipedProfiles.length === 0) return;
 
     const lastProfile = swipedProfiles[swipedProfiles.length - 1];
     await undoLastSwipe(lastProfile.userId);
-    
-    setProfiles(prev => [...prev, lastProfile]);
-    setSwipedProfiles(prev => prev.slice(0, -1));
-    setCurrentIndex(prev => prev + 1);
+
+    setProfiles((prev) => [...prev, lastProfile]);
+    setSwipedProfiles((prev) => prev.slice(0, -1));
+    setCurrentIndex((prev) => prev + 1);
   }, [swipedProfiles]);
 
   const handleLikeBack = async (profileId: string) => {
@@ -96,23 +102,23 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
   };
 
   return (
-    <div className="flex w-full max-w-7xl mx-auto relative">
-      {/* Side Panel */}
-      <div className="hidden lg:block w-80 fixed left-4 top-24">
+    <div className="flex w-full max-w-7xl mx-auto relative min-h-screen">
+      {/* Side Panel - Adjusted positioning */}
+      <div className="hidden lg:block w-72 fixed left-0 top-24 h-[calc(100vh-6rem)]">
         <SidePanels
-          profiles={swipedProfiles.filter(p => p.isMatch)}
+          profiles={swipedProfiles.filter((p) => p.isMatch)}
           likedByProfiles={likedByProfiles}
           onUnlike={handleRevert}
           onLikeBack={handleLikeBack}
         />
       </div>
 
-      {/* Main Card Area */}
-      <div className="flex-1 flex justify-center lg:ml-96">
-        <div className="w-full max-w-[400px]">
-          <div className="relative h-[600px]">
+      {/* Main Card Area - Adjusted layout */}
+      <div className="flex-1 flex justify-center items-center lg:ml-52">
+        <div className="w-full max-w-[450px] mx-4">
+          <div className="relative h-[650px] w-full flex items-center justify-center">
             <AnimatePresence>
-              {profiles[currentIndex] && (
+              {profiles[currentIndex] ? (
                 <SwipeCard
                   key={profiles[currentIndex].userId}
                   profile={profiles[currentIndex]}
@@ -124,12 +130,16 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
                   isAnimating={isAnimating}
                   canRevert={swipedProfiles.length > 0}
                   style={{
-                    position: 'absolute',
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '8px',
+                    position: "absolute",
+                    width: "100%",
+                    height: "90%",
+                    maxWidth: "450px",
+                    borderRadius: "16px",
+                    boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)",
                   }}
                 />
+              ) : (
+                <NoMoreProfiles initialLikedProfiles={likedByProfiles} />
               )}
             </AnimatePresence>
           </div>
@@ -145,5 +155,3 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
     </div>
   );
 }
-
-
