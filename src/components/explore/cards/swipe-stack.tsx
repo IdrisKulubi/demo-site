@@ -1,222 +1,175 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
+import { Profile } from "@/db/schema";
 import { SwipeCard } from "./swipe-card";
-import type { Profile } from "@/db/schema";
-import {
-  recordSwipe,
-  undoLastSwipe,
-  getLikedProfiles,
-  getLikedByProfiles,
-} from "@/lib/actions/explore.actions";
+import { motion, AnimatePresence } from "framer-motion";
+import { Heart, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useSwipeCounter } from "@/context/swipe-counter-context";
-
-import { MatchModal } from "../modals/match-modal";
-import { SwipeControls } from "../controls/swipe-controls";
-import { LikedAvatars } from "./liked-avatars";
-import { NoMoreProfiles } from "../empty-state";
-import { SidePanels } from "./side-panels";
-
-const swipeAnimationVariants = {
-  right: {
-    x: "150%",
-    y: -50,
-    rotate: 20,
-    opacity: 0,
-    transition: { duration: 0.5 },
-  },
-  left: {
-    x: "-150%",
-    y: -50,
-    rotate: -20,
-    opacity: 0,
-    transition: { duration: 0.5 },
-  },
-};
+import { recordSwipe } from "@/lib/actions/explore.actions";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface SwipeStackProps {
   initialProfiles: Profile[];
+  onMatch: (profile: Profile) => void;
+  onEmptyStack: () => void;
 }
 
-export function SwipeStack({ initialProfiles }: SwipeStackProps) {
-  const [profiles, setProfiles] = useState<Profile[]>(initialProfiles);
-  const [swipedProfiles, setSwipedProfiles] = useState<Profile[]>([]);
-  const [likedProfiles, setLikedProfiles] = useState<Profile[]>([]);
-  const [likedByProfiles, setLikedByProfiles] = useState<Profile[]>([]);
-  const [showMatch, setShowMatch] = useState(false);
-  const [currentSwipeDirection, setCurrentSwipeDirection] = useState<
-    "left" | "right" | null
-  >(null);
-  const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
+const swipeVariants = {
+  left: {
+    x: -1000,
+    opacity: 0,
+    rotate: -30,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+  right: {
+    x: 1000,
+    opacity: 0,
+    rotate: 30,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
+
+export function SwipeStack({ initialProfiles, onMatch, onEmptyStack }: SwipeStackProps) {
+  const [profiles, setProfiles] = useState(initialProfiles);
+  const [currentIndex, setCurrentIndex] = useState(initialProfiles.length - 1);
+  const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
   const { toast } = useToast();
-  const { incrementSwipeCount } = useSwipeCounter();
 
-  // Load both liked and liked-by profiles on mount
+  const currentProfile = profiles[currentIndex];
+
   useEffect(() => {
-    const loadProfiles = async () => {
-      // Load liked profiles
-      const { profiles: liked, error: likedError } = await getLikedProfiles();
-      if (likedError) {
-        toast({
-          variant: "destructive",
-          description: "Couldn't load your crushes 😅",
-        });
-        return;
-      }
-      setLikedProfiles(liked);
-
-      // Load profiles that liked you
-      const { profiles: likedBy } = await getLikedByProfiles();
-      setLikedByProfiles(likedBy);
-
-      // Check if there are any matches to show
-      const hasNewMatch = liked.some((profile) => profile.isMatch);
-      if (hasNewMatch) {
-        setShowMatch(true);
-      }
-    };
-
-    loadProfiles();
-  }, [toast]);
-
-  const handleSwipe = async (direction: "left" | "right", profile: Profile) => {
-    setCurrentSwipeDirection(direction);
-    const action = direction === "right" ? "like" : "pass";
-
-    try {
-      incrementSwipeCount(); // Increment the swipe counter
-      const result = await recordSwipe(profile.userId, action);
-
-      if (!result.success) {
-        toast({
-          variant: "destructive",
-          description: result.error || "Couldn't record swipe 😅",
-        });
-        return;
-      }
-
-      setTimeout(() => {
-        if (direction === "right") {
-          const updatedProfile = {
-            ...profile,
-            isMatch: result.isMatch ?? null,
-          } satisfies Profile;
-          setLikedProfiles((prev) => [...prev, updatedProfile]);
-          if (result.isMatch) {
-            setMatchedProfile(updatedProfile);
-            setShowMatch(true);
-          }
-        }
-        setSwipedProfiles((prev) => [...prev, profile]);
-        setProfiles((prev) => prev.slice(0, -1));
-        setCurrentSwipeDirection(null);
-      }, 500);
-    } catch (error) {
-      console.error(error);
+    if (currentIndex < 0) {
+      onEmptyStack();
     }
-  };
+  }, [currentIndex, onEmptyStack]);
 
-  const handleUndo = async () => {
-    if (swipedProfiles.length === 0) return;
+  const handleSwipe = useCallback(async (direction: "left" | "right") => {
+    if (isAnimating || !currentProfile) return;
 
-    const lastSwiped = swipedProfiles[swipedProfiles.length - 1];
-    const result = await undoLastSwipe(lastSwiped.userId);
+    setIsAnimating(true);
+    setSwipeDirection(direction);
 
-    if (result.success) {
-      setProfiles((prev) => [...prev, lastSwiped]);
-      setSwipedProfiles((prev) => prev.slice(0, -1));
-      setLikedProfiles((prev) =>
-        prev.filter((p) => p.userId !== lastSwiped.userId)
-      );
-    } else {
+    const result = await recordSwipe(
+      currentProfile.userId,
+      direction === "right" ? "like" : "pass"
+    );
+
+    if (!result.success) {
       toast({
         variant: "destructive",
-        description: result.error || "Couldn't undo swipe 😅",
+        description: result.error || "Couldn't record swipe 😅",
       });
+      setIsAnimating(false);
+      return;
     }
-  };
+
+    // If it's a match, notify parent component
+    if (direction === "right" && result.isMatch) {
+      onMatch(currentProfile);
+    }
+
+    // Delay state updates to allow animation to complete
+    setTimeout(() => {
+      setCurrentIndex((prev) => prev - 1);
+      setSwipeDirection(null);
+      setIsAnimating(false);
+    }, 300);
+  }, [currentProfile, isAnimating, onMatch, toast]);
+
+  // Handle keyboard controls
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (isAnimating) return;
+      if (e.key === "ArrowLeft") handleSwipe("left");
+      if (e.key === "ArrowRight") handleSwipe("right");
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [handleSwipe, isAnimating]);
 
   return (
-    <div className="relative flex flex-col lg:flex-row w-full">
-      {/* Side Panels - Fixed with reduced width */}
-      <div className="lg:w-[320px] lg:fixed lg:left-0 lg:top-[80px] lg:bottom-0 lg:pl-4">
-        <SidePanels
-          profiles={likedProfiles}
-          likedByProfiles={likedByProfiles}
-          onUnlike={async (profileId) => {
-            const result = await undoLastSwipe(profileId);
-            if (result.success) {
-              setLikedProfiles((prev) =>
-                prev.filter((p) => p.userId !== profileId)
-              );
-            }
-          }}
-          onLikeBack={(profileId) => {
-            setLikedByProfiles((prev) =>
-              prev.filter((p) => p.userId !== profileId)
+    <div className="relative w-full max-w-md mx-auto h-[600px] md:h-[700px]">
+      {/* Cards Stack */}
+      <div className="relative w-full h-full">
+        <AnimatePresence>
+          {profiles.map((profile, index) => {
+            const isTop = index === currentIndex;
+            const isSecond = index === currentIndex - 1;
+
+            return (
+              <SwipeCard
+                key={profile.userId}
+                profile={profile}
+                onSwipe={handleSwipe}
+                active={isTop}
+                animate={isTop ? swipeDirection : undefined}
+                variants={swipeVariants}
+                style={{
+                  scale: isSecond ? 0.95 : 1,
+                  opacity: isSecond ? 0.8 : 1,
+                  zIndex: index,
+                }}
+              />
             );
-          }}
-        />
+          })}
+        </AnimatePresence>
       </div>
 
-      {/* Main Swipe Area */}
-      <div className="flex-1 lg:ml-[160px] flex flex-col items-center justify-start pt-6">
-        <div className="w-full max-w-[420px] mx-auto px-4">
-          <div className="mb-6">
-            <LikedAvatars profiles={likedProfiles} />
-          </div>
-
-          {/* Card Container - Fixed dimensions with proper centering */}
-          <div className="relative h-[600px] w-full flex items-center justify-center">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <AnimatePresence mode="popLayout">
-                {profiles.map((profile, index) => (
-                  <SwipeCard
-                    key={`${profile.userId}-${index}`}
-                    profile={profile}
-                    active={index === profiles.length - 1}
-                    onSwipe={(dir) => handleSwipe(dir, profile)}
-                    animate={
-                      index === profiles.length - 1
-                        ? currentSwipeDirection
-                        : undefined
-                    }
-                    variants={swipeAnimationVariants}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
-
-            {profiles.length === 0 && (
-              <NoMoreProfiles initialLikedProfiles={likedProfiles} />
+      {/* Swipe Controls */}
+      {currentProfile && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4"
+        >
+          <Button
+            size="lg"
+            variant="outline"
+            className={cn(
+              "h-14 w-14 rounded-full border-2 shadow-lg transition-colors",
+              "hover:border-red-500 hover:bg-red-500/10",
+              isAnimating && "pointer-events-none opacity-50"
             )}
-          </div>
+            onClick={() => handleSwipe("left")}
+          >
+            <X className="h-8 w-8 text-red-500" />
+          </Button>
 
-          <div className="mt-8 max-w-sm mx-auto">
-            <SwipeControls
-              onSwipeLeft={() =>
-                profiles.length > 0 &&
-                handleSwipe("left", profiles[profiles.length - 1])
-              }
-              onSwipeRight={() =>
-                profiles.length > 0 &&
-                handleSwipe("right", profiles[profiles.length - 1])
-              }
-              onUndo={handleUndo}
-              disabled={swipedProfiles.length === 0}
-            />
-          </div>
-        </div>
-      </div>
+          <Button
+            size="lg"
+            variant="outline"
+            className={cn(
+              "h-14 w-14 rounded-full border-2 shadow-lg transition-colors",
+              "hover:border-pink-500 hover:bg-pink-500/10",
+              isAnimating && "pointer-events-none opacity-50"
+            )}
+            onClick={() => handleSwipe("right")}
+          >
+            <Heart className="h-8 w-8 text-pink-500" />
+          </Button>
+        </motion.div>
+      )}
 
-      {showMatch && matchedProfile && (
-        <MatchModal
-          open={showMatch}
-          onOpenChange={setShowMatch}
-          matchedProfile={matchedProfile}
-        />
+      {/* Empty State */}
+      {!currentProfile && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-white/50 dark:bg-background/50 backdrop-blur-sm rounded-3xl"
+        >
+          <span className="text-6xl mb-6">✨</span>
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+            No more profiles
+          </h3>
+          <p className="text-muted-foreground mt-2">
+            Check back later for more potential matches!
+          </p>
+        </motion.div>
       )}
     </div>
   );

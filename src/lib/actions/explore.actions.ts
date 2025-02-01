@@ -3,7 +3,7 @@
 
 import db from "@/db/drizzle";
 import { profiles, swipes, matches, users } from "@/db/schema";
-import { eq, and, not, isNull, or, sql } from "drizzle-orm";
+import { eq, and, not, isNull, or, sql, exists, desc } from "drizzle-orm";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
@@ -104,63 +104,66 @@ export async function getSwipableProfiles() {
   }
 }
 
-export async function recordSwipe(
-  targetUserId: string,
-  action: "like" | "pass"
-) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { success: false, error: "Unauthorized" };
-  }
-
+export async function recordSwipe(swipedId: string, action: "like" | "pass") {
   try {
-    const [swiper, swiped] = await Promise.all([
-      db.select().from(users).where(eq(users.id, session.user.id)),
-      db.select().from(users).where(eq(users.id, targetUserId))
-    ]);
-
-    if (!swiper.length) {
-      return { success: false, error: "Swiper user not found" };
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: "Not authenticated" };
     }
 
-    if (!swiped.length) {
-      return { success: false, error: "Swiped user not found" };
+    // Check if there's an existing swipe to prevent duplicates
+    const existingSwipe = await db
+      .select()
+      .from(swipes)
+      .where(
+        and(
+          eq(swipes.swiperId, session.user.id),
+          eq(swipes.swipedId, swipedId)
+        )
+      )
+      .limit(1);
+
+    if (existingSwipe.length > 0) {
+      return { success: false, error: "Already swiped on this profile" };
     }
 
+    // Record the swipe
     await db.insert(swipes).values({
       swiperId: session.user.id,
-      swipedId: targetUserId,
+      swipedId: swipedId,
       isLike: action === "like",
       createdAt: new Date(),
     });
 
+    // If it's a like, check for a match
     if (action === "like") {
       const mutualLike = await db
         .select()
         .from(swipes)
         .where(
           and(
-            eq(swipes.swiperId, targetUserId),
+            eq(swipes.swiperId, swipedId),
             eq(swipes.swipedId, session.user.id),
             eq(swipes.isLike, true)
           )
-        );
+        )
+        .limit(1);
 
+      // If there's a mutual like, create a match
       if (mutualLike.length > 0) {
         await db.insert(matches).values({
-          id: crypto.randomUUID(),
           user1Id: session.user.id,
-          user2Id: targetUserId,
+          user2Id: swipedId,
           createdAt: new Date(),
-          user1Typing: false,
-          user2Typing: false,
         });
+
         return { success: true, isMatch: true };
       }
     }
 
     return { success: true, isMatch: false };
   } catch (error) {
+    console.error("Error recording swipe:", error);
     return { success: false, error: "Failed to record swipe" };
   }
 }
@@ -259,39 +262,54 @@ export async function getLikedByProfiles() {
   }
 
   try {
+    // Get profiles that have liked the current user but haven't been matched or passed
     const results = await db
       .select({
         profile: profiles,
-        isMatch: matches.id,
-        swipe: swipes,
       })
       .from(swipes)
       .innerJoin(profiles, eq(profiles.userId, swipes.swiperId))
-      .leftJoin(
-        matches,
-        and(
-          or(
-            and(
-              eq(matches.user1Id, session.user.id),
-              eq(matches.user2Id, profiles.userId)
-            ),
-            and(
-              eq(matches.user2Id, session.user.id),
-              eq(matches.user1Id, profiles.userId)
-            )
-          )
-        )
-      )
       .where(
         and(
           eq(swipes.swipedId, session.user.id),
           eq(swipes.isLike, true),
-          isNull(matches.id)
+          not(
+            exists(
+              db
+                .select()
+                .from(matches)
+                .where(
+                  or(
+                    and(
+                      eq(matches.user1Id, session.user.id),
+                      eq(matches.user2Id, swipes.swiperId)
+                    ),
+                    and(
+                      eq(matches.user2Id, session.user.id),
+                      eq(matches.user1Id, swipes.swiperId)
+                    )
+                  )
+                )
+            )
+          ),
+          not(
+            exists(
+              db
+                .select()
+                .from(swipes)
+                .where(
+                  and(
+                    eq(swipes.swiperId, session.user.id),
+                    eq(swipes.swipedId, profiles.userId)
+                  )
+                )
+            )
+          )
         )
       );
 
     return {
-      profiles: results.map((r) => ({ ...r.profile, isMatch: !!r.isMatch })),
+      profiles: results.map((r) => r.profile),
       error: null,
     };
   } catch (error) {
@@ -311,5 +329,45 @@ export async function getTotalSwipes() {
   } catch (error) {
     console.error("Error getting total swipes:", error);
     return { success: false, count: 0 };
+  }
+}
+
+export async function getMatches() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { matches: [], error: "Unauthorized" };
+  }
+
+  try {
+    const results = await db
+      .select({
+        profile: profiles,
+        matchedAt: matches.createdAt,
+      })
+      .from(matches)
+      .innerJoin(
+        profiles,
+        or(
+          and(
+            eq(matches.user1Id, session.user.id),
+            eq(profiles.userId, matches.user2Id)
+          ),
+          and(
+            eq(matches.user2Id, session.user.id),
+            eq(profiles.userId, matches.user1Id)
+          )
+        )
+      )
+      .orderBy(desc(matches.createdAt));
+
+    return {
+      matches: results.map((r) => ({
+        ...r.profile,
+        matchedAt: r.matchedAt,
+      })),
+      error: null,
+    };
+  } catch (error) {
+    return { matches: [], error: "Failed to fetch matches" };
   }
 }
