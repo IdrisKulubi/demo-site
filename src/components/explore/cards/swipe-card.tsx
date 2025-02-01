@@ -99,6 +99,9 @@ export function SwipeCard({
                 src={photo || ""}
                 alt={`${profile.firstName}'s photo ${index + 1}`}
                 className="w-full h-full object-cover"
+                width={500}
+                height={500}
+              
               />
             </SwiperSlide>
           ))}
