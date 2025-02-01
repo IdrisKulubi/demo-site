@@ -41,49 +41,6 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     }
   }, [volume, audio]);
 
-  // Try to autoplay music
-  useEffect(() => {
-    if (audio) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const attemptPlay = async () => {
-        try {
-          await audio.play();
-          setIsPlaying(true);
-        } catch (error) {
-          console.error('Failed to play audio:', error);
-          // Silent fail - will require user interaction
-          console.log('Music will play after user interaction');
-        }
-      };
-
-      // attemptPlay(); // Commented out to stop auto-play
-
-      // Also try to play on first interaction
-      const handleInteraction = async () => {
-        try {
-          await audio.play();
-          setIsPlaying(true);
-        } catch (error) {
-          console.error('Failed to play audio:', error);
-        }
-        // Remove listeners after first attempt
-        document.removeEventListener('click', handleInteraction);
-        document.removeEventListener('touchstart', handleInteraction);
-        document.removeEventListener('keydown', handleInteraction);
-      };
-
-      document.addEventListener('click', handleInteraction);
-      document.addEventListener('touchstart', handleInteraction);
-      document.addEventListener('keydown', handleInteraction);
-
-      return () => {
-        document.removeEventListener('click', handleInteraction);
-        document.removeEventListener('touchstart', handleInteraction);
-        document.removeEventListener('keydown', handleInteraction);
-      };
-    }
-  }, [audio]);
-
   const toggleMusic = async () => {
     if (audio) {
       if (!isPlaying) {

@@ -19,6 +19,7 @@ import { useSession } from "next-auth/react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { deleteUploadThingFile } from "@/lib/actions/upload.actions";
+import { auth } from "@/auth";
 
 export default function ProfileSetup() {
   const [step, setStep] = useState(0);
@@ -28,13 +29,11 @@ export default function ProfileSetup() {
   const { data: session } = useSession();
 
   useEffect(() => {
-    // Check if user has a Strathmore email
-    const email = session?.user?.email;
     const existingProfile = session?.user?.profileCompleted;
-    
-    // Only check new users (those without completed profiles)
-    if (!existingProfile && email && !email.endsWith("@strathmore.edu")) {
-      router.replace("/no-access");
+
+    // Only redirect users with completed profiles
+    if (existingProfile) {
+      router.replace("/explore");
     }
   }, [session, router]);
 
@@ -74,7 +73,7 @@ export default function ProfileSetup() {
       }
 
       const result = await submitProfile(data);
-      
+
       if (result.success) {
         toast({
           title: "Success!",
@@ -86,7 +85,10 @@ export default function ProfileSetup() {
         toast({
           variant: "destructive",
           title: "Error",
-          description: result.validationErrors?.[0]?.message || result.error || "Something went wrong",
+          description:
+            result.validationErrors?.[0]?.message ||
+            result.error ||
+            "Something went wrong",
         });
       }
     } catch (error) {
@@ -103,82 +105,86 @@ export default function ProfileSetup() {
 
   const handleNext = () => {
     const currentStepData = form.getValues();
-    
+
     switch (step) {
       case 0: // Photos
         if (currentStepData.photos.length === 0) {
           toast({
             variant: "destructive",
             title: "Upload Required",
-            description: "Please upload at least one photo to continue"
+            description: "Please upload at least one photo to continue",
           });
           return;
         }
         break;
-        
+
       case 1: // Bio
         if (currentStepData.bio.split(/\s+/).filter(Boolean).length < 10) {
           toast({
             variant: "destructive",
             title: "Bio Too Short",
-            description: `Please write at least 10 words (currently ${currentStepData.bio.split(/\s+/).filter(Boolean).length} words)`
+            description: `Please write at least 10 words (currently ${
+              currentStepData.bio.split(/\s+/).filter(Boolean).length
+            } words)`,
           });
           return;
         }
         break;
-        
+
       case 2: // Interests
         if (currentStepData.interests.length < 3) {
           toast({
             variant: "destructive",
             title: "More Interests Needed",
-            description: `Please select at least 3 interests (currently ${currentStepData.interests.length} selected)`
+            description: `Please select at least 3 interests (currently ${currentStepData.interests.length} selected)`,
           });
           return;
         }
         break;
-        
+
       case 3: // Details
         const missingFields = [];
-        if (!currentStepData.firstName?.trim()) missingFields.push("First Name");
+        if (!currentStepData.firstName?.trim())
+          missingFields.push("First Name");
         if (!currentStepData.lastName?.trim()) missingFields.push("Last Name");
         if (!currentStepData.course?.trim()) missingFields.push("Course");
         if (!currentStepData.yearOfStudy) missingFields.push("Year of Study");
         if (!currentStepData.gender) missingFields.push("Gender");
         if (!currentStepData.age) missingFields.push("Age");
         if (!currentStepData.lookingFor) missingFields.push("Looking For");
-        
+
         // Special validation for phone number
-        const phoneDigits = currentStepData.phoneNumber?.replace(/[^0-9]/g, '');
+        const phoneDigits = currentStepData.phoneNumber?.replace(/[^0-9]/g, "");
         if (!currentStepData.phoneNumber?.trim()) {
           missingFields.push("Phone Number");
         } else if (!/^[0-9+\-\s()]+$/.test(currentStepData.phoneNumber)) {
           toast({
             variant: "destructive",
             title: "Invalid Phone Number",
-            description: "Phone number can only contain numbers, spaces, and these symbols: + - ( )"
+            description:
+              "Phone number can only contain numbers, spaces, and these symbols: + - ( )",
           });
           return;
         } else if (phoneDigits?.length !== 10) {
           toast({
             variant: "destructive",
             title: "Invalid Phone Number",
-            description: "Phone number must be exactly 10 digits"
+            description: "Phone number must be exactly 10 digits",
           });
           return;
         }
-        
+
         if (missingFields.length > 0) {
           toast({
             variant: "destructive",
             title: "Required Fields Missing",
-            description: `Please fill in: ${missingFields.join(", ")}`
+            description: `Please fill in: ${missingFields.join(", ")}`,
           });
           return;
         }
         break;
     }
-    
+
     setStep(step + 1);
   };
 
@@ -201,7 +207,7 @@ export default function ProfileSetup() {
           formData.phoneNumber &&
           formData.phoneNumber.trim() !== "" &&
           /^[0-9+\-\s()]+$/.test(formData.phoneNumber) &&
-          formData.phoneNumber.replace(/[^0-9]/g, '').length === 10
+          formData.phoneNumber.replace(/[^0-9]/g, "").length === 10
         );
       case 4: // Social (optional)
         return true;
@@ -212,8 +218,8 @@ export default function ProfileSetup() {
   /* eslint-disable  @typescript-eslint/no-unused-vars */
 
   const isFormValid = (formData: ProfileFormData) => {
-    const digitsOnly = formData.phoneNumber?.replace(/[^0-9]/g, '') || '';
-    
+    const digitsOnly = formData.phoneNumber?.replace(/[^0-9]/g, "") || "";
+
     // Add console logs to debug validation
     console.log("Form data:", formData);
     console.log("Validation checks:", {
@@ -231,8 +237,8 @@ export default function ProfileSetup() {
         exists: !!formData.phoneNumber,
         notEmpty: formData.phoneNumber?.trim() !== "",
         format: /^[0-9+\-\s()]+$/.test(formData.phoneNumber || ""),
-        length: digitsOnly.length === 10
-      }
+        length: digitsOnly.length === 10,
+      },
     });
 
     return (
@@ -302,6 +308,16 @@ export default function ProfileSetup() {
     };
   }, [session]);
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      const session = await auth();
+      if (!session?.user) {
+        router.replace("/login");
+      }
+    };
+    checkAuth();
+  }, [router]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white dark:from-pink-950 dark:to-background p-6 pt-16">
       <motion.div
@@ -331,7 +347,6 @@ export default function ProfileSetup() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-
           {step === 0 && (
             <div className="space-y-4">
               <ImageUpload
@@ -452,11 +467,7 @@ export default function ProfileSetup() {
               </Button>
             )}
             {step < steps.length - 1 ? (
-              <Button
-                type="button"
-                onClick={handleNext}
-                className="ml-auto"
-              >
+              <Button type="button" onClick={handleNext} className="ml-auto">
                 Next
               </Button>
             ) : (
@@ -492,7 +503,7 @@ export default function ProfileSetup() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      Create Profile 
+                      Create Profile
                     </motion.span>
                   )}
                 </Button>
