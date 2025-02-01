@@ -128,51 +128,21 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
                   key={profiles[currentIndex].userId}
                   profile={profiles[currentIndex]}
                   onSwipe={handleSwipe}
+                  onRevert={handleRevert}
                   active={false}
                   animate={swipeDirection}
                   variants={swipeVariants}
+                  isAnimating={isAnimating}
+                  canRevert={swipedProfiles.length > 0}
                   style={{
                     position: 'absolute',
                     width: '100%',
                     height: '100%',
                     borderRadius: '8px',
                   }}
-                >
-                  {/* Mobile Controls Inside Card */}
-                  <div className="lg:hidden absolute bottom-6 left-0 right-0 flex justify-center items-center gap-4 z-10">
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="h-14 w-14 rounded-full border-2 shadow-lg bg-white/90"
-                      onClick={() => handleSwipe("left")}
-                      disabled={isAnimating}
-                    >
-                      <X className="h-6 w-6 text-red-500" />
-                    </Button>
-
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="h-12 w-12 rounded-full border-2 shadow-lg bg-white/90"
-                      onClick={handleRevert}
-                      disabled={swipedProfiles.length === 0 || isAnimating}
-                    >
-                      <ArrowLeft className="h-5 w-5 text-blue-500" />
-                    </Button>
-
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="h-14 w-14 rounded-full border-2 shadow-lg bg-white/90"
-                      onClick={() => handleSwipe("right")}
-                      disabled={isAnimating}
-                    >
-                      <Heart className="h-6 w-6 text-pink-500" />
-                    </Button>
-          </div>
-                </SwipeCard>
+                />
               )}
-              </AnimatePresence>
+            </AnimatePresence>
 
             {/* Desktop Controls - Hidden on Mobile */}
             <div className="hidden lg:flex absolute -bottom-20 left-0 right-0 justify-center items-center gap-6">

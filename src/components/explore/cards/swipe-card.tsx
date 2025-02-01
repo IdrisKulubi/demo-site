@@ -17,17 +17,22 @@ import Link from "next/link";
 interface SwipeCardProps {
   profile: Profile;
   onSwipe: (direction: "left" | "right") => void;
+  onRevert?: () => void;
   active: boolean;
   animate?: "left" | "right" | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   variants?: Record<string, any>;
   style?: React.CSSProperties;
   children?: React.ReactNode;
+  isAnimating?: boolean;
+  canRevert?: boolean;
 }
 
 export function SwipeCard({
   profile,
   onSwipe,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  onRevert,
   active,
   animate,
   variants,
