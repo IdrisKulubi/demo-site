@@ -76,7 +76,7 @@ export function SwipeCard({
         "bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-black",
         active && "cursor-grab active:cursor-grabbing"
       )}
-      animate={animate ? variants?.[animate] as AnimationControls : undefined}
+      animate={animate ? (variants?.[animate] as AnimationControls) : undefined}
       style={{
         ...style,
         backgroundImage: "none",
@@ -105,13 +105,15 @@ export function SwipeCard({
             (photo, index) => (
               <SwiperSlide key={index} className="relative">
                 <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/60" />
-                <Image
-                  src={photo || ""}
-                  alt={`${profile.firstName}'s photo ${index + 1}`}
-                  className="w-full h-full object-cover"
-                  width={500}
-                  height={500}
-                />
+                {photo && (
+                  <Image
+                    src={photo}
+                    alt={`${profile.firstName}'s photo ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    width={500}
+                    height={500}
+                  />
+                )}
               </SwiperSlide>
             )
           )}
