@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { matches, Profile } from "@/db/schema";
+import {  Profile } from "@/db/schema";
 import { SwipeCard } from "../cards/swipe-card";
 import { AnimatePresence } from "framer-motion";
 import { Heart, X, User2, Bell, ArrowLeft, Star } from "lucide-react";
@@ -19,11 +19,13 @@ import { ProfilePreviewModal } from "../modals/profile-preview-modal";
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];
   currentUserProfile: Profile;
+  currentUser: { id: string };
 }
 
 export function ExploreMobileV2({
   initialProfiles,
   currentUserProfile,
+  currentUser,
 }: ExploreMobileV2Props) {
   const [profiles, setProfiles] = useState(initialProfiles);
   const [currentIndex, setCurrentIndex] = useState(initialProfiles.length - 1);
@@ -203,6 +205,7 @@ export function ExploreMobileV2({
           likedProfiles={[]}
           onShare={() => {}}
           onUnlike={async () => {}}
+          currentUser={currentUser}
         />
       )}
 
@@ -212,6 +215,7 @@ export function ExploreMobileV2({
         onClose={() => setMatchedProfile(null)}
         matchedProfile={matchedProfile!}
         currentUserProfile={currentUserProfile}
+        currentUser={currentUser}
       />
 
       <MatchesModal

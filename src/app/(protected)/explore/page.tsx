@@ -27,6 +27,7 @@ export default async function ExplorePage() {
         <ExploreMobileV2
           initialProfiles={profiles as Profile[]}
           currentUserProfile={currentUserProfile}
+          currentUser={session.user}
         />
       </div>
 
@@ -38,9 +39,10 @@ export default async function ExplorePage() {
               initialProfiles={profiles as Profile[]}
               currentUserProfile={currentUserProfile}
               likedByProfiles={[]}
+              currentUser={session.user}
             />
           ) : (
-            <NoMoreProfiles initialLikedProfiles={[]} />
+            <NoMoreProfiles initialLikedProfiles={[]} currentUser={session.user} />
           )}
         </div>
       </div>

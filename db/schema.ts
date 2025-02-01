@@ -11,8 +11,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "@auth/core/adapters";
 
-// Users table
-export const users = pgTable("user", {
+// First define all tables
+export const users = pgTable("users", {
   id: text("id").primaryKey(), // Maps to Auth.js user id
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
@@ -130,7 +130,7 @@ export const matches = pgTable("matches", {
   user2Typing: boolean("user2_typing").default(false),
 });
 
-export const feedback = pgTable("feedback", {
+export const feedbacks = pgTable("feedbacks", {
   id: text("id").primaryKey().notNull(),
   name: text("name"),
   phoneNumber: text("phone_number"),
@@ -197,14 +197,22 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   receivedSwipes: many(swipes, { relationName: "swipedRelation" }),
   matches1: many(matches, { relationName: "user1Relation" }),
   matches2: many(matches, { relationName: "user2Relation" }),
-  starredProfiles: many(starredProfiles, { relationName: "userStarredProfiles" }),
+  starredProfiles: many(starredProfiles, {
+    relationName: "userStarredProfiles",
+  }),
 }));
 
 export const matchesRelations = relations(matches, ({ many }) => ({
   messages: many(messages, { relationName: "matchMessages" }),
 }));
 
+// Then create type references at the end
 export type Profile = typeof profiles.$inferSelect & {
   isMatch: boolean | null;
   userId: string;
+  unreadMessages?: number;
+  matchId?: string;
 };
+
+// Export the Message type if needed
+export type Message = typeof messages.$inferSelect;

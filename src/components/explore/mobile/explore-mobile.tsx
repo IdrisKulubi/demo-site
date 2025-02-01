@@ -28,13 +28,19 @@ interface ExploreMobileProps {
   initialProfiles: Profile[];
   likedProfiles: Profile[];
   likedByProfiles: Profile[];
+  currentUser: { id: string };
+  currentUserProfile: Profile;
 }
+
 
 export function ExploreMobile({
   initialProfiles,
   likedProfiles: initialLikedProfiles,
   likedByProfiles: initialLikedByProfiles,
+  currentUser,
+  currentUserProfile,
 }: ExploreMobileProps) {
+
   const [profiles, setProfiles] = useState<Profile[]>(initialProfiles);
   const [likedProfiles, setLikedProfiles] =
     useState<Profile[]>(initialLikedProfiles);
@@ -242,6 +248,8 @@ export function ExploreMobile({
       ) : (
         <EmptyMobileView
           likedProfiles={likedProfiles}
+            currentUser={currentUser}
+            
           onShare={handleShare}
           onUnlike={async (profileId) => {
             const result = await undoLastSwipe(profileId);
@@ -291,12 +299,14 @@ export function ExploreMobile({
 
       {showMatch && matchedProfile && (
         <MatchModal
-          open={showMatch}
-          onOpenChange={setShowMatch}
+          isOpen={showMatch}
+          currentUserProfile={currentUserProfile}
+          onClose={() => setShowMatch(false)}
           matchedProfile={matchedProfile}
+          currentUser={currentUser}
         >
           <DialogTitle className="text-2xl font-bold text-center bg-gradient-to-r from-pink-500 to-pink-700 bg-clip-text text-transparent">
-            It&apos; a Match ✨
+            It&apos;s a Match ✨
           </DialogTitle>
           <DialogDescription className="text-center text-muted-foreground">
             You and {matchedProfile.firstName} liked each other! Time to slide

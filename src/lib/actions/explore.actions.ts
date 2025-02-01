@@ -1,12 +1,14 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
 import db from "@/db/drizzle";
-import { profiles, swipes, matches, users, Profile } from "@/db/schema";
 import { eq, and, not, isNull, or, sql, exists, desc } from "drizzle-orm";
 import { auth } from "@/auth";
-import { revalidatePath } from "next/cache";
+import { Profile } from "@/db/schema";
+import { profiles } from "@/db/schema";
+import { matches, swipes, users } from "@/db/schema";
+import { messages } from "@/db/schema";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type SwipeResult =
   | {
       success: boolean;
@@ -59,15 +61,6 @@ export async function getSwipableProfiles() {
     }
     // For non-binary and other genders, show all profiles (no gender filter)
 
-    const totalProfiles = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(profiles);
-
-    const visibleProfiles = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(profiles)
-      .where(eq(profiles.isVisible, true));
-
     const results = await db
       .select({
         id: profiles.id,
@@ -114,6 +107,7 @@ export async function getSwipableProfiles() {
       isMatch: !!profile.isMatch,
     }));
   } catch (error) {
+    console.error("Error fetching swipable profiles:", error);
     return [];
   }
 }
@@ -340,6 +334,7 @@ export async function getLikedByProfiles() {
       error: null,
     };
   } catch (error) {
+    console.error("Error fetching liked by profiles:", error);
     return { profiles: [], error: "Failed to fetch profiles" };
   }
 }
@@ -370,6 +365,8 @@ export async function getMatches() {
       .select({
         profile: profiles,
         matchedAt: matches.createdAt,
+        matchId: matches.id,
+        unreadMessages: sql<number>`COUNT(messages.id)`,
       })
       .from(matches)
       .innerJoin(
@@ -385,18 +382,29 @@ export async function getMatches() {
           )
         )
       )
+      .leftJoin(
+        messages,
+        and(
+          eq(messages.matchId, matches.id),
+          eq(messages.read, false),
+          not(eq(messages.senderId, session.user.id))
+        )
+      )
       .where(
         or(
           eq(matches.user1Id, session.user.id),
           eq(matches.user2Id, session.user.id)
         )
       )
+      .groupBy(matches.id, profiles.id)
       .orderBy(desc(matches.createdAt));
 
     return {
       matches: results.map((r) => ({
         ...r.profile,
         matchedAt: r.matchedAt,
+        matchId: r.matchId,
+        unreadMessages: r.unreadMessages,
       })),
       error: null,
     };

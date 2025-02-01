@@ -14,6 +14,8 @@ interface MatchModalProps {
   onClose: () => void;
   matchedProfile: Profile;
   currentUserProfile: Profile;
+  currentUser: { id: string };
+  children?: React.ReactNode;
 }
 
 export function MatchModal({
@@ -41,19 +43,19 @@ export function MatchModal({
     fire(0.25, {
       spread: 26,
       startVelocity: 55,
-      colors: ['#ff69b4', '#ff85c8', '#ffa1dc'],
+      colors: ["#ff69b4", "#ff85c8", "#ffa1dc"],
     });
 
     fire(0.2, {
       spread: 60,
-      colors: ['#ff69b4', '#ff85c8', '#ffa1dc'],
+      colors: ["#ff69b4", "#ff85c8", "#ffa1dc"],
     });
 
     fire(0.35, {
       spread: 100,
       decay: 0.91,
       scalar: 0.8,
-      colors: ['#ff69b4', '#ff85c8', '#ffa1dc'],
+      colors: ["#ff69b4", "#ff85c8", "#ffa1dc"],
     });
 
     fire(0.1, {
@@ -61,13 +63,13 @@ export function MatchModal({
       startVelocity: 25,
       decay: 0.92,
       scalar: 1.2,
-      colors: ['#ff69b4', '#ff85c8', '#ffa1dc'],
+      colors: ["#ff69b4", "#ff85c8", "#ffa1dc"],
     });
 
     fire(0.1, {
       spread: 120,
       startVelocity: 45,
-      colors: ['#ff69b4', '#ff85c8', '#ffa1dc'],
+      colors: ["#ff69b4", "#ff85c8", "#ffa1dc"],
     });
   };
 
@@ -92,7 +94,11 @@ export function MatchModal({
                 >
                   <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-pink-200 dark:ring-pink-800">
                     <Image
-                      src={currentUserProfile.profilePhoto || currentUserProfile.photos?.[0] || ""}
+                      src={
+                        currentUserProfile.profilePhoto ||
+                        currentUserProfile.photos?.[0] ||
+                        ""
+                      }
                       alt="Your photo"
                       width={96}
                       height={96}
@@ -127,7 +133,11 @@ export function MatchModal({
                 >
                   <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-pink-200 dark:ring-pink-800">
                     <Image
-                      src={matchedProfile.profilePhoto || matchedProfile.photos?.[0] || ""}
+                      src={
+                        matchedProfile.profilePhoto ||
+                        matchedProfile.photos?.[0] ||
+                        ""
+                      }
                       alt={`${matchedProfile.firstName}'s photo`}
                       width={96}
                       height={96}
@@ -166,7 +176,10 @@ export function MatchModal({
                 transition={{ delay: 0.2 }}
                 className="mt-8 space-y-3"
               >
-                <Link href={`/messages/${matchedProfile.userId}`} className="block">
+                <Link
+                  href={`/messages/${matchedProfile.userId}`}
+                  className="block"
+                >
                   <Button
                     className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white"
                     size="lg"

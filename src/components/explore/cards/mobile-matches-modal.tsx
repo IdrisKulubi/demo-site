@@ -11,17 +11,20 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
+import { ChatButton } from "@/components/chat/chat-button";
 
 interface MobileMatchesModalProps {
   isOpen: boolean;
   onClose: () => void;
   profiles: Profile[];
+  currentUser: { id: string };
 }
 
 export function MobileMatchesModal({
   isOpen,
   onClose,
   profiles,
+  currentUser,
 }: MobileMatchesModalProps) {
   const matchedProfiles = profiles.filter((p) => p.isMatch);
 
@@ -50,26 +53,33 @@ export function MobileMatchesModal({
                   key={profile.userId}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-3 bg-white/50 dark:bg-background/50 p-3 rounded-2xl border border-purple-100 dark:border-purple-900"
+                  className="flex items-center justify-between bg-white/50 dark:bg-background/50 p-3 rounded-2xl border border-purple-100 dark:border-purple-900"
                 >
-                  <Avatar className="h-14 w-14 border-2 border-purple-200 dark:border-purple-800">
-                    <AvatarImage src={profile.profilePhoto || ""} />
-                    <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white">
-                      {profile.firstName?.[0]}
-                      {profile.lastName?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <h3 className="font-medium">
-                      {profile.firstName} {profile.lastName}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {profile.course} • {profile.yearOfStudy}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-14 w-14 border-2 border-purple-200 dark:border-purple-800">
+                      <AvatarImage src={profile.profilePhoto || ""} />
+                      <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white">
+                        {profile.firstName?.[0]}
+                        {profile.lastName?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <h3 className="font-medium">
+                        {profile.firstName} {profile.lastName}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {profile.course} • {profile.yearOfStudy}
+                      </p>
+                    </div>
                   </div>
                   <WhatsAppButton
                     phoneNumber={profile.phoneNumber || ""}
                     size="sm"
+                  />
+                  <ChatButton
+                    matchId={profile.matchId || ""}
+                    currentUserId={currentUser.id}
+                    unreadCount={profile.unreadMessages || 0}
                   />
                 </motion.div>
               ))}

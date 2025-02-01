@@ -1,4 +1,3 @@
-import { Profile } from "@/db/schema";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,6 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import Image from "next/image";
 import { GraduationCap, Music, Instagram } from "lucide-react";
+import { Profile } from "@/db/schema";
 
 interface ProfilePreviewModalProps {
   isOpen: boolean;
@@ -78,7 +78,7 @@ export function ProfilePreviewModal({
               <div className="space-y-1">
                 <h3 className="font-medium">Interests</h3>
                 <div className="flex flex-wrap gap-2">
-                  {profile.interests?.map((interest) => (
+                  {profile.interests?.map((interest: string) => (
                     <span
                       key={interest}
                       className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md text-sm"

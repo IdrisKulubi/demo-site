@@ -13,9 +13,13 @@ import { SidePanels } from "./cards/side-panels";
 
 interface NoMoreProfilesProps {
   initialLikedProfiles: Profile[];
+  currentUser: { id: string };
 }
 
-export function NoMoreProfiles({ initialLikedProfiles }: NoMoreProfilesProps) {
+export function NoMoreProfiles({
+  initialLikedProfiles,
+  currentUser,
+}: NoMoreProfilesProps) {
   const [mounted, setMounted] = useState(false);
   const [likedProfiles, setLikedProfiles] = useState(initialLikedProfiles);
   const [likedByProfiles, setLikedByProfiles] = useState<Profile[]>([]);
@@ -156,6 +160,7 @@ export function NoMoreProfiles({ initialLikedProfiles }: NoMoreProfilesProps) {
             <div className="block md:hidden">
               <EmptyMobileView
                 likedProfiles={likedProfiles}
+                currentUser={currentUser}
                 onShare={handleShare}
                 onUnlike={handleUnlike}
               />

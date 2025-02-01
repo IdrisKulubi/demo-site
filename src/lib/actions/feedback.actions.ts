@@ -2,7 +2,7 @@
 
 import { nanoid } from "nanoid";
 import db from "@/db/drizzle";
-import { feedback, users } from "@/db/schema";
+import { feedbacks, users } from "@/db/schema";
 import { auth } from "@/auth";
 import { eq } from "drizzle-orm";
 
@@ -30,7 +30,7 @@ export async function submitFeedback(message: string, name?: string, phoneNumber
       }
     }
 
-    await db.insert(feedback).values({
+    await db.insert(feedbacks).values({
       id: nanoid(),
       message,
       name: finalName,

@@ -145,7 +145,7 @@ export function SwipeCard({
 
             {profile.interests && profile.interests.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2">
-                {profile.interests.map((interest, index) => (
+                {profile.interests.map((interest: string, index: number) => (
                   <span
                     key={index}
                     className="px-3 py-1 rounded-full bg-white/20 text-xs backdrop-blur-sm"

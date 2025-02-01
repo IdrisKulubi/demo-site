@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Heart, GraduationCap, Instagram, Music } from "lucide-react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 interface ViewMoreProfileProps {
   profile: Profile;
@@ -26,7 +27,7 @@ export function ViewMoreProfile({
         <div className="relative">
           {/* Cover Photo */}
           <div className="h-48 overflow-hidden">
-            <img
+            <Image
               src={profile.photos?.[0] || profile.profilePhoto || ""}
               alt={profile.firstName}
               className="w-full h-full object-cover"

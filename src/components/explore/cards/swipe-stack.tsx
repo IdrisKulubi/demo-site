@@ -16,8 +16,10 @@ interface SwipeStackProps {
   initialProfiles: Profile[];
   currentUserProfile: Profile;
   likedByProfiles: Profile[];
+  currentUser: { id: string };
   onMatch?: (profile: Profile) => void;
 }
+
 
 const swipeVariants = {
   left: {
@@ -38,6 +40,8 @@ export function SwipeStack({
   initialProfiles,
   currentUserProfile,
   likedByProfiles,
+  currentUser,
+
 }: SwipeStackProps) {
   const [profiles, setProfiles] = useState(initialProfiles);
   const [currentIndex, setCurrentIndex] = useState(initialProfiles.length - 1);
@@ -139,7 +143,10 @@ export function SwipeStack({
                   }}
                 />
               ) : (
-                <NoMoreProfiles initialLikedProfiles={likedByProfiles} />
+                <NoMoreProfiles
+                  initialLikedProfiles={likedByProfiles}
+                  currentUser={currentUserProfile}
+                />
               )}
             </AnimatePresence>
           </div>
@@ -151,6 +158,8 @@ export function SwipeStack({
         onClose={() => setMatchedProfile(null)}
         matchedProfile={matchedProfile!}
         currentUserProfile={currentUserProfile}
+        currentUser={currentUser}
+
       />
     </div>
   );
