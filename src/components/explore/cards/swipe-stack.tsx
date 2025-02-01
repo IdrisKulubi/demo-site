@@ -4,14 +4,12 @@ import {  useCallback, useState } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeCard } from "./swipe-card";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, X, ArrowUturnLeft } from "lucide-react";
+import { Heart, X, ArrowLeft } from "lucide-react";
 import { recordSwipe, undoLastSwipe } from "@/lib/actions/explore.actions";
 import { Button } from "@/components/ui/button";
 import { MatchModal } from "@/components/explore/modals/match-modal";
-import { NoMoreProfiles } from "../empty-state";
 
 import { useToast } from "@/hooks/use-toast";
-import { SidePanels } from "./side-panels";
 
 interface SwipeStackProps {
   initialProfiles: Profile[];
@@ -35,7 +33,7 @@ const swipeVariants = {
   },
 };
 
-export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfiles }: SwipeStackProps) {
+export function SwipeStack({ initialProfiles, currentUserProfile }: SwipeStackProps) {
   const [profiles, setProfiles] = useState(initialProfiles);
   const [currentIndex, setCurrentIndex] = useState(initialProfiles.length - 1);
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
@@ -129,7 +127,7 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
             onClick={handleRevert}
             disabled={swipedProfiles.length === 0 || isAnimating}
           >
-            <ArrowUturnLeft className="h-5 w-5 text-blue-500" />
+            <ArrowLeft className="h-5 w-5 text-blue-500" />
           </Button>
 
           <Button
