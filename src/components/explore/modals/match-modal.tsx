@@ -177,7 +177,7 @@ export function MatchModal({
                 className="mt-8 space-y-3"
               >
                 <Link
-                  href={`/messages/${matchedProfile.userId}`}
+                  href={`/chat/${matchedProfile.userId}`}
                   className="block"
                 >
                   <Button
