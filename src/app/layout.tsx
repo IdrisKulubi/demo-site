@@ -11,6 +11,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SwipeCounterProvider } from "@/context/swipe-counter-context";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { ReliefNotifyModal } from "@/components/shared/relief-notify-modal";
 
 
 const fontSans = Geist({
@@ -45,7 +46,8 @@ export default async function RootLayout({
             <MusicProvider>
               <SwipeCounterProvider>
                 <div className="relative min-h-screen">
-                    <Navbar />
+                  <Navbar />
+                  <ReliefNotifyModal/>
                     <main className="flex-1">{children}</main>
                     <Analytics />
                     <Toaster />

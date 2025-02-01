@@ -1,11 +1,36 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { MessageCircle } from "lucide-react";
 import { Profile } from "@/db/schema";
-import Link from "next/link";
+import { WhatsAppButton } from "@/components/shared/whatsapp-button";
+
+// Utility function to format phone number with country code
+const formatPhoneNumber = (phone: string | null | undefined) => {
+  if (!phone) return "";
+
+  // Remove any non-digit characters
+  const digits = phone.replace(/\D/g, "");
+
+  // Add Kenya country code if not present
+  if (digits.startsWith("0")) {
+    return `254${digits.substring(1)}`;
+  }
+
+  // If number starts with 254, use as is
+  if (digits.startsWith("254")) {
+    return digits;
+  }
+
+  // If number starts with 7 or 1, add 254
+  if (digits.startsWith("7") || digits.startsWith("1")) {
+    return `254${digits}`;
+  }
+
+  return digits;
+};
 
 export function MatchCard({ profile }: { profile: Profile }) {
+  const formattedPhoneNumber = formatPhoneNumber(profile.phoneNumber);
+
   return (
     <motion.div
       layout
@@ -30,15 +55,13 @@ export function MatchCard({ profile }: { profile: Profile }) {
             {profile.course} • Year {profile.yearOfStudy}
           </p>
         </div>
-        <Link
-          href={`/messages/${profile.userId}`}
+        <WhatsAppButton
+          phoneNumber={formattedPhoneNumber}
           className="opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          <Button size="icon" variant="ghost">
-            <MessageCircle className="h-5 w-5" />
-          </Button>
-        </Link>
+          size="sm"
+          variant="outline"
+        />
       </div>
     </motion.div>
   );
-} 
+}

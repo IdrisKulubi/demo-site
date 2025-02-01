@@ -29,7 +29,7 @@ export function WhatsAppButton({
       onClick={handleWhatsAppClick}
       variant={variant}
       size={size}
-      className={`gap-2 ${className}`}
+      className={`gap-2 ${className} bg-green-500 hover:bg-green-700 text-white`}
     >
       <FaWhatsapp className="h-5 w-5" />
     </Button>
