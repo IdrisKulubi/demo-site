@@ -9,7 +9,6 @@ import { Navbar } from "@/components/layout/navbar";
 import { constructMetadata } from "@/lib/metadata";
 import { Analytics } from "@vercel/analytics/react";
 import { SwipeCounterProvider } from "@/context/swipe-counter-context";
-import { SwipeCounter } from "@/components/shared/swipe-counter";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 
@@ -48,7 +47,6 @@ export default async function RootLayout({
                 <div className="relative min-h-screen">
                     <Navbar />
                     <main className="flex-1">{children}</main>
-                    <SwipeCounter />
                     <Analytics />
                     <Toaster />
                   </div>
