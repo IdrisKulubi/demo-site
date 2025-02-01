@@ -14,7 +14,7 @@ import { getProfile } from "@/lib/actions/profile.actions";
 
 export default async function ExplorePage() {
   const session = await auth();
-  if (!session?.user) redirect("/");
+  if (!session?.user) redirect("/login");
 
   const profiles = await getSwipableProfiles();
   const { profiles: likedProfiles } = await getLikedProfiles();

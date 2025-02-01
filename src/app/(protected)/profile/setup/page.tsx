@@ -19,6 +19,7 @@ import { useSession } from "next-auth/react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { deleteUploadThingFile } from "@/lib/actions/upload.actions";
+import { auth } from "@/auth";
 
 export default function ProfileSetup() {
   const [step, setStep] = useState(0);
@@ -306,6 +307,16 @@ export default function ProfileSetup() {
       if (intervalId) clearInterval(intervalId);
     };
   }, [session]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const session = await auth();
+      if (!session?.user) {
+        router.replace("/login");
+      }
+    };
+    checkAuth();
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white dark:from-pink-950 dark:to-background p-6 pt-16">

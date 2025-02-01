@@ -55,7 +55,7 @@ export async function getProfile() {
 
     if (!user || user.length === 0) {
       console.error("User not found by email:", session.user.email);
-      throw new Error("User not found");
+      return null;
     }
 
     const actualUserId = user[0].id;
