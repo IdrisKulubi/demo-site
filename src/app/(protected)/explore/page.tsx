@@ -8,10 +8,11 @@ import { redirect } from "next/navigation";
 import { SwipeStack } from "@/components/explore/cards/swipe-stack";
 import { NoMoreProfiles } from "@/components/explore/empty-state";
 import { type Profile } from "@/db/schema";
-import { NotifyModal } from "@/components/explore/modals/notify";
+
 import { ExploreMobile } from "@/components/explore/mobile/explore-mobile";
 import { isAllowedEmail } from "@/lib/utils/email-validator";
-import { GenderUpdateNotification } from "@/components/notifications/GenderUpdateNotification";
+import { NotifyModal } from "@/components/explore/modals/notify";
+
 
 export default async function ExplorePage() {
   const session = await auth();
@@ -29,9 +30,7 @@ export default async function ExplorePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white dark:from-pink-950/30 dark:to-background">
-      <GenderUpdateNotification />
-      <NotifyModal />
-
+<NotifyModal/>
       {/* Desktop Header - Hidden on Mobile */}
       <div className="hidden md:block container mx-auto px-4 pt-24 pb-2">
         <div className="relative mb-4 max-w-4xl mx-auto">
@@ -72,7 +71,8 @@ export default async function ExplorePage() {
         <div className="container mx-auto px-4 flex justify-center">
           {profiles && profiles.length > 0 ? (
             <div className="w-full max-w-[640px] -ml-32">
-              <SwipeStack initialProfiles={profiles as Profile[]} />
+              <SwipeStack initialProfiles={profiles as Profile[]}
+              />
             </div>
           ) : (
             <NoMoreProfiles initialLikedProfiles={likedProfiles || []} />
