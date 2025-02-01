@@ -107,51 +107,57 @@ export function FeedbackModal() {
             <div className="space-y-3 sm:space-y-4">
               {/* Crisis Header */}
               <div className="flex items-start gap-2 sm:gap-3">
-                <div className="text-2xl sm:text-3xl animate-bounce">🚨</div>
+                <div className="text-3xl sm:text-4xl animate-bounce">⚡</div>
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-rose-400 to-pink-400 bg-clip-text text-transparent">
-                    Valentine&apos;s Crisis Mode
+                  <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+                    Sheeeesh! We&apos;re Leveling Up 🔥
                   </h2>
-                  <p className="text-xs sm:text-sm text-rose-200/90">
-                    App&apos;s being fixed and chat feature added- back tomorrow 10AM
+                  <p className="text-sm sm:text-base text-fuchsia-200/90">
+                    Major glow up in progress, bestie Back tomorrow @ 10AM
                   </p>
                 </div>
               </div>
 
-              {/* Status Update */}
-              <div className="p-3 sm:p-4 bg-black/20 rounded-lg sm:rounded-xl">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm">
-                  <span className="text-rose-400">⚠️ Current Status:</span>
-                  <span className="bg-rose-900/30 px-2 py-1 rounded-md">
-                    Glitching harder than my ex&apos;s WiFi,non-functional😭
+              {/* Status Update - Enhanced Countdown */}
+              <div className="p-4 sm:p-6 bg-black/30 rounded-lg sm:rounded-xl border border-violet-500/20">
+                <div className="flex flex-col items-center text-center gap-2">
+                  <span className="text-fuchsia-400 text-lg sm:text-xl font-bold animate-pulse">
+                    Time Until We&apos;re Back Online
                   </span>
+                  <div className="text-4xl sm:text-6xl font-bold bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent animate-[pulse_2s_ease-in-out_infinite]">
+                    {timeLeft}
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <span className="bg-violet-900/40 px-3 py-1 rounded-full text-sm animate-bounce">✨</span>
+                    <span className="bg-fuchsia-900/40 px-3 py-1 rounded-full text-sm animate-bounce delay-100">💫</span>
+                    <span className="bg-pink-900/40 px-3 py-1 rounded-full text-sm animate-bounce delay-200">⭐</span>
+                  </div>
                 </div>
-                <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm">
-                  <span>⏳ Comeback Countdown:</span>
-                  <span className="bg-pink-900/30 px-2 py-1 rounded-md">
-                    {timeLeft} left
-                  </span>
+              </div>
+
+              {/* Updated Message */}
+              <div className="text-center space-y-2">
+                <p className="text-sm sm:text-base text-fuchsia-100">
+                  <span className="block text-xl mb-2">👾 Plot Twist! 👾</span>
+                  Fr fr, y&apos;all broke the app with your main character energy!
+                  <span className="inline-block animate-bounce ml-1">💅</span>
+                </p>
+                <p className="text-sm text-fuchsia-200/80">
+                  Servers went: &quot;Aight, imma head out&quot; 
+                  <span className="inline-block animate-spin">💫</span>
+                </p>
+                <p className="text-sm text-fuchsia-200/80">
+                  But no cap, we&apos;re cooking something bussin&apos;
+                  <span className="inline-block animate-pulse ml-1">🔥</span>
+                </p>
+                <div className="text-xs text-fuchsia-300/60 mt-4">
+                  Drop your thoughts below and we&apos;ll catch you on the flip! 
+                  <span className="inline-block animate-bounce">✌️</span>
                 </div>
               </div>
 
               {/* Feedback Section */}
               <div>
-              <p className="text-xs sm:text-sm mb-2 text-rose-100">
-  Y&apos;all broke the app 🤯 (in the best way)! 🔥 My servers did a dramatic exit 
-  <span className="whitespace-nowrap">🎭💻</span> 
-  <br />
-  Coding at lightspeed with 
-  <span className="inline-block animate-bounce">🥤⚡</span> 
-  I see your texts blowing up like fireworks! &quot;Who is vehem23?&quot; 
-  <span className="inline-block animate-pulse">💥📲</span>
-  <span className="text-[0.7rem] sm:text-xs animate-pulse font-bold text-rose-400 ">That&apos;s story for another day🤫</span>
-  <br />
-  <span className="text-[0.7rem] sm:text-xs opacity-75">
-    (Skip the &quot;pls fix&quot; - we&apos;re already deep in code-sorcery mode 🔮)
-  </span>
-  Leave your feedback below or text .Byeee ,Let&apos; catch up tomorow🥰
-</p>
-
                 <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4">
                   <input
                     type="text"
