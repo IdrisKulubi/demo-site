@@ -83,7 +83,7 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
 
   const handleRevert = useCallback(async () => {
     if (swipedProfiles.length === 0) return;
-    
+
     const lastProfile = swipedProfiles[swipedProfiles.length - 1];
     await undoLastSwipe(lastProfile.userId);
     
@@ -169,10 +169,10 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
                     >
                       <Heart className="h-6 w-6 text-pink-500" />
                     </Button>
-                  </div>
+          </div>
                 </SwipeCard>
               )}
-            </AnimatePresence>
+              </AnimatePresence>
 
             {/* Desktop Controls - Hidden on Mobile */}
             <div className="hidden lg:flex absolute -bottom-20 left-0 right-0 justify-center items-center gap-6">
@@ -214,7 +214,7 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
         </div>
       </div>
 
-      <MatchModal
+        <MatchModal
         isOpen={!!matchedProfile}
         onClose={() => setMatchedProfile(null)}
         matchedProfile={matchedProfile!}
