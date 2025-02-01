@@ -7,9 +7,19 @@ import { eq, and, not, isNull, or, sql, exists, desc } from "drizzle-orm";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
-type SwipeResult = 
-  | { success: boolean; error: string; isMatch?: undefined; matchedProfile?: undefined }
-  | { success: boolean; isMatch: boolean; error?: undefined; matchedProfile?: Profile }
+type SwipeResult =
+  | {
+      success: boolean;
+      error: string;
+      isMatch?: undefined;
+      matchedProfile?: undefined;
+    }
+  | {
+      success: boolean;
+      isMatch: boolean;
+      error?: undefined;
+      matchedProfile?: Profile;
+    };
 
 export async function getSwipableProfiles() {
   const session = await auth();
@@ -38,14 +48,14 @@ export async function getSwipableProfiles() {
       eq(profiles.isVisible, true),
       eq(profiles.profileCompleted, true),
       not(isNull(profiles.firstName)),
-      not(isNull(profiles.lastName))
+      not(isNull(profiles.lastName)),
     ];
 
     // Only apply gender filter for binary genders (male/female)
-    if (userGender === 'male') {
-      whereConditions.push(eq(profiles.gender, 'female'));
-    } else if (userGender === 'female') {
-      whereConditions.push(eq(profiles.gender, 'male'));
+    if (userGender === "male") {
+      whereConditions.push(eq(profiles.gender, "female"));
+    } else if (userGender === "female") {
+      whereConditions.push(eq(profiles.gender, "male"));
     }
     // For non-binary and other genders, show all profiles (no gender filter)
 
@@ -99,9 +109,9 @@ export async function getSwipableProfiles() {
       .orderBy(sql`RANDOM()`)
       .limit(150);
 
-    return results.map(profile => ({
+    return results.map((profile) => ({
       ...profile,
-      isMatch: !!profile.isMatch
+      isMatch: !!profile.isMatch,
     }));
   } catch (error) {
     return [];
@@ -111,7 +121,12 @@ export async function getSwipableProfiles() {
 export async function recordSwipe(
   profileId: string,
   type: "like" | "pass"
-): Promise<{ success: boolean; error?: string; isMatch?: boolean; matchedProfile?: Profile }> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  isMatch?: boolean;
+  matchedProfile?: Profile;
+}> {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -169,7 +184,11 @@ export async function recordSwipe(
           .from(profiles)
           .where(eq(profiles.userId, profileId));
 
-        return { success: true, isMatch: true, matchedProfile: matchedProfile[0] };
+        return {
+          success: true,
+          isMatch: true,
+          matchedProfile: matchedProfile[0],
+        };
       }
     }
 
@@ -228,41 +247,37 @@ export async function getLikedProfiles() {
   }
 
   try {
-    const results = await db
-      .select({
-        profile: profiles,
-        isMatch: matches.id,
-      })
+    // Get all profiles the current user has liked
+    const likedProfiles = await db
+      .select({ profile: profiles })
       .from(swipes)
       .innerJoin(profiles, eq(profiles.userId, swipes.swipedId))
-      .leftJoin(
-        matches,
-        and(
-          or(
-            and(
-              eq(matches.user1Id, session.user.id),
-              eq(matches.user2Id, profiles.userId)
-            ),
-            and(
-              eq(matches.user2Id, session.user.id),
-              eq(matches.user1Id, profiles.userId)
-            )
-          )
-        )
-      )
       .where(
-        and(
-          eq(swipes.swiperId, session.user.id),
-          eq(swipes.isLike, true),
-          isNull(matches.id)
-        )
+        and(eq(swipes.swiperId, session.user.id), eq(swipes.isLike, true))
       );
 
+    // Get profiles that have liked the current user
+    const likedByProfiles = await db
+      .select({ profile: profiles })
+      .from(swipes)
+      .innerJoin(profiles, eq(profiles.userId, swipes.swiperId))
+      .where(
+        and(eq(swipes.swipedId, session.user.id), eq(swipes.isLike, true))
+      );
+
+    // Find mutual matches
+    const mutualMatches = likedProfiles
+      .filter((lp) =>
+        likedByProfiles.some((lbp) => lbp.profile.userId === lp.profile.userId)
+      )
+      .map((lp) => ({ ...lp.profile, isMatch: true }));
+
     return {
-      profiles: results.map((r) => ({ ...r.profile, isMatch: !!r.isMatch })),
+      profiles: mutualMatches,
       error: null,
     };
   } catch (error) {
+    console.error("Error fetching liked profiles:", error);
     return { profiles: [], error: "Failed to fetch profiles" };
   }
 }
@@ -370,6 +385,12 @@ export async function getMatches() {
           )
         )
       )
+      .where(
+        or(
+          eq(matches.user1Id, session.user.id),
+          eq(matches.user2Id, session.user.id)
+        )
+      )
       .orderBy(desc(matches.createdAt));
 
     return {
@@ -380,6 +401,57 @@ export async function getMatches() {
       error: null,
     };
   } catch (error) {
+    console.error("Error fetching matches:", error);
     return { matches: [], error: "Failed to fetch matches" };
+  }
+}
+
+export async function getLikesForProfile(profileName: string) {
+  console.log("Starting getLikesForProfile for:", profileName);
+
+  try {
+    console.log("Searching for profile...");
+    const profile = await db
+      .select()
+      .from(profiles)
+      .where(
+        and(eq(profiles.firstName, "Imani"), eq(profiles.lastName, "Wachira"))
+      )
+      .limit(1);
+
+    console.log("Profile query result:", profile);
+
+    if (!profile.length) {
+      console.log("Profile not found");
+      return { error: "Profile not found", likes: [] };
+    }
+
+    console.log("Fetching likes for profile ID:", profile[0].userId);
+
+    const likes = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        likedAt: swipes.createdAt,
+      })
+      .from(swipes)
+      .innerJoin(users, eq(users.id, swipes.swiperId))
+      .where(
+        and(eq(swipes.swipedId, profile[0].userId), eq(swipes.isLike, true))
+      )
+      .orderBy(desc(swipes.createdAt));
+
+    console.log("Likes query results:", likes);
+    console.log("Total likes found:", likes.length);
+
+    return {
+      success: true,
+      likes,
+      profile: profile[0],
+    };
+  } catch (error) {
+    console.error("Error in getLikesForProfile:", error);
+    return { error: "Failed to fetch likes", likes: [] };
   }
 }

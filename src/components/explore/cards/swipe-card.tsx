@@ -14,6 +14,7 @@ import {
   X,
   ArrowLeft,
   Heart,
+  User,
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ interface SwipeCardProps {
   children?: React.ReactNode;
   isAnimating?: boolean;
   canRevert?: boolean;
+  onViewProfile?: () => void;
 }
 
 export function SwipeCard({
@@ -43,6 +45,7 @@ export function SwipeCard({
   variants,
   style,
   isAnimating,
+  onViewProfile,
 }: SwipeCardProps) {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
@@ -207,6 +210,18 @@ export function SwipeCard({
             disabled={isAnimating}
           >
             <Heart className="h-6 w-6 text-pink-500" />
+          </Button>
+        </div>
+
+        {/* View Profile Button */}
+        <div className="absolute top-4 right-4 z-20">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onViewProfile}
+            className="bg-white/90 hover:bg-white"
+          >
+            <User className="h-4 w-4 text-gray-700" />
           </Button>
         </div>
       </div>

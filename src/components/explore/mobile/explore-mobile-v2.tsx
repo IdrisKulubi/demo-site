@@ -14,17 +14,22 @@ import { EmptyMobileView } from "../cards/empty-mobile";
 import { MatchesModal } from "../modals/matches-modal";
 import { LikesModal } from "../modals/likes-modal";
 import { getMatches } from "@/lib/actions/explore.actions";
-
+import { ProfilePreviewModal } from "../modals/profile-preview-modal";
 
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];
   currentUserProfile: Profile;
 }
 
-export function ExploreMobileV2({ initialProfiles, currentUserProfile }: ExploreMobileV2Props) {
+export function ExploreMobileV2({
+  initialProfiles,
+  currentUserProfile,
+}: ExploreMobileV2Props) {
   const [profiles, setProfiles] = useState(initialProfiles);
   const [currentIndex, setCurrentIndex] = useState(initialProfiles.length - 1);
-  const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
+  const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(
+    null
+  );
   const [isAnimating, setIsAnimating] = useState(false);
   const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
   const [swipedProfiles, setSwipedProfiles] = useState<Profile[]>([]);
@@ -33,66 +38,77 @@ export function ExploreMobileV2({ initialProfiles, currentUserProfile }: Explore
   const [showLikes, setShowLikes] = useState(false);
   const [matches, setMatches] = useState<Profile[]>([]);
   const [likes, setLikes] = useState<Profile[]>([]);
+  const [previewProfile, setPreviewProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     const fetchMatches = async () => {
       const result = await getMatches();
       if (result.matches) {
-        setMatches(result.matches);
+        setMatches((prev) => [
+          ...prev,
+          ...result.matches.filter(
+            (newMatch) => !prev.some((p) => p.userId === newMatch.userId)
+          ),
+        ]);
       }
     };
-    
     fetchMatches();
-  }, []);
+  }, [swipedProfiles]);
 
-  const handleSwipe = useCallback(async (direction: "left" | "right") => {
-    if (isAnimating || !profiles[currentIndex]) return;
+  const handleSwipe = useCallback(
+    async (direction: "left" | "right") => {
+      if (isAnimating || !profiles[currentIndex]) return;
 
-    setIsAnimating(true);
-    setSwipeDirection(direction);
+      setIsAnimating(true);
+      setSwipeDirection(direction);
 
-    const result = await recordSwipe(
-      profiles[currentIndex].userId,
-      direction === "right" ? "like" : "pass"
-    );
+      const result = await recordSwipe(
+        profiles[currentIndex].userId,
+        direction === "right" ? "like" : "pass"
+      );
 
-    if (direction === "right") {
-      if (result.isMatch) {
-        setMatchedProfile(profiles[currentIndex]);
-      } else {
-        toast({
-          title: "Yasss 💖",
-          description: `You liked ${profiles[currentIndex].firstName}! Fingers crossed for a match!`,
-          variant: "default",
-          className: "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-none",
-        });
+      if (direction === "right") {
+        if (result.isMatch) {
+          setMatchedProfile(profiles[currentIndex]);
+          setMatches((prev) => [...prev, profiles[currentIndex]]);
+        } else {
+          toast({
+            title: "Yasss 💖",
+            description: `You liked ${profiles[currentIndex].firstName}! Fingers crossed for a match!`,
+            variant: "default",
+            className:
+              "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-none",
+          });
+        }
       }
-    }
 
-    setSwipedProfiles(prev => [...prev, profiles[currentIndex]]);
+      setSwipedProfiles((prev) => [...prev, profiles[currentIndex]]);
 
-    setTimeout(() => {
-      setCurrentIndex(prev => prev - 1);
-      setSwipeDirection(null);
-      setIsAnimating(false);
-    }, 300);
-  }, [currentIndex, isAnimating, profiles, toast]);
+      setTimeout(() => {
+        setCurrentIndex((prev) => prev - 1);
+        setSwipeDirection(null);
+        setIsAnimating(false);
+      }, 300);
+    },
+    [currentIndex, isAnimating, profiles, toast]
+  );
 
   const handleRevert = useCallback(async () => {
     if (swipedProfiles.length === 0) return;
-    
+
     const lastProfile = swipedProfiles[swipedProfiles.length - 1];
     await undoLastSwipe(lastProfile.userId);
-    
-    setProfiles(prev => [...prev, lastProfile]);
-    setSwipedProfiles(prev => prev.slice(0, -1));
-    setCurrentIndex(prev => prev + 1);
-    
+
+    setProfiles((prev) => [...prev, lastProfile]);
+    setSwipedProfiles((prev) => prev.slice(0, -1));
+    setCurrentIndex((prev) => prev + 1);
+
     toast({
       title: "Time Machine Activated! ⏰",
       description: "Brought back the last profile for another chance!",
       variant: "default",
-      className: "bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-none",
+      className:
+        "bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-none",
     });
   }, [swipedProfiles, toast]);
 
@@ -107,14 +123,18 @@ export function ExploreMobileV2({ initialProfiles, currentUserProfile }: Explore
                   key={profiles[currentIndex].userId}
                   profile={profiles[currentIndex]}
                   onSwipe={handleSwipe}
+                  onRevert={handleRevert}
                   active={true}
                   animate={swipeDirection}
                   style={{
-                    position: 'absolute',
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '16px',
+                    position: "absolute",
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: "16px",
                   }}
+                  onViewProfile={() =>
+                    setPreviewProfile(profiles[currentIndex])
+                  }
                 >
                   {/* Controls Inside Card */}
                   <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-4 z-10">
@@ -156,15 +176,23 @@ export function ExploreMobileV2({ initialProfiles, currentUserProfile }: Explore
           {/* Bottom Navigation */}
           <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-background/80 backdrop-blur-lg border-t border-border">
             <div className="flex justify-around items-center h-16 px-4">
-              <Button variant="ghost" size="icon" onClick={() => setShowMatches(true)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowMatches(true)}
+              >
                 <Heart className="h-6 w-6 text-pink-500" />
               </Button>
-              
+
               <Button variant="ghost" size="icon">
                 <User2 className="h-6 w-6 text-muted-foreground" />
               </Button>
 
-              <Button variant="ghost" size="icon" onClick={() => setShowLikes(true)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowLikes(true)}
+              >
                 <Star className="h-6 w-6 text-yellow-500" />
               </Button>
             </div>
@@ -177,7 +205,7 @@ export function ExploreMobileV2({ initialProfiles, currentUserProfile }: Explore
           onUnlike={async () => {}}
         />
       )}
-      
+
       {/* Modals */}
       <MatchModal
         isOpen={!!matchedProfile}
@@ -185,18 +213,24 @@ export function ExploreMobileV2({ initialProfiles, currentUserProfile }: Explore
         matchedProfile={matchedProfile!}
         currentUserProfile={currentUserProfile}
       />
-      
-      <MatchesModal 
-        isOpen={showMatches} 
+
+      <MatchesModal
+        isOpen={showMatches}
         onClose={() => setShowMatches(false)}
         matches={matches}
       />
-      
+
       <LikesModal
         isOpen={showLikes}
         onClose={() => setShowLikes(false)}
         likes={likes}
       />
+
+      <ProfilePreviewModal
+        isOpen={!!previewProfile}
+        onClose={() => setPreviewProfile(null)}
+        profile={previewProfile}
+      />
     </div>
   );
-} 
+}
