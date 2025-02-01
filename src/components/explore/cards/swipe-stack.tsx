@@ -20,7 +20,6 @@ interface SwipeStackProps {
   onMatch?: (profile: Profile) => void;
 }
 
-
 const swipeVariants = {
   left: {
     x: -1000,
@@ -41,7 +40,6 @@ export function SwipeStack({
   currentUserProfile,
   likedByProfiles,
   currentUser,
-
 }: SwipeStackProps) {
   const [profiles, setProfiles] = useState(initialProfiles);
   const [currentIndex, setCurrentIndex] = useState(initialProfiles.length - 1);
@@ -159,7 +157,6 @@ export function SwipeStack({
         matchedProfile={matchedProfile!}
         currentUserProfile={currentUserProfile}
         currentUser={currentUser}
-
       />
     </div>
   );
