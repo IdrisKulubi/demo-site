@@ -93,11 +93,11 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
   }, [swipedProfiles]);
 
   return (
-    <div className="flex gap-8">
-      {/* Left Panel - Using existing SidePanels component */}
-      <div className="hidden lg:block w-80">
+    <div className="flex flex-col lg:flex-row w-full">
+      {/* Side Panels - Fixed at top left */}
+      <div className="hidden lg:block lg:fixed lg:left-4 lg:top-24 lg:w-80">
         <SidePanels
-          profiles={profiles}
+          profiles={swipedProfiles}
           likedByProfiles={likedByProfiles}
           onUnlike={async (profileId) => {
             const result = await undoLastSwipe(profileId);
@@ -118,66 +118,100 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
         />
       </div>
 
-      {/* Main Card Area */}
-      <div className="flex-1 max-w-[400px] mx-auto">
-        <div className="relative h-[600px]">
-          <AnimatePresence>
-            {profiles[currentIndex] && (
-              <SwipeCard
-                key={profiles[currentIndex].userId}
-                profile={profiles[currentIndex]}
-                onSwipe={handleSwipe}
-                active={false}
-                animate={swipeDirection}
-                variants={swipeVariants}
-                style={{
-                  position: 'absolute',
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: '8px',
-                }}
-              />
-            )}
-          </AnimatePresence>
+      {/* Main Card Area - Centered with offset for side panel */}
+      <div className="flex-1 lg:ml-96">
+        <div className="max-w-[400px] mx-auto">
+          <div className="relative h-[600px]">
+            <AnimatePresence>
+              {profiles[currentIndex] && (
+                <SwipeCard
+                  key={profiles[currentIndex].userId}
+                  profile={profiles[currentIndex]}
+                  onSwipe={handleSwipe}
+                  active={false}
+                  animate={swipeDirection}
+                  variants={swipeVariants}
+                  style={{
+                    position: 'absolute',
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '8px',
+                  }}
+                >
+                  {/* Mobile Controls Inside Card */}
+                  <div className="lg:hidden absolute bottom-6 left-0 right-0 flex justify-center items-center gap-4 z-10">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-14 w-14 rounded-full border-2 shadow-lg bg-white/90"
+                      onClick={() => handleSwipe("left")}
+                      disabled={isAnimating}
+                    >
+                      <X className="h-6 w-6 text-red-500" />
+                    </Button>
 
-          {/* Controls below card */}
-          <div className="absolute -bottom-20 left-0 right-0 flex justify-center items-center gap-6">
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-14 w-14 rounded-full border-2 shadow-lg hover:border-red-500 hover:bg-red-500/10"
-              onClick={() => handleSwipe("left")}
-              disabled={isAnimating}
-            >
-              <X className="h-6 w-6 text-red-500" />
-            </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-12 w-12 rounded-full border-2 shadow-lg bg-white/90"
+                      onClick={handleRevert}
+                      disabled={swipedProfiles.length === 0 || isAnimating}
+                    >
+                      <ArrowLeft className="h-5 w-5 text-blue-500" />
+                    </Button>
 
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-12 w-12 rounded-full border-2 shadow-lg hover:border-blue-500 hover:bg-blue-500/10"
-              onClick={handleRevert}
-              disabled={swipedProfiles.length === 0 || isAnimating}
-            >
-              <ArrowLeft className="h-5 w-5 text-blue-500" />
-            </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-14 w-14 rounded-full border-2 shadow-lg bg-white/90"
+                      onClick={() => handleSwipe("right")}
+                      disabled={isAnimating}
+                    >
+                      <Heart className="h-6 w-6 text-pink-500" />
+                    </Button>
+                  </div>
+                </SwipeCard>
+              )}
+            </AnimatePresence>
 
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-14 w-14 rounded-full border-2 shadow-lg hover:border-pink-500 hover:bg-pink-500/10"
-              onClick={() => handleSwipe("right")}
-              disabled={isAnimating}
-            >
-              <Heart className="h-6 w-6 text-pink-500" />
-            </Button>
+            {/* Desktop Controls - Hidden on Mobile */}
+            <div className="hidden lg:flex absolute -bottom-20 left-0 right-0 justify-center items-center gap-6">
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 w-14 rounded-full border-2 shadow-lg hover:border-red-500 hover:bg-red-500/10"
+                onClick={() => handleSwipe("left")}
+                disabled={isAnimating}
+              >
+                <X className="h-6 w-6 text-red-500" />
+              </Button>
+
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-12 w-12 rounded-full border-2 shadow-lg hover:border-blue-500 hover:bg-blue-500/10"
+                onClick={handleRevert}
+                disabled={swipedProfiles.length === 0 || isAnimating}
+              >
+                <ArrowLeft className="h-5 w-5 text-blue-500" />
+              </Button>
+
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 w-14 rounded-full border-2 shadow-lg hover:border-pink-500 hover:bg-pink-500/10"
+                onClick={() => handleSwipe("right")}
+                disabled={isAnimating}
+              >
+                <Heart className="h-6 w-6 text-pink-500" />
+              </Button>
+            </div>
           </div>
-        </div>
 
-        {/* Empty State */}
-        {!profiles[currentIndex] && (
-          <NoMoreProfiles initialLikedProfiles={profiles} />
-        )}
+          {!profiles[currentIndex] && (
+            <NoMoreProfiles initialLikedProfiles={profiles} />
+          )}
+        </div>
       </div>
 
       <MatchModal

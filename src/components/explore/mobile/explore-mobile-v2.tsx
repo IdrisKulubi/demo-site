@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { matches, Profile } from "@/db/schema";
 import { SwipeCard } from "../cards/swipe-card";
 import { AnimatePresence } from "framer-motion";
@@ -13,6 +13,7 @@ import { MatchModal } from "../modals/match-modal";
 import { EmptyMobileView } from "../cards/empty-mobile";
 import { MatchesModal } from "../modals/matches-modal";
 import { LikesModal } from "../modals/likes-modal";
+import { getMatches } from "@/lib/actions/explore.actions";
 
 
 interface ExploreMobileV2Props {
@@ -32,6 +33,17 @@ export function ExploreMobileV2({ initialProfiles, currentUserProfile }: Explore
   const [showLikes, setShowLikes] = useState(false);
   const [matches, setMatches] = useState<Profile[]>([]);
   const [likes, setLikes] = useState<Profile[]>([]);
+
+  useEffect(() => {
+    const fetchMatches = async () => {
+      const result = await getMatches();
+      if (result.matches) {
+        setMatches(result.matches);
+      }
+    };
+    
+    fetchMatches();
+  }, []);
 
   const handleSwipe = useCallback(async (direction: "left" | "right") => {
     if (isAnimating || !profiles[currentIndex]) return;
