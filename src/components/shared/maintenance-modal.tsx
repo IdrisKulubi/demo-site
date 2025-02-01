@@ -88,7 +88,7 @@ export function FeedbackModal() {
                     Sheeeesh We&apos;re Leveling Up 🔥
                   </h2>
                   <p className="text-sm sm:text-base text-fuchsia-200/90">
-                    Major glow up in progress, bestie. Back today @ 12PM
+                    Deployment in the pipeline, just a few minutes
                   </p>
                 </div>
               </div>
