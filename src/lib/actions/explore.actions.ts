@@ -1,7 +1,7 @@
 "use server";
 
 import db from "@/db/drizzle";
-import { eq, and, not, isNull, or, sql, exists, desc } from "drizzle-orm";
+import { eq, and, not, isNull, or, sql, desc } from "drizzle-orm";
 import { auth } from "@/auth";
 import { Profile } from "@/db/schema";
 import { profiles } from "@/db/schema";
@@ -241,33 +241,41 @@ export async function getLikedProfiles() {
   }
 
   try {
-    // Get all profiles the current user has liked
-    const likedProfiles = await db
-      .select({ profile: profiles })
+    // Optimized query to get profiles liked by the user with match status
+    const results = await db
+      .select({
+        profile: profiles,
+        swipeId: swipes.id,
+        swipedAt: swipes.createdAt,
+        matchId: matches.id,
+      })
       .from(swipes)
-      .innerJoin(profiles, eq(profiles.userId, swipes.swipedId))
-      .where(
-        and(eq(swipes.swiperId, session.user.id), eq(swipes.isLike, true))
-      );
-
-    // Get profiles that have liked the current user
-    const likedByProfiles = await db
-      .select({ profile: profiles })
-      .from(swipes)
-      .innerJoin(profiles, eq(profiles.userId, swipes.swiperId))
-      .where(
-        and(eq(swipes.swipedId, session.user.id), eq(swipes.isLike, true))
-      );
-
-    // Find mutual matches
-    const mutualMatches = likedProfiles
-      .filter((lp) =>
-        likedByProfiles.some((lbp) => lbp.profile.userId === lp.profile.userId)
+      .innerJoin(
+        profiles,
+        and(eq(profiles.userId, swipes.swipedId), eq(profiles.isVisible, true))
       )
-      .map((lp) => ({ ...lp.profile, isMatch: true }));
+      .leftJoin(
+        matches,
+        or(
+          and(
+            eq(matches.user1Id, session.user.id),
+            eq(matches.user2Id, profiles.userId)
+          ),
+          and(
+            eq(matches.user2Id, session.user.id),
+            eq(matches.user1Id, profiles.userId)
+          )
+        )
+      )
+      .where(and(eq(swipes.swiperId, session.user.id), eq(swipes.isLike, true)))
+      .orderBy(desc(swipes.createdAt));
 
     return {
-      profiles: mutualMatches,
+      profiles: results.map((r) => ({
+        ...r.profile,
+        swipedAt: r.swipedAt,
+        isMatch: !!r.matchId,
+      })),
       error: null,
     };
   } catch (error) {
@@ -283,54 +291,44 @@ export async function getLikedByProfiles() {
   }
 
   try {
-    // Get profiles that have liked the current user but haven't been matched or passed
+    // Get profiles that have liked the current user with match status
     const results = await db
       .select({
         profile: profiles,
+        swipeId: swipes.id,
+        swipedAt: swipes.createdAt,
+        matchId: matches.id, // Include match ID to check if matched
       })
       .from(swipes)
       .innerJoin(profiles, eq(profiles.userId, swipes.swiperId))
+      .leftJoin(
+        matches,
+        or(
+          and(
+            eq(matches.user1Id, session.user.id),
+            eq(matches.user2Id, swipes.swiperId)
+          ),
+          and(
+            eq(matches.user2Id, session.user.id),
+            eq(matches.user1Id, swipes.swiperId)
+          )
+        )
+      )
       .where(
         and(
           eq(swipes.swipedId, session.user.id),
           eq(swipes.isLike, true),
-          not(
-            exists(
-              db
-                .select()
-                .from(matches)
-                .where(
-                  or(
-                    and(
-                      eq(matches.user1Id, session.user.id),
-                      eq(matches.user2Id, swipes.swiperId)
-                    ),
-                    and(
-                      eq(matches.user2Id, session.user.id),
-                      eq(matches.user1Id, swipes.swiperId)
-                    )
-                  )
-                )
-            )
-          ),
-          not(
-            exists(
-              db
-                .select()
-                .from(swipes)
-                .where(
-                  and(
-                    eq(swipes.swiperId, session.user.id),
-                    eq(swipes.swipedId, profiles.userId)
-                  )
-                )
-            )
-          )
+          eq(profiles.isVisible, true)
         )
-      );
+      )
+      .orderBy(desc(swipes.createdAt));
 
     return {
-      profiles: results.map((r) => r.profile),
+      profiles: results.map((r) => ({
+        ...r.profile,
+        swipedAt: r.swipedAt,
+        isMatch: !!r.matchId,
+      })),
       error: null,
     };
   } catch (error) {
@@ -361,12 +359,14 @@ export async function getMatches() {
   }
 
   try {
+    // Optimized matches query with unread messages count
     const results = await db
       .select({
         profile: profiles,
         matchedAt: matches.createdAt,
         matchId: matches.id,
-        unreadMessages: sql<number>`COUNT(messages.id)`,
+        lastMessageAt: sql<Date>`MAX(messages.created_at)`,
+        unreadCount: sql<number>`COUNT(CASE WHEN messages.read = false AND messages.sender_id != ${session.user.id} THEN 1 END)`,
       })
       .from(matches)
       .innerJoin(
@@ -382,29 +382,39 @@ export async function getMatches() {
           )
         )
       )
-      .leftJoin(
-        messages,
-        and(
-          eq(messages.matchId, matches.id),
-          eq(messages.read, false),
-          not(eq(messages.senderId, session.user.id))
-        )
-      )
+      .leftJoin(messages, eq(messages.matchId, matches.id))
       .where(
-        or(
-          eq(matches.user1Id, session.user.id),
-          eq(matches.user2Id, session.user.id)
+        and(
+          or(
+            eq(matches.user1Id, session.user.id),
+            eq(matches.user2Id, session.user.id)
+          ),
+          eq(profiles.isVisible, true)
         )
       )
       .groupBy(matches.id, profiles.id)
-      .orderBy(desc(matches.createdAt));
+      .orderBy(
+        sql`COALESCE(MAX(messages.created_at), matches.created_at) DESC`
+      );
+
+    // Debug logging
+    console.log(`Found ${results.length} matches for user ${session.user.id}`);
+    if (results.length > 0) {
+      console.log("Sample match:", {
+        matchId: results[0].matchId,
+        profileId: results[0].profile.userId,
+        unreadCount: results[0].unreadCount,
+        lastMessageAt: results[0].lastMessageAt,
+      });
+    }
 
     return {
       matches: results.map((r) => ({
         ...r.profile,
         matchedAt: r.matchedAt,
         matchId: r.matchId,
-        unreadMessages: r.unreadMessages,
+        unreadMessages: Number(r.unreadCount) || 0,
+        lastMessageAt: r.lastMessageAt || r.matchedAt,
       })),
       error: null,
     };
