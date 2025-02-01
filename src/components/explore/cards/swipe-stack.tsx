@@ -12,8 +12,8 @@ import { cn } from "@/lib/utils";
 
 interface SwipeStackProps {
   initialProfiles: Profile[];
-  onMatch: (profile: Profile) => void;
-  onEmptyStack: () => void;
+  onMatch?: (profile: Profile) => void;
+  onEmptyStack?: () => void;
 }
 
 const swipeVariants = {
@@ -32,6 +32,7 @@ const swipeVariants = {
 };
 
 export function SwipeStack({ initialProfiles, onMatch, onEmptyStack }: SwipeStackProps) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [profiles, setProfiles] = useState(initialProfiles);
   const [currentIndex, setCurrentIndex] = useState(initialProfiles.length - 1);
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
@@ -42,7 +43,7 @@ export function SwipeStack({ initialProfiles, onMatch, onEmptyStack }: SwipeStac
 
   useEffect(() => {
     if (currentIndex < 0) {
-      onEmptyStack();
+      onEmptyStack?.();
     }
   }, [currentIndex, onEmptyStack]);
 
@@ -68,7 +69,7 @@ export function SwipeStack({ initialProfiles, onMatch, onEmptyStack }: SwipeStac
 
     // If it's a match, notify parent component
     if (direction === "right" && result.isMatch) {
-      onMatch(currentProfile);
+      onMatch?.(currentProfile);
     }
 
     // Delay state updates to allow animation to complete
