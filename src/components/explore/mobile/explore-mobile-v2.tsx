@@ -7,25 +7,33 @@ import { SwipeCard } from "../cards/swipe-card";
 import { AnimatePresence } from "framer-motion";
 import { Heart, X, User2, Bell, ArrowLeft, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { recordSwipe, undoLastSwipe } from "@/lib/actions/explore.actions";
+import {
+  recordSwipe,
+  undoLastSwipe,
+  getMatches,
+  getLikedByProfiles,
+} from "@/lib/actions/explore.actions";
 import { useToast } from "@/hooks/use-toast";
 import { MatchModal } from "../modals/match-modal";
 import { EmptyMobileView } from "../cards/empty-mobile";
 import { MatchesModal } from "../modals/matches-modal";
 import { LikesModal } from "../modals/likes-modal";
-import { getMatches } from "@/lib/actions/explore.actions";
 import { ProfilePreviewModal } from "../modals/profile-preview-modal";
 
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];
   currentUserProfile: Profile;
   currentUser: { id: string };
+  likedProfiles: Profile[];
+  likedByProfiles: Profile[];
 }
 
 export function ExploreMobileV2({
   initialProfiles,
   currentUserProfile,
   currentUser,
+  likedProfiles: initialLikedProfiles,
+  likedByProfiles: initialLikedByProfiles,
 }: ExploreMobileV2Props) {
   const [profiles, setProfiles] = useState(initialProfiles);
   const [currentIndex, setCurrentIndex] = useState(initialProfiles.length - 1);
@@ -35,26 +43,43 @@ export function ExploreMobileV2({
   const [isAnimating, setIsAnimating] = useState(false);
   const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
   const [swipedProfiles, setSwipedProfiles] = useState<Profile[]>([]);
-  const { toast } = useToast();
   const [showMatches, setShowMatches] = useState(false);
   const [showLikes, setShowLikes] = useState(false);
-  const [matches, setMatches] = useState<Profile[]>([]);
-  const [likes, setLikes] = useState<Profile[]>([]);
-  const [previewProfile, setPreviewProfile] = useState<Profile | null>(null);
 
+  // Initialize matches from likedProfiles where isMatch is true
+  const [matches, setMatches] = useState<Profile[]>(
+    initialLikedProfiles.filter((p) => p.isMatch)
+  );
+
+  // Initialize likes from likedByProfiles
+  const [likes, setLikes] = useState<Profile[]>(initialLikedByProfiles);
+
+  const [previewProfile, setPreviewProfile] = useState<Profile | null>(null);
+  const { toast } = useToast();
+
+  // Fetch and sync matches and likes
   useEffect(() => {
-    const fetchMatches = async () => {
-      const result = await getMatches();
-      if (result.matches) {
-        setMatches((prev) => [
-          ...prev,
-          ...result.matches.filter(
+    const syncMatchesAndLikes = async () => {
+      const [matchesResult, likesResult] = await Promise.all([
+        getMatches(),
+        getLikedByProfiles(),
+      ]);
+
+      if (matchesResult.matches) {
+        setMatches((prev) => {
+          const newMatches = matchesResult.matches.filter(
             (newMatch) => !prev.some((p) => p.userId === newMatch.userId)
-          ),
-        ]);
+          );
+          return [...prev, ...newMatches];
+        });
+      }
+
+      if (likesResult.profiles) {
+        setLikes(likesResult.profiles);
       }
     };
-    fetchMatches();
+
+    syncMatchesAndLikes();
   }, [swipedProfiles]);
 
   const handleSwipe = useCallback(
@@ -71,8 +96,14 @@ export function ExploreMobileV2({
 
       if (direction === "right") {
         if (result.isMatch) {
-          setMatchedProfile(profiles[currentIndex]);
-          setMatches((prev) => [...prev, profiles[currentIndex]]);
+          const updatedProfile = {
+            ...profiles[currentIndex],
+            isMatch: true,
+            matchId: result.matchedProfile?.id,
+          } satisfies Profile;
+          setMatchedProfile(updatedProfile);
+          setMatches((prev) => [...prev, updatedProfile]);
+
         } else {
           toast({
             title: "Yasss 💖",
@@ -182,8 +213,14 @@ export function ExploreMobileV2({
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowMatches(true)}
+                className="relative"
               >
                 <Heart className="h-6 w-6 text-pink-500" />
+                {matches.length > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-pink-500 text-white text-xs flex items-center justify-center">
+                    {matches.length}
+                  </span>
+                )}
               </Button>
 
               <Button variant="ghost" size="icon">
@@ -194,15 +231,21 @@ export function ExploreMobileV2({
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowLikes(true)}
+                className="relative"
               >
                 <Star className="h-6 w-6 text-yellow-500" />
+                {likes.length > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-yellow-500 text-white text-xs flex items-center justify-center">
+                    {likes.length}
+                  </span>
+                )}
               </Button>
             </div>
           </div>
         </>
       ) : (
         <EmptyMobileView
-          likedProfiles={[]}
+          likedProfiles={matches}
           onShare={() => {}}
           onUnlike={async () => {}}
           currentUser={currentUser}

@@ -9,8 +9,8 @@ import { SwipeStack } from "@/components/explore/cards/swipe-stack";
 import { NoMoreProfiles } from "@/components/explore/empty-state";
 import { type Profile } from "@/db/schema";
 import { NotifyModal } from "@/components/explore/modals/notify";
-import { ExploreMobile } from "@/components/explore/mobile/explore-mobile";
 import { getProfile } from "@/lib/actions/profile.actions";
+import { ExploreMobileV2 } from "@/components/explore/mobile/explore-mobile-v2";
 
 export default async function ExplorePage() {
   const session = await auth();
@@ -57,12 +57,12 @@ export default async function ExplorePage() {
 
       {/* Conditional Rendering based on screen size */}
       <div className="md:hidden">
-        <ExploreMobile
+        <ExploreMobileV2
           currentUser={session.user}
           currentUserProfile={currentUserProfile as Profile}
           initialProfiles={profiles as Profile[]}
-          likedProfiles={likedProfiles}
           likedByProfiles={likedByProfiles}
+          likedProfiles={likedProfiles}
         />
       </div>
       <div className="hidden md:block">
