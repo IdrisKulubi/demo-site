@@ -8,7 +8,6 @@ import { redirect } from "next/navigation";
 import { SwipeStack } from "@/components/explore/cards/swipe-stack";
 import { NoMoreProfiles } from "@/components/explore/empty-state";
 import { type Profile } from "@/db/schema";
-import { NotifyModal } from "@/components/explore/modals/notify";
 import { getProfile } from "@/lib/actions/profile.actions";
 import { ExploreMobileV2 } from "@/components/explore/mobile/explore-mobile-v2";
 
@@ -25,7 +24,6 @@ export default async function ExplorePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white dark:from-pink-950/30 dark:to-background">
-      <NotifyModal />
 
       {/* Desktop Header - Hidden on Mobile */}
       <div className="hidden md:block container mx-auto px-4 pt-24 pb-2">

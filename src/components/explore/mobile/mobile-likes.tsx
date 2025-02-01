@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Heart } from "lucide-react";
 import type { Profile } from "@/db/schema";
 import Image from "next/image";
+import { useState } from "react";
+import { confetti } from "@/lib/confetti";
 
 interface MobileLikesProps {
   profiles: Profile[];
@@ -18,17 +20,44 @@ export function MobileLikes({
   onLikeBack,
   onViewProfile,
 }: MobileLikesProps) {
+  const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
+
+  const handleLikeBackWithAnimation = async (userId: string) => {
+    try {
+      const result = await onLikeBack(userId);
+
+      if (result?.isMatch) {
+        // Remove from likes view
+        setRemovedIds((prev) => new Set([...prev, userId]));
+
+        // Show match celebration
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+      }
+    } catch (error) {
+      console.error("Error in handleLikeBackWithAnimation:", error);
+    }
+  };
+
+  // Filter out profiles that have been matched
+  const visibleProfiles = profiles.filter(
+    (profile) => !removedIds.has(profile.userId)
+  );
+
   return (
     <ScrollArea className="h-[calc(100vh-200px)]">
       <div className="grid grid-cols-2 gap-4 p-4">
-        <AnimatePresence>
-          {profiles.map((profile) => (
+        <AnimatePresence mode="popLayout">
+          {visibleProfiles.map((profile) => (
             <motion.div
               key={profile.userId}
               layout
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              exit={{ opacity: 0, scale: 0.8 }}
               className="group relative bg-gradient-to-br from-white to-pink-50 dark:from-background dark:to-pink-950/20 rounded-2xl overflow-hidden border border-pink-100 dark:border-pink-900 hover:border-pink-300 dark:hover:border-pink-700 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
               onClick={() => onViewProfile(profile)}
             >
@@ -61,7 +90,7 @@ export function MobileLikes({
                 className="absolute top-3 right-3 bg-pink-500/90 hover:bg-pink-600 text-white shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onLikeBack(profile.userId);
+                  handleLikeBackWithAnimation(profile.userId);
                 }}
               >
                 <Heart className="h-4 w-4 mr-1.5" />

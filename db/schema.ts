@@ -100,6 +100,7 @@ export const profiles = pgTable("profiles", {
   firstName: text("first_name").notNull().default(""),
   lastName: text("last_name").notNull().default(""),
   isMatch: boolean("is_match").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Swipes/Likes
@@ -125,6 +126,7 @@ export const matches = pgTable("matches", {
     .notNull()
     .references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
   lastMessageAt: timestamp("last_message_at"),
   user1Typing: boolean("user1_typing").default(false),
   user2Typing: boolean("user2_typing").default(false),
@@ -140,20 +142,17 @@ export const feedbacks = pgTable("feedbacks", {
 });
 
 // Messages
-export const messages = pgTable("messages", {
+export const messages = pgTable("message", {
   id: uuid("id").defaultRandom().primaryKey(),
   matchId: uuid("match_id")
     .notNull()
     .references(() => matches.id, { onDelete: "cascade" }),
   senderId: text("sender_id")
     .notNull()
-    .references(() => users.id),
-  sender: text("sender").notNull(),
+    .references(() => users.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  delivered: boolean("delivered").default(false),
-  read: boolean("read").default(false),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
 });
 
 export const messagesRelations = relations(messages, ({ one }) => ({

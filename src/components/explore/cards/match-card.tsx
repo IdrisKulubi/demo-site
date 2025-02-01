@@ -1,36 +1,22 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Profile } from "@/db/schema";
-import { WhatsAppButton } from "@/components/shared/whatsapp-button";
+import { Heart, X } from "lucide-react";
 
-// Utility function to format phone number with country code
-const formatPhoneNumber = (phone: string | null | undefined) => {
-  if (!phone) return "";
+interface MatchCardProps {
+  profile: Profile;
+  onLikeBack: (userId: string) => Promise<void>;
+  onUnlike: (userId: string) => Promise<void>;
+  isProcessing?: boolean;
+}
 
-  // Remove any non-digit characters
-  const digits = phone.replace(/\D/g, "");
-
-  // Add Kenya country code if not present
-  if (digits.startsWith("0")) {
-    return `254${digits.substring(1)}`;
-  }
-
-  // If number starts with 254, use as is
-  if (digits.startsWith("254")) {
-    return digits;
-  }
-
-  // If number starts with 7 or 1, add 254
-  if (digits.startsWith("7") || digits.startsWith("1")) {
-    return `254${digits}`;
-  }
-
-  return digits;
-};
-
-export function MatchCard({ profile }: { profile: Profile }) {
-  const formattedPhoneNumber = formatPhoneNumber(profile.phoneNumber);
-
+export function MatchCard({
+  profile,
+  onLikeBack,
+  onUnlike,
+  isProcessing,
+}: MatchCardProps) {
   return (
     <motion.div
       layout
@@ -55,12 +41,38 @@ export function MatchCard({ profile }: { profile: Profile }) {
             {profile.course} • Year {profile.yearOfStudy}
           </p>
         </div>
-        <WhatsAppButton
-          phoneNumber={formattedPhoneNumber}
-          className="opacity-0 group-hover:opacity-100 transition-opacity"
-          size="sm"
-          variant="outline"
-        />
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onLikeBack(profile.userId)}
+            disabled={isProcessing}
+            className="hover:bg-pink-100/50 dark:hover:bg-pink-950/50 text-pink-500 dark:text-pink-400"
+          >
+            {isProcessing ? (
+              <span className="flex items-center gap-1.5">
+                <span className="animate-spin">⌛</span>
+                <span className="text-xs">Loading...</span>
+              </span>
+            ) : (
+              <>
+                <Heart className="h-4 w-4 mr-1.5" />
+                <span className="text-xs">Like Back</span>
+              </>
+            )}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onUnlike(profile.userId)}
+            disabled={isProcessing}
+            className="hover:bg-rose-100/50 dark:hover:bg-rose-950/50 text-rose-500 dark:text-rose-400"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </motion.div>
   );

@@ -6,7 +6,6 @@ import { auth } from "@/auth";
 import { Profile } from "@/db/schema";
 import { profiles } from "@/db/schema";
 import { matches, swipes, users } from "@/db/schema";
-import { messages } from "@/db/schema";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type SwipeResult =
@@ -167,10 +166,14 @@ export async function recordSwipe(
 
       // If there's a mutual like, create a match
       if (mutualLike.length > 0) {
+        // Create a match with a proper UUID
+        const matchId = crypto.randomUUID();
         await db.insert(matches).values({
+          id: matchId,
           user1Id: session.user.id,
           user2Id: profileId,
           createdAt: new Date(),
+          updatedAt: new Date(),
         });
 
         const matchedProfile = await db
@@ -354,19 +357,27 @@ export async function getTotalSwipes() {
 
 export async function getMatches() {
   const session = await auth();
+  console.log("Session user ID:", session?.user?.id);
+
   if (!session?.user?.id) {
     return { matches: [], error: "Unauthorized" };
   }
 
   try {
-    // Optimized matches query with unread messages count
+    // Simplified matches query without messages
     const results = await db
       .select({
-        profile: profiles,
+        id: matches.id,
         matchedAt: matches.createdAt,
-        matchId: matches.id,
-        lastMessageAt: sql<Date>`MAX(messages.created_at)`,
-        unreadCount: sql<number>`COUNT(CASE WHEN messages.read = false AND messages.sender_id != ${session.user.id} THEN 1 END)`,
+        // Profile fields
+        userId: profiles.userId,
+        firstName: profiles.firstName,
+        lastName: profiles.lastName,
+        profilePhoto: profiles.profilePhoto,
+        bio: profiles.bio,
+        course: profiles.course,
+        yearOfStudy: profiles.yearOfStudy,
+        phoneNumber: profiles.phoneNumber,
       })
       .from(matches)
       .innerJoin(
@@ -382,7 +393,6 @@ export async function getMatches() {
           )
         )
       )
-      .leftJoin(messages, eq(messages.matchId, matches.id))
       .where(
         and(
           or(
@@ -392,30 +402,28 @@ export async function getMatches() {
           eq(profiles.isVisible, true)
         )
       )
-      .groupBy(matches.id, profiles.id)
-      .orderBy(
-        sql`COALESCE(MAX(messages.created_at), matches.created_at) DESC`
-      );
+      .orderBy(desc(matches.createdAt));
 
-    // Debug logging
-    console.log(`Found ${results.length} matches for user ${session.user.id}`);
-    if (results.length > 0) {
-      console.log("Sample match:", {
-        matchId: results[0].matchId,
-        profileId: results[0].profile.userId,
-        unreadCount: results[0].unreadCount,
-        lastMessageAt: results[0].lastMessageAt,
-      });
-    }
+   
+
+    const formattedMatches = results.map((match) => ({
+      matchId: match.id,
+      matchedAt: match.matchedAt,
+      // Profile data
+      userId: match.userId,
+      firstName: match.firstName,
+      lastName: match.lastName,
+      profilePhoto: match.profilePhoto,
+      bio: match.bio,
+      course: match.course,
+      yearOfStudy: match.yearOfStudy,
+      phoneNumber: match.phoneNumber,
+    }));
+
+    console.log("Formatted matches:", formattedMatches);
 
     return {
-      matches: results.map((r) => ({
-        ...r.profile,
-        matchedAt: r.matchedAt,
-        matchId: r.matchId,
-        unreadMessages: Number(r.unreadCount) || 0,
-        lastMessageAt: r.lastMessageAt || r.matchedAt,
-      })),
+      matches: formattedMatches,
       error: null,
     };
   } catch (error) {

@@ -16,9 +16,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { MatchModal } from "../modals/match-modal";
 import { EmptyMobileView } from "../cards/empty-mobile";
-import { MatchesModal } from "../modals/matches-modal";
 import { LikesModal } from "../modals/likes-modal";
 import { ProfilePreviewModal } from "../modals/profile-preview-modal";
+import { useInterval } from "@/hooks/use-interval";
+import { handleLike, handleUnlike } from "@/lib/actions/like.actions";
+import { MatchesModal } from "../modals/matches-modal";
 
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];
@@ -58,29 +60,46 @@ export function ExploreMobileV2({
   const { toast } = useToast();
 
   // Fetch and sync matches and likes
-  useEffect(() => {
-    const syncMatchesAndLikes = async () => {
+  const syncMatchesAndLikes = useCallback(async () => {
+    try {
       const [matchesResult, likesResult] = await Promise.all([
         getMatches(),
         getLikedByProfiles(),
       ]);
 
       if (matchesResult.matches) {
-        setMatches((prev) => {
-          const newMatches = matchesResult.matches.filter(
-            (newMatch) => !prev.some((p) => p.userId === newMatch.userId)
-          );
-          return [...prev, ...newMatches];
-        });
+        setMatches(matchesResult.matches as Profile[]);
       }
 
       if (likesResult.profiles) {
-        setLikes(likesResult.profiles);
+        // Filter out profiles that are now matches
+        const newLikes = likesResult.profiles.filter(
+          (profile) =>
+            !matchesResult.matches?.some(
+              (match) => match.userId === profile.userId
+            )
+        );
+        setLikes(newLikes);
       }
-    };
+    } catch (error) {
+      console.error("Error syncing matches and likes:", error);
+    }
+  }, []);
 
+  // Initial sync
+  useEffect(() => {
     syncMatchesAndLikes();
-  }, [swipedProfiles]);
+  }, [syncMatchesAndLikes]);
+
+  // Periodic sync every 30 seconds
+  useInterval(syncMatchesAndLikes, 30000);
+
+  // Sync after any swipe action
+  useEffect(() => {
+    if (swipedProfiles.length > 0) {
+      syncMatchesAndLikes();
+    }
+  }, [swipedProfiles, syncMatchesAndLikes]);
 
   const handleSwipe = useCallback(
     async (direction: "left" | "right") => {
@@ -103,7 +122,6 @@ export function ExploreMobileV2({
           } satisfies Profile;
           setMatchedProfile(updatedProfile);
           setMatches((prev) => [...prev, updatedProfile]);
-
         } else {
           toast({
             title: "Yasss 💖",
@@ -144,6 +162,51 @@ export function ExploreMobileV2({
         "bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-none",
     });
   }, [swipedProfiles, toast]);
+
+  const handleLikeBack = async (userId: string) => {
+    try {
+      const result = await handleLike(userId);
+      if (result.success) {
+        // Remove from likes immediately
+        setLikes((prev) => prev.filter((profile) => profile.userId !== userId));
+
+        if (result.isMatch && result.matchedProfile) {
+          // Add to matches immediately
+          setMatches((prev) => [...prev, result.matchedProfile as Profile]);
+        }
+
+        // Sync with server
+        syncMatchesAndLikes();
+      }
+      return result;
+    } catch (error) {
+      console.error("Error in handleLikeBack:", error);
+      return { success: false };
+    }
+  };
+
+  const handleUnlike = async (
+    userId: string
+  ): Promise<{ success: boolean }> => {
+    try {
+      const result = await handleUnlike(userId);
+      if (result.success) {
+        // Remove from likes immediately
+        setLikes((prev) => prev.filter((profile) => profile.userId !== userId));
+        // Also remove from matches if it was a match
+        setMatches((prev) =>
+          prev.filter((profile) => profile.userId !== userId)
+        );
+
+        // Sync with server to ensure consistency
+        syncMatchesAndLikes();
+      }
+      return result;
+    } catch (error) {
+      console.error("Error in handleUnlike:", error);
+      return { success: false };
+    }
+  };
 
   return (
     <div className="relative h-screen">
@@ -265,12 +328,15 @@ export function ExploreMobileV2({
         isOpen={showMatches}
         onClose={() => setShowMatches(false)}
         matches={matches}
+        currentUser={currentUser}
       />
 
       <LikesModal
         isOpen={showLikes}
         onClose={() => setShowLikes(false)}
         likes={likes}
+        onUnlike={handleUnlike}
+        onUpdate={syncMatchesAndLikes}
       />
 
       <ProfilePreviewModal
