@@ -23,7 +23,7 @@ export function FeedbackModal() {
   useEffect(() => {
     const target = new Date();
     target.setDate(target.getDate() + 1);
-    target.setHours(10, 0, 0, 0);
+    target.setHours(12, 0, 0, 0);
 
     const timer = setInterval(() => {
       const now = new Date();
@@ -110,10 +110,10 @@ export function FeedbackModal() {
                 <div className="text-3xl sm:text-4xl animate-bounce">⚡</div>
                 <div>
                   <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-                    Sheeeesh! We&apos;re Leveling Up 🔥
+                    Sheeeesh We&apos;re Leveling Up 🔥
                   </h2>
                   <p className="text-sm sm:text-base text-fuchsia-200/90">
-                    Major glow up in progress, bestie Back tomorrow @ 10AM
+                    Major glow up in progress, bestie Back today @ 12PM
                   </p>
                 </div>
               </div>
