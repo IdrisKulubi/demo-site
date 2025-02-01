@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import {  Profile } from "@/db/schema";
+import { Profile } from "@/db/schema";
 import { SwipeCard } from "../cards/swipe-card";
 import { AnimatePresence } from "framer-motion";
 import { Heart, X, User2, Bell, ArrowLeft, Star } from "lucide-react";

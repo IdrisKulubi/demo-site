@@ -118,51 +118,16 @@ export function ExploreMobile({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white dark:from-pink-950/30 dark:to-background">
+      {/* Mobile Navigation */}
       <MobileNav />
 
-      {/* Main Content */}
-      {profiles.length > 0 ? (
-        <>
-          {/* Card Stack */}
-          <div className="fixed inset-0 pt-[56px] pb-24">
-            <div className="relative h-full w-full max-w-md mx-auto">
-              <AnimatePresence mode="popLayout">
-                {profiles.map((profile, index) => (
-                  <SwipeCard
-                    key={`${profile.userId}-${index}`}
-                    profile={profile}
-                    active={index === profiles.length - 1}
-                    onSwipe={(dir) => handleSwipe(dir, profile)}
-                    animate={
-                      index === profiles.length - 1
-                        ? currentSwipeDirection
-                        : undefined
-                    }
-                    variants={{
-                      right: {
-                        x: "120%",
-                        rotate: 24,
-                        opacity: 0,
-                        transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
-                      },
-                      left: {
-                        x: "-120%",
-                        rotate: -24,
-                        opacity: 0,
-                        transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
-                      },
-                    }}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
-
-          {/* Top Actions */}
-          <div className="fixed top-[56px] left-0 right-0 z-50 px-4 py-2 flex justify-between items-center">
+      {/* Top Controls - Only show when there are profiles */}
+      {profiles.length > 0 && (
+        <div className="fixed top-[56px] left-0 right-0 z-40 bg-white/50 dark:bg-background/50 backdrop-blur-sm border-b border-pink-100 dark:border-pink-900">
+          <div className="px-6 py-3 flex items-center justify-between">
             <Sheet>
               <SheetTrigger asChild>
-                <Button size="icon" variant="ghost" className="relative">
+                <Button variant="ghost" className="relative">
                   <Heart className="h-6 w-6 text-pink-500" />
                   {likedByProfiles.length > 0 && (
                     <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs font-medium bg-pink-500 text-white rounded-full">
@@ -171,7 +136,7 @@ export function ExploreMobile({
                   )}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0">
+              <SheetContent side="left" className="w-full sm:w-[400px] p-0">
                 <div className="p-6 space-y-4">
                   <SheetTitle className="text-xl font-bold text-pink-500 flex items-center gap-2">
                     Likes You <span className="text-2xl">💘</span>
@@ -205,7 +170,6 @@ export function ExploreMobile({
             </Sheet>
 
             <Button
-              size="icon"
               variant="ghost"
               onClick={() => setShowCrushes(true)}
               className="relative"
@@ -218,10 +182,52 @@ export function ExploreMobile({
               )}
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      {profiles.length > 0 ? (
+        <>
+          {/* Card Stack - Adjusted top padding for new layout */}
+          <div className="pt-[112px] pb-24 px-4">
+            <div className="relative h-[calc(100vh-220px)] w-full">
+              <AnimatePresence mode="popLayout">
+                {profiles.map((profile, index) => (
+                  <SwipeCard
+                    key={`${profile.userId}-${index}`}
+                    profile={profile}
+                    active={index === profiles.length - 1}
+                    onSwipe={(dir) => handleSwipe(dir, profile)}
+                    animate={
+                      index === profiles.length - 1
+                        ? currentSwipeDirection
+                        : undefined
+                    }
+                    variants={{
+                      right: {
+                        x: "120%",
+                        y: -30,
+                        rotate: 20,
+                        opacity: 0,
+                        transition: { duration: 0.2 },
+                      },
+                      left: {
+                        x: "-120%",
+                        y: -30,
+                        rotate: -20,
+                        opacity: 0,
+                        transition: { duration: 0.2 },
+                      },
+                    }}
+                  />
+                ))}
+              </AnimatePresence>
+            </div>
+          </div>
 
           {/* Bottom Controls */}
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-background to-transparent pb-6 pt-12">
-            <div className="px-6">
+          <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-background/80 backdrop-blur-lg border-t border-pink-100 dark:border-pink-900">
+            <div className="px-6 py-4">
               <SwipeControls
                 onSwipeLeft={() =>
                   profiles.length > 0 &&
