@@ -118,44 +118,12 @@ export function FeedbackModal() {
                 </div>
               </div>
 
-              {/* Status Update - Enhanced Countdown */}
-              <div className="p-4 sm:p-6 bg-black/30 rounded-lg sm:rounded-xl border border-violet-500/20">
-                <div className="flex flex-col items-center text-center gap-2">
-                  <span className="text-fuchsia-400 text-lg sm:text-xl font-bold animate-pulse">
-                    Time Until We&apos;re Back Online
-                  </span>
-                  <div className="text-4xl sm:text-6xl font-bold bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent animate-[pulse_2s_ease-in-out_infinite]">
-                    {timeLeft}
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <span className="bg-violet-900/40 px-3 py-1 rounded-full text-sm animate-bounce">✨</span>
-                    <span className="bg-fuchsia-900/40 px-3 py-1 rounded-full text-sm animate-bounce delay-100">💫</span>
-                    <span className="bg-pink-900/40 px-3 py-1 rounded-full text-sm animate-bounce delay-200">⭐</span>
-                  </div>
-                </div>
-              </div>
+             
 
-              {/* Updated Message */}
-              <div className="text-center space-y-2">
-                <p className="text-sm sm:text-base text-fuchsia-100">
-                  <span className="block text-xl mb-2">👾 Plot Twist! 👾</span>
-                  Fr fr, y&apos;all broke the app with your main character energy!
-                  <span className="inline-block animate-bounce ml-1">💅</span>
-                </p>
-                <p className="text-sm text-fuchsia-200/80">
-                  Servers went: &quot;Aight, imma head out&quot; 
-                  <span className="inline-block animate-spin">💫</span>
-                </p>
-                <p className="text-sm text-fuchsia-200/80">
-                  But no cap, we&apos;re cooking something bussin&apos;
-                  <span className="inline-block animate-pulse ml-1">🔥</span>
-                </p>
-                <div className="text-xs text-fuchsia-300/60 mt-4">
-                  Drop your thoughts below and we&apos;ll catch you on the flip! 
-                  <span className="inline-block animate-bounce">✌️</span>
-                </div>
-              </div>
-
+            <p className="text-sm sm:text-base text-fuchsia-200/90">
+  Deployment is in the pipeline! 🚀 We’re rolling out the update in just a few minutes. 
+  Hang tight, bestie – we’ll be back before you know it! ⏳✨
+</p>
               {/* Feedback Section */}
               <div>
                 <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4">
