@@ -10,34 +10,11 @@ export function FeedbackModal() {
   const [message, setMessage] = useState("");
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [timeLeft, setTimeLeft] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  // Open modal by default on mount
   useEffect(() => {
     setIsOpen(true);
-  }, []);
-
-  // Countdown timer until 12PM next day
-  useEffect(() => {
-    const updateCountdown = () => {
-      const target = new Date();
-      target.setDate(target.getDate() + 1);
-      target.setHours(12, 0, 0, 0);
-
-      const now = new Date();
-      const difference = target.getTime() - now.getTime();
-
-      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-
-      setTimeLeft(`${hours}h ${minutes}m`);
-    };
-
-    updateCountdown();
-    const timer = setInterval(updateCountdown, 1000);
-    return () => clearInterval(timer);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -115,12 +92,6 @@ export function FeedbackModal() {
                   </p>
                 </div>
               </div>
-
-              {/* Countdown Message */}
-              <p className="text-sm sm:text-base text-fuchsia-200/90">
-                Deployment is in the pipeline! 🚀 We’re rolling out the update in just <strong>{timeLeft}</strong>.  
-                Hang tight, bestie – we’ll be back before you know it! ⏳✨
-              </p>
 
               {/* Feedback Section */}
               <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4">
