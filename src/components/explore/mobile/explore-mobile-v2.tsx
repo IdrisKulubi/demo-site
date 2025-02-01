@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeCard } from "../cards/swipe-card";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, X, Undo2, Star } from "lucide-react";
+import { Heart, X, Undo2, Star, User2, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { recordSwipe, undoLastSwipe } from "@/lib/actions/explore.actions";
 import { useToast } from "@/hooks/use-toast";
@@ -35,15 +35,6 @@ export function ExploreMobileV2({ initialProfiles, currentUserProfile }: Explore
       direction === "right" ? "like" : "pass"
     );
 
-    if (!result.success) {
-      toast({
-        variant: "destructive",
-        description: result.error || "Couldn't record swipe"
-      });
-      setIsAnimating(false);
-      return;
-    }
-
     if (direction === "right" && result.isMatch) {
       setMatchedProfile(profiles[currentIndex]);
     }
@@ -53,12 +44,14 @@ export function ExploreMobileV2({ initialProfiles, currentUserProfile }: Explore
       setSwipeDirection(null);
       setIsAnimating(false);
     }, 300);
-  }, [currentIndex, isAnimating, profiles, toast]);
+  }, [currentIndex, isAnimating, profiles]);
 
   return (
-    <div className="relative h-[calc(100vh-4rem)]">
+    <div className="relative h-screen">
+      {/* Remove top navbar */}
+      
       {/* Cards Stack */}
-      <div className="relative w-full h-[calc(100vh-12rem)] mx-auto">
+      <div className="relative w-full h-[calc(100vh-5rem)] mx-auto">
         <AnimatePresence>
           {profiles.map((profile, index) => {
             if (index < currentIndex - 2 || index > currentIndex) return null;
@@ -74,9 +67,10 @@ export function ExploreMobileV2({ initialProfiles, currentUserProfile }: Explore
                 active={isTop}
                 animate={isTop ? swipeDirection : undefined}
                 style={{
-                  scale: isSecond ? 0.95 : 1,
-                  opacity: isSecond ? 0.8 : 1,
-                  zIndex: index,
+                  scale: isTop ? 1 : 0.95,
+                  opacity: isTop ? 1 : 0.6,
+                  zIndex: isTop ? 10 : index,
+                  transform: isTop ? 'none' : `translateY(${(currentIndex - index) * 12}px)`,
                 }}
               />
             );
@@ -84,30 +78,42 @@ export function ExploreMobileV2({ initialProfiles, currentUserProfile }: Explore
         </AnimatePresence>
       </div>
 
-      {/* Tinder-like Control Buttons */}
-      <div className="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-4">
-        <Button
-          size="icon"
-          variant="outline"
-          className="h-14 w-14 rounded-full border-2 shadow-lg"
-          onClick={() => handleSwipe("left")}
-          disabled={isAnimating}
-        >
-          <X className="h-6 w-6 text-red-500" />
-        </Button>
+      {/* Bottom Navigation Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-background border-t border-border">
+        <div className="flex justify-around items-center h-16 px-4">
+          <Button variant="ghost" size="icon">
+            <User2 className="h-6 w-6 text-muted-foreground" />
+          </Button>
+          
+          {/* Swipe Controls */}
+          <div className="flex gap-4">
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-14 w-14 rounded-full border-2 shadow-lg"
+              onClick={() => handleSwipe("left")}
+              disabled={isAnimating}
+            >
+              <X className="h-6 w-6 text-red-500" />
+            </Button>
 
-        <Button
-          size="icon"
-          variant="outline"
-          className="h-16 w-16 rounded-full border-2 shadow-lg"
-          onClick={() => handleSwipe("right")}
-          disabled={isAnimating}
-        >
-          <Heart className="h-8 w-8 text-pink-500" />
-        </Button>
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-14 w-14 rounded-full border-2 shadow-lg"
+              onClick={() => handleSwipe("right")}
+              disabled={isAnimating}
+            >
+              <Heart className="h-6 w-6 text-pink-500" />
+            </Button>
+          </div>
+
+          <Button variant="ghost" size="icon">
+            <Bell className="h-6 w-6 text-muted-foreground" />
+          </Button>
+        </div>
       </div>
 
-      {/* Match Modal */}
       <MatchModal
         isOpen={!!matchedProfile}
         onClose={() => setMatchedProfile(null)}

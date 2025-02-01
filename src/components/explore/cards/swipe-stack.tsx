@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import {  useCallback, useState } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeCard } from "./swipe-card";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, X } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { recordSwipe } from "@/lib/actions/explore.actions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { MatchModal } from "@/components/explore/modals/match-modal";
 
 interface SwipeStackProps {
   initialProfiles: Profile[];
+  currentUserProfile: Profile;
   onMatch?: (profile: Profile) => void;
-  onEmptyStack?: () => void;
 }
 
 const swipeVariants = {
@@ -31,97 +31,65 @@ const swipeVariants = {
   },
 };
 
-export function SwipeStack({ initialProfiles, onMatch, onEmptyStack }: SwipeStackProps) {
+export function SwipeStack({ initialProfiles, currentUserProfile }: SwipeStackProps) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [profiles, setProfiles] = useState(initialProfiles);
   const [currentIndex, setCurrentIndex] = useState(initialProfiles.length - 1);
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const { toast } = useToast();
-
-  const currentProfile = profiles[currentIndex];
-
-  useEffect(() => {
-    if (currentIndex < 0) {
-      onEmptyStack?.();
-    }
-  }, [currentIndex, onEmptyStack]);
+  const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
 
   const handleSwipe = useCallback(async (direction: "left" | "right") => {
-    if (isAnimating || !currentProfile) return;
+    if (isAnimating || !profiles[currentIndex]) return;
 
     setIsAnimating(true);
     setSwipeDirection(direction);
 
     const result = await recordSwipe(
-      currentProfile.userId,
+      profiles[currentIndex].userId,
       direction === "right" ? "like" : "pass"
     );
 
-    if (!result.success) {
-      toast({
-        variant: "destructive",
-        description: result.error || "Couldn't record swipe 😅",
-      });
-      setIsAnimating(false);
-      return;
-    }
-
-    // If it's a match, notify parent component
     if (direction === "right" && result.isMatch) {
-      onMatch?.(currentProfile);
+      setMatchedProfile(profiles[currentIndex]);
     }
 
-    // Delay state updates to allow animation to complete
     setTimeout(() => {
-      setCurrentIndex((prev) => prev - 1);
+      setCurrentIndex(prev => prev - 1);
       setSwipeDirection(null);
       setIsAnimating(false);
     }, 300);
-  }, [currentProfile, isAnimating, onMatch, toast]);
-
-  // Handle keyboard controls
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (isAnimating) return;
-      if (e.key === "ArrowLeft") handleSwipe("left");
-      if (e.key === "ArrowRight") handleSwipe("right");
-    };
-
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [handleSwipe, isAnimating]);
+  }, [currentIndex, isAnimating, profiles]);
 
   return (
-    <div className="relative w-full max-w-md mx-auto h-[600px] md:h-[700px]">
-      {/* Cards Stack */}
-      <div className="relative w-full h-full">
-        <AnimatePresence>
-          {profiles.map((profile, index) => {
-            const isTop = index === currentIndex;
-            const isSecond = index === currentIndex - 1;
+    <div className="relative aspect-[3/4] w-full">
+      <AnimatePresence>
+        {profiles.map((profile, index) => {
+          if (index < currentIndex - 2 || index > currentIndex) return null;
 
-            return (
-              <SwipeCard
-                key={profile.userId}
-                profile={profile}
-                onSwipe={handleSwipe}
-                active={isTop}
-                animate={isTop ? swipeDirection : undefined}
-                variants={swipeVariants}
-                style={{
-                  scale: isSecond ? 0.95 : 1,
-                  opacity: isSecond ? 0.8 : 1,
-                  zIndex: index,
-                }}
-              />
-            );
-          })}
-        </AnimatePresence>
-      </div>
+          const isTop = index === currentIndex;
+
+          return (
+            <SwipeCard
+              key={profile.userId}
+              profile={profile}
+              onSwipe={handleSwipe}
+              active={isTop}
+              animate={isTop ? swipeDirection : undefined}
+              variants={swipeVariants}
+              style={{
+                scale: isTop ? 1 : 0.95,
+                opacity: isTop ? 1 : 0.5,
+                zIndex: isTop ? 10 : index,
+                transform: isTop ? 'none' : `translateY(${(currentIndex - index) * 16}px)`,
+              }}
+            />
+          );
+        })}
+      </AnimatePresence>
 
       {/* Swipe Controls */}
-      {currentProfile && (
+      {profiles[currentIndex] && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -157,7 +125,7 @@ export function SwipeStack({ initialProfiles, onMatch, onEmptyStack }: SwipeStac
       )}
 
       {/* Empty State */}
-      {!currentProfile && (
+      {!profiles[currentIndex] && (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -172,6 +140,13 @@ export function SwipeStack({ initialProfiles, onMatch, onEmptyStack }: SwipeStac
           </p>
         </motion.div>
       )}
+
+      <MatchModal
+        isOpen={!!matchedProfile}
+        onClose={() => setMatchedProfile(null)}
+        matchedProfile={matchedProfile!}
+        currentUserProfile={currentUserProfile}
+      />
     </div>
   );
 }
