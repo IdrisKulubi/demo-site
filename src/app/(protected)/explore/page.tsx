@@ -39,6 +39,7 @@ export default async function ExplorePage() {
             <SwipeStack 
               initialProfiles={profiles as Profile[]}
               currentUserProfile={currentUserProfile}
+              likedByProfiles={[]}
             />
           ) : (
             <NoMoreProfiles initialLikedProfiles={[]} />

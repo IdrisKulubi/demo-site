@@ -2,10 +2,14 @@
 "use server";
 
 import db from "@/db/drizzle";
-import { profiles, swipes, matches, users } from "@/db/schema";
+import { profiles, swipes, matches, users, Profile } from "@/db/schema";
 import { eq, and, not, isNull, or, sql, exists, desc } from "drizzle-orm";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+
+type SwipeResult = 
+  | { success: boolean; error: string; isMatch?: undefined; matchedProfile?: undefined }
+  | { success: boolean; isMatch: boolean; error?: undefined; matchedProfile?: Profile }
 
 export async function getSwipableProfiles() {
   const session = await auth();
@@ -104,7 +108,10 @@ export async function getSwipableProfiles() {
   }
 }
 
-export async function recordSwipe(swipedId: string, action: "like" | "pass") {
+export async function recordSwipe(
+  profileId: string,
+  type: "like" | "pass"
+): Promise<{ success: boolean; error?: string; isMatch?: boolean; matchedProfile?: Profile }> {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -118,7 +125,7 @@ export async function recordSwipe(swipedId: string, action: "like" | "pass") {
       .where(
         and(
           eq(swipes.swiperId, session.user.id),
-          eq(swipes.swipedId, swipedId)
+          eq(swipes.swipedId, profileId)
         )
       )
       .limit(1);
@@ -130,19 +137,19 @@ export async function recordSwipe(swipedId: string, action: "like" | "pass") {
     // Record the swipe
     await db.insert(swipes).values({
       swiperId: session.user.id,
-      swipedId: swipedId,
-      isLike: action === "like",
+      swipedId: profileId,
+      isLike: type === "like",
       createdAt: new Date(),
     });
 
     // If it's a like, check for a match
-    if (action === "like") {
+    if (type === "like") {
       const mutualLike = await db
         .select()
         .from(swipes)
         .where(
           and(
-            eq(swipes.swiperId, swipedId),
+            eq(swipes.swiperId, profileId),
             eq(swipes.swipedId, session.user.id),
             eq(swipes.isLike, true)
           )
@@ -153,11 +160,16 @@ export async function recordSwipe(swipedId: string, action: "like" | "pass") {
       if (mutualLike.length > 0) {
         await db.insert(matches).values({
           user1Id: session.user.id,
-          user2Id: swipedId,
+          user2Id: profileId,
           createdAt: new Date(),
         });
 
-        return { success: true, isMatch: true };
+        const matchedProfile = await db
+          .select()
+          .from(profiles)
+          .where(eq(profiles.userId, profileId));
+
+        return { success: true, isMatch: true, matchedProfile: matchedProfile[0] };
       }
     }
 

@@ -68,6 +68,10 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
       }
     }
 
+    if (result.success && result.isMatch && result.matchedProfile) {
+      setMatchedProfile(result.matchedProfile);
+    }
+
     setSwipedProfiles(prev => [...prev, profiles[currentIndex]]);
 
     setTimeout(() => {
@@ -89,26 +93,17 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
   }, [swipedProfiles]);
 
   return (
-    <div className="flex gap-8">
-      {/* Left Panel - Using existing SidePanels component */}
+    <div className="flex gap-6 h-full max-h-[calc(100vh-200px)]">
+      {/* Left Side Panel */}
       <div className="hidden lg:block w-80">
         <SidePanels
-          profiles={profiles}
+          profiles={swipedProfiles}
           likedByProfiles={likedByProfiles}
-          onUnlike={async (profileId) => {
-            const result = await undoLastSwipe(profileId);
-            if (result.success) {
-              setProfiles(prev => prev.filter(p => p.userId !== profileId));
-              toast({
-                title: "Profile unliked",
-                description: "The profile has been removed from your likes",
-              });
-            }
-          }}
+          onUnlike={handleRevert}
           onLikeBack={async (profileId) => {
             const result = await recordSwipe(profileId, "like");
-            if (result.success && result.isMatch) {
-              setMatchedProfile(profiles.find(p => p.userId === profileId)!);
+            if (result.success && result.isMatch && result.matchedProfile)  {
+              setMatchedProfile(result.matchedProfile);
             }
           }}
         />
@@ -132,12 +127,45 @@ export function SwipeStack({ initialProfiles, currentUserProfile, likedByProfile
                   height: '100%',
                   borderRadius: '8px',
                 }}
-              />
+              >
+                {/* Mobile Controls Inside Card */}
+                <div className="lg:hidden absolute bottom-6 left-0 right-0 flex justify-center items-center gap-4 z-10">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-14 w-14 rounded-full border-2 shadow-lg bg-white/90"
+                    onClick={() => handleSwipe("left")}
+                    disabled={isAnimating}
+                  >
+                    <X className="h-6 w-6 text-red-500" />
+                  </Button>
+
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-12 w-12 rounded-full border-2 shadow-lg bg-white/90"
+                    onClick={handleRevert}
+                    disabled={swipedProfiles.length === 0 || isAnimating}
+                  >
+                    <ArrowLeft className="h-5 w-5 text-blue-500" />
+                  </Button>
+
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-14 w-14 rounded-full border-2 shadow-lg bg-white/90"
+                    onClick={() => handleSwipe("right")}
+                    disabled={isAnimating}
+                  >
+                    <Heart className="h-6 w-6 text-pink-500" />
+                  </Button>
+                </div>
+              </SwipeCard>
             )}
           </AnimatePresence>
 
-          {/* Controls below card */}
-          <div className="absolute -bottom-20 left-0 right-0 flex justify-center items-center gap-6">
+          {/* Desktop Controls */}
+          <div className="hidden lg:flex absolute -bottom-20 left-0 right-0 justify-center items-center gap-6">
             <Button
               size="lg"
               variant="outline"
