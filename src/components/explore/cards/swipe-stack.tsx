@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Heart, X } from "lucide-react";
 import { recordSwipe } from "@/lib/actions/explore.actions";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { MatchModal } from "@/components/explore/modals/match-modal";
 
 interface SwipeStackProps {
@@ -62,66 +61,48 @@ export function SwipeStack({ initialProfiles, currentUserProfile }: SwipeStackPr
   }, [currentIndex, isAnimating, profiles]);
 
   return (
-    <div className="relative aspect-[3/4] w-full">
+    <div className="relative max-w-sm mx-auto h-[calc(100vh-4rem)]">
       <AnimatePresence>
-        {profiles.map((profile, index) => {
-          if (index < currentIndex - 2 || index > currentIndex) return null;
-
-          const isTop = index === currentIndex;
-
-          return (
-            <SwipeCard
-              key={profile.userId}
-              profile={profile}
-              onSwipe={handleSwipe}
-              active={isTop}
-              animate={isTop ? swipeDirection : undefined}
-              variants={swipeVariants}
-              style={{
-                scale: isTop ? 1 : 0.95,
-                opacity: isTop ? 1 : 0.5,
-                zIndex: isTop ? 10 : index,
-                transform: isTop ? 'none' : `translateY(${(currentIndex - index) * 16}px)`,
-              }}
-            />
-          );
-        })}
+        {profiles[currentIndex] && (
+          <SwipeCard
+            key={profiles[currentIndex].userId}
+            profile={profiles[currentIndex]}
+            onSwipe={handleSwipe}
+            active={true}
+            animate={swipeDirection}
+            variants={swipeVariants}
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: 'calc(100% - 5rem)',
+            }}
+          />
+        )}
       </AnimatePresence>
 
-      {/* Swipe Controls */}
+      {/* Tinder-style Controls - Moved closer to card */}
       {profiles[currentIndex] && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4"
-        >
+        <div className="absolute bottom-0 left-0 right-0 flex justify-center items-center gap-6 pb-4">
           <Button
             size="lg"
             variant="outline"
-            className={cn(
-              "h-14 w-14 rounded-full border-2 shadow-lg transition-colors",
-              "hover:border-red-500 hover:bg-red-500/10",
-              isAnimating && "pointer-events-none opacity-50"
-            )}
+            className="h-14 w-14 rounded-full border-2 shadow-lg hover:border-red-500 hover:bg-red-500/10"
             onClick={() => handleSwipe("left")}
+            disabled={isAnimating}
           >
-            <X className="h-8 w-8 text-red-500" />
+            <X className="h-6 w-6 text-red-500" />
           </Button>
 
           <Button
             size="lg"
             variant="outline"
-            className={cn(
-              "h-14 w-14 rounded-full border-2 shadow-lg transition-colors",
-              "hover:border-pink-500 hover:bg-pink-500/10",
-              isAnimating && "pointer-events-none opacity-50"
-            )}
+            className="h-16 w-16 rounded-full border-2 shadow-lg hover:border-pink-500 hover:bg-pink-500/10"
             onClick={() => handleSwipe("right")}
+            disabled={isAnimating}
           >
             <Heart className="h-8 w-8 text-pink-500" />
           </Button>
-        </motion.div>
+        </div>
       )}
 
       {/* Empty State */}
