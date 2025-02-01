@@ -11,10 +11,8 @@ export async function POST(req: Request) {
     .values({
       matchId,
       senderId,
-      sender: senderId,
       content,
       createdAt: new Date(),
-      read: false,
     })
     .returning();
 

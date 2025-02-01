@@ -357,7 +357,6 @@ export async function getTotalSwipes() {
 
 export async function getMatches() {
   const session = await auth();
-  console.log("Session user ID:", session?.user?.id);
 
   if (!session?.user?.id) {
     return { matches: [], error: "Unauthorized" };
@@ -420,7 +419,6 @@ export async function getMatches() {
       phoneNumber: match.phoneNumber,
     }));
 
-    console.log("Formatted matches:", formattedMatches);
 
     return {
       matches: formattedMatches,
@@ -436,7 +434,6 @@ export async function getLikesForProfile(profileName: string) {
   console.log("Starting getLikesForProfile for:", profileName);
 
   try {
-    console.log("Searching for profile...");
     const profile = await db
       .select()
       .from(profiles)
@@ -445,14 +442,11 @@ export async function getLikesForProfile(profileName: string) {
       )
       .limit(1);
 
-    console.log("Profile query result:", profile);
 
     if (!profile.length) {
-      console.log("Profile not found");
       return { error: "Profile not found", likes: [] };
     }
 
-    console.log("Fetching likes for profile ID:", profile[0].userId);
 
     const likes = await db
       .select({
@@ -468,8 +462,7 @@ export async function getLikesForProfile(profileName: string) {
       )
       .orderBy(desc(swipes.createdAt));
 
-    console.log("Likes query results:", likes);
-    console.log("Total likes found:", likes.length);
+ 
 
     return {
       success: true,

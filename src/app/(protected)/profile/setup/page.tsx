@@ -221,25 +221,7 @@ export default function ProfileSetup() {
     const digitsOnly = formData.phoneNumber?.replace(/[^0-9]/g, "") || "";
 
     // Add console logs to debug validation
-    console.log("Form data:", formData);
-    console.log("Validation checks:", {
-      photos: formData.photos.length > 0,
-      bio: formData.bio?.split(/\s+/).filter(Boolean).length >= 10,
-      interests: formData.interests.length >= 3,
-      lookingFor: !!formData.lookingFor,
-      course: !!formData.course,
-      yearOfStudy: formData.yearOfStudy > 0,
-      gender: !!formData.gender,
-      age: formData.age >= 18 && formData.age <= 25,
-      firstName: formData.firstName?.trim().length >= 2,
-      lastName: formData.lastName?.trim().length >= 2,
-      phoneNumber: {
-        exists: !!formData.phoneNumber,
-        notEmpty: formData.phoneNumber?.trim() !== "",
-        format: /^[0-9+\-\s()]+$/.test(formData.phoneNumber || ""),
-        length: digitsOnly.length === 10,
-      },
-    });
+   
 
     return (
       // Required fields from schema
