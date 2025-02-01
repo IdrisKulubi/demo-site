@@ -9,11 +9,14 @@ import { submitFeedback } from "@/lib/actions/feedback.actions";
 export function FeedbackModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [name, setName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [hasUnread, setHasUnread] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!message.trim()) {
       toast({
         title: "Hold up! 🛑",
@@ -25,19 +28,26 @@ export function FeedbackModal() {
 
     setIsSubmitting(true);
     try {
-      const result = await submitFeedback(message);
+      const result = await submitFeedback(
+        message,
+        name || undefined,
+        phoneNumber || undefined
+      );
 
       if (result.error) throw new Error(result.error);
 
       toast({
-        title: " Feedback sent",
+        title: "Feedback sent",
         description: "vehem23 gonna read this while sipping matcha latte",
       });
 
       setMessage("");
+      setName("");
+      setPhoneNumber("");
       setIsOpen(false);
     } catch (error) {
       console.error("RIP feedback:", error);
+      console.log(error);
       toast({
         title: "Big oof 😬",
         description: "Feedback got ghosted, try again?",
@@ -57,7 +67,7 @@ export function FeedbackModal() {
         }}
         className="relative group"
       >
-        <motion.div 
+        <motion.div
           whileHover={{ rotate: 15, scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           transition={{ type: "spring", stiffness: 400, damping: 17 }}
@@ -84,7 +94,7 @@ export function FeedbackModal() {
               onClick={() => setIsOpen(false)}
               className="fixed inset-0 backdrop-blur-[2px] bg-black/60"
             />
-            
+
             <div className="mt-[15vh] sm:mt-[20vh] h-fit relative">
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 40 }}
@@ -98,18 +108,18 @@ export function FeedbackModal() {
                 onClick={(e) => e.stopPropagation()}
                 className="w-[95%] sm:w-[90vw] max-w-[340px] sm:max-w-md bg-gradient-to-b from-card to-card/90 backdrop-blur-[2px] p-4 sm:p-6 rounded-xl shadow-2xl border border-white/10 z-50 relative overflow-hidden"
               >
-                <motion.div 
+                <motion.div
                   className="absolute inset-0 bg-gradient-to-br from-pink-500/10 via-purple-500/10 to-transparent"
-                  animate={{ 
+                  animate={{
                     backgroundPosition: ["0% 0%", "100% 100%"],
                   }}
-                  transition={{ 
+                  transition={{
                     duration: 10,
                     repeat: Infinity,
-                    repeatType: "reverse"
+                    repeatType: "reverse",
                   }}
                 />
-                
+
                 <button
                   onClick={() => setIsOpen(false)}
                   className="absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 rounded-full hover:bg-white/10 transition-colors group z-10"
@@ -118,18 +128,18 @@ export function FeedbackModal() {
                 </button>
 
                 <div className="space-y-3 sm:space-y-4 relative z-10">
-                  <motion.div 
+                  <motion.div
                     className="flex items-center gap-2 sm:gap-3"
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: 0.1 }}
                   >
-                    <motion.div 
+                    <motion.div
                       animate={{ rotate: [0, 15, -15, 0] }}
-                      transition={{ 
-                        repeat: Infinity, 
+                      transition={{
+                        repeat: Infinity,
                         duration: 2,
-                        ease: "easeInOut"
+                        ease: "easeInOut",
                       }}
                       className="text-2xl sm:text-3xl"
                     >
@@ -146,21 +156,22 @@ export function FeedbackModal() {
                     </motion.div>
                   </motion.div>
 
-                  <motion.p 
+                  <motion.p
                     className="text-muted-foreground text-xs sm:text-sm"
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3 }}
                   >
-                    Send me anything - feature requests, 
-                    <motion.span 
+                    Send me anything - feature requests,
+                    <motion.span
                       className="mx-1.5 inline-block"
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ repeat: Infinity, duration: 1.5 }}
                     >
                       🔥
                     </motion.span>
-                    hot takes, or feature suggestions. I&apos;m chronically online anyway.
+                    hot takes, or feature suggestions. I&apos;m chronically
+                    online anyway.
                   </motion.p>
 
                   <motion.div
@@ -168,62 +179,80 @@ export function FeedbackModal() {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.4 }}
                   >
-                    <textarea
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Type your genius here..."
-                      className="w-full h-24 sm:h-32 p-2.5 sm:p-3 rounded-xl bg-black/20 border border-white/10 focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/30 placeholder:text-white/30 resize-none outline-none transition-all text-sm sm:text-base"
-                    />
-                  </motion.div>
-
-                  <motion.div 
-                    className="flex justify-end gap-2"
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    <motion.button
-                      onClick={() => setIsOpen(false)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl hover:bg-white/10 transition-colors font-medium text-xs sm:text-sm"
+                    <form
+                      onSubmit={handleSubmit}
+                      className="flex flex-col gap-3 sm:gap-4"
                     >
-                      Nah, I&apos;m good
-                    </motion.button>
-                    <motion.button
-                      onClick={handleSubmit}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      disabled={isSubmitting}
-                      className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium text-xs sm:text-sm hover:shadow-[0_0_20px_rgba(255,65,106,0.3)] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2 relative overflow-hidden group"
-                    >
-                      <motion.div 
-                        className="absolute inset-0 bg-gradient-to-r from-pink-400/20 to-purple-400/20"
-                        initial={{ x: "100%" }}
-                        whileHover={{ x: "-100%" }}
-                        transition={{ duration: 0.5 }}
+                      <input
+                        type="text"
+                        placeholder="Your name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full rounded-md border bg-black/20 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm ring-offset-background placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/30"
                       />
-                      <span className="relative">
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-                            <span>Sending...</span>
-                          </>
-                        ) : (
-                          "Yeet Feedback 🚀"
-                        )}
-                      </span>
-                    </motion.button>
+                      <input
+                        type="tel"
+                        placeholder="Your phone number"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        className="w-full rounded-md border bg-black/20 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm ring-offset-background placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/30"
+                      />
+                      <textarea
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Type your genius here..."
+                        className="w-full h-24 sm:h-32 p-2.5 sm:p-3 rounded-xl bg-black/20 border border-white/10 focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/30 placeholder:text-white/30 resize-none outline-none transition-all text-sm sm:text-base"
+                      />
+                      <motion.div
+                        className="flex justify-end gap-2"
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                      >
+                        <motion.button
+                          onClick={() => setIsOpen(false)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl hover:bg-white/10 transition-colors font-medium text-xs sm:text-sm"
+                        >
+                          Nah, I&apos;m good
+                        </motion.button>
+                        <motion.button
+                          type="submit"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          disabled={isSubmitting}
+                          className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium text-xs sm:text-sm hover:shadow-[0_0_20px_rgba(255,65,106,0.3)] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2 relative overflow-hidden group"
+                        >
+                          <motion.div
+                            className="absolute inset-0 bg-gradient-to-r from-pink-400/20 to-purple-400/20"
+                            initial={{ x: "100%" }}
+                            whileHover={{ x: "-100%" }}
+                            transition={{ duration: 0.5 }}
+                          />
+                          <span className="relative">
+                            {isSubmitting ? (
+                              <>
+                                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                                <span>Sending...</span>
+                              </>
+                            ) : (
+                              "Yeet Feedback 🚀"
+                            )}
+                          </span>
+                        </motion.button>
+                      </motion.div>
+                    </form>
                   </motion.div>
 
-                  <motion.p 
+                  <motion.p
                     className="text-center text-[10px] sm:text-xs text-white/50 mt-2 sm:mt-4"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.6 }}
                   >
                     PS: No cap, I read every message fr fr
-                    <motion.span 
+                    <motion.span
                       className="mx-1.5 inline-block"
                       animate={{ y: [0, -4, 0] }}
                       transition={{ repeat: Infinity, duration: 1.5 }}
