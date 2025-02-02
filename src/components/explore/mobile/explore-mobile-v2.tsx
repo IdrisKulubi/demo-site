@@ -74,7 +74,7 @@ export function ExploreMobileV2({
       if (likesResult.profiles) {
         // Filter out profiles that are now matches
         const newLikes = likesResult.profiles.filter(
-          (profile) =>
+          (profile: Profile) =>
             !matchesResult.matches?.some(
               (match) => match.userId === profile.userId
             )

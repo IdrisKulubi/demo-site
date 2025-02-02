@@ -50,6 +50,20 @@
       "when": 1738441147609,
       "tag": "0006_nasty_purifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1738486669726,
+      "tag": "0007_parched_lorna_dane",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1738487514959,
+      "tag": "0008_chilly_iron_monger",
+      "breakpoints": true
     }
   ]
 }

@@ -6,7 +6,7 @@ import { Profile } from "@/db/schema";
 import { cn } from "@/lib/utils";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   GraduationCap,
   Instagram,
@@ -22,6 +22,8 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import Link from "next/link";
+import { getCachedProfilePicture } from "@/lib/redis";
+
 interface SwipeCardProps {
   profile: Profile;
   onSwipe: (direction: "left" | "right") => void;
@@ -50,6 +52,8 @@ export function SwipeCard({
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [cachedPhotos, setCachedPhotos] = useState<string[]>([]);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
@@ -71,6 +75,34 @@ export function SwipeCard({
     setTouchStart(null);
     setTouchEnd(null);
   };
+
+  // Memoize the photo list with cache-aware URLs
+  const optimizedPhotos = useMemo(() => {
+    return [profile.profilePhoto, ...(profile.photos || [])].map((photo) =>
+      photo ? `${photo}?width=500&quality=70` : photo
+    );
+  }, [profile]);
+
+  // Prefetch images on mount
+  useEffect(() => {
+    const prefetchImages = async () => {
+      const cachedMain = await getCachedProfilePicture(profile.userId);
+      if (cachedMain) {
+        setCachedPhotos((prev) => [...new Set([...prev, cachedMain])]);
+      }
+
+      optimizedPhotos.forEach((photo) => {
+        if (photo) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const img = new (window as any).Image();
+          img.src = photo;
+          img.decode().catch(() => {});
+        }
+      });
+    };
+
+    prefetchImages();
+  }, [profile.userId, optimizedPhotos]);
 
   return (
     <motion.div
@@ -115,6 +147,21 @@ export function SwipeCard({
                     className="w-full h-full object-cover"
                     width={500}
                     height={500}
+                    quality={70}
+                    priority={index < 2} // Prioritize first two images
+                    placeholder={
+                      cachedPhotos.includes(photo) ? "blur" : "empty"
+                    }
+                    blurDataURL={
+                      cachedPhotos.includes(photo)
+                        ? `${photo}?width=50&quality=10`
+                        : undefined
+                    }
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        "/default-profile.png";
+                    }}
                   />
                 )}
               </SwiperSlide>

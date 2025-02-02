@@ -8,23 +8,32 @@ import {
   uuid,
   json,
   primaryKey,
+  index,
 } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "@auth/core/adapters";
 
 // First define all tables
-export const users = pgTable("user", {
-  id: text("id").primaryKey(), // Maps to Auth.js user id
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  emailVerified: timestamp("emailVerified"),
-  image: text("image"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  lastActive: timestamp("last_active").defaultNow().notNull(),
-  isOnline: boolean("is_online").default(false),
-  profilePhoto: text("profile_photo"),
-  phoneNumber: text("phone_number").notNull(),
-});
+export const users = pgTable(
+  "user",
+  {
+    id: text("id").primaryKey(), // Maps to Auth.js user id
+    name: text("name").notNull(),
+    email: text("email").notNull().unique(),
+    emailVerified: timestamp("emailVerified"),
+    image: text("image"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    lastActive: timestamp("last_active").defaultNow().notNull(),
+    isOnline: boolean("is_online").default(false),
+    profilePhoto: text("profile_photo"),
+    phoneNumber: text("phone_number").notNull(),
+  },
+  (table) => ({
+    emailIdx: index("user_email_idx").on(table.email),
+    createdAtIdx: index("user_created_at_idx").on(table.createdAt),
+    lastActiveIdx: index("user_last_active_idx").on(table.lastActive),
+  })
+);
 
 // Auth.js tables
 export const accounts = pgTable(
@@ -72,65 +81,96 @@ export const verificationTokens = pgTable(
 );
 
 // Extended user profiles
-export const profiles = pgTable("profiles", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  bio: text("bio"),
-  age: integer("age"),
-  gender: text("gender"),
-  role: text("role").$type<"user" | "admin">().default("user"),
+export const profiles = pgTable(
+  "profiles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    bio: text("bio"),
+    age: integer("age"),
+    gender: text("gender"),
+    role: text("role").$type<"user" | "admin">().default("user"),
 
-  interests: json("interests").$type<string[]>(),
-  photos: json("photos").$type<string[]>(), // Array of photo URLs
-  isVisible: boolean("is_visible").default(true),
-  lastActive: timestamp("last_active").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  isComplete: boolean("is_complete").default(false),
-  profileCompleted: boolean("profile_completed").default(false),
-  lookingFor: text("looking_for"),
-  course: text("course"),
-  yearOfStudy: integer("year_of_study"),
-  instagram: text("instagram"),
-  spotify: text("spotify"),
-  snapchat: text("snapchat"),
-  profilePhoto: text("profile_photo"),
-  phoneNumber: text("phone_number"),
-  firstName: text("first_name").notNull().default(""),
-  lastName: text("last_name").notNull().default(""),
-  isMatch: boolean("is_match").default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+    interests: json("interests").$type<string[]>(),
+    photos: json("photos").$type<string[]>(), // Array of photo URLs
+    isVisible: boolean("is_visible").default(true),
+    lastActive: timestamp("last_active").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    isComplete: boolean("is_complete").default(false),
+    profileCompleted: boolean("profile_completed").default(false),
+    lookingFor: text("looking_for"),
+    course: text("course"),
+    yearOfStudy: integer("year_of_study"),
+    instagram: text("instagram"),
+    spotify: text("spotify"),
+    snapchat: text("snapchat"),
+    profilePhoto: text("profile_photo"),
+    phoneNumber: text("phone_number"),
+    firstName: text("first_name").notNull().default(""),
+    lastName: text("last_name").notNull().default(""),
+    isMatch: boolean("is_match").default(false),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdIdx: index("profile_user_id_idx").on(table.userId),
+    isVisibleIdx: index("profile_is_visible_idx").on(table.isVisible),
+    genderIdx: index("profile_gender_idx").on(table.gender),
+    lastActiveIdx: index("profile_last_active_idx").on(table.lastActive),
+    completedIdx: index("profile_completed_idx").on(table.profileCompleted),
+  })
+);
 
 // Swipes/Likes
-export const swipes = pgTable("swipes", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  swiperId: text("swiper_id")
-    .notNull()
-    .references(() => users.id),
-  swipedId: text("swiped_id")
-    .notNull()
-    .references(() => users.id),
-  isLike: boolean("is_like").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const swipes = pgTable(
+  "swipes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    swiperId: text("swiper_id")
+      .notNull()
+      .references(() => users.id),
+    swipedId: text("swiped_id")
+      .notNull()
+      .references(() => users.id),
+    isLike: boolean("is_like").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    swiperIdx: index("swipe_swiper_idx").on(table.swiperId),
+    swipedIdx: index("swipe_swiped_idx").on(table.swipedId),
+    createdAtIdx: index("swipe_created_at_idx").on(table.createdAt),
+    // Compound index for faster lookups
+    swipeComboIdx: index("swipe_combo_idx").on(table.swiperId, table.swipedId),
+  })
+);
 
 // Matches
-export const matches = pgTable("matches", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  user1Id: text("user1_id")
-    .notNull()
-    .references(() => users.id),
-  user2Id: text("user2_id")
-    .notNull()
-    .references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  lastMessageAt: timestamp("last_message_at"),
-  user1Typing: boolean("user1_typing").default(false),
-  user2Typing: boolean("user2_typing").default(false),
-});
+export const matches = pgTable(
+  "matches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    user1Id: text("user1_id")
+      .notNull()
+      .references(() => users.id),
+    user2Id: text("user2_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    lastMessageAt: timestamp("last_message_at"),
+    user1Typing: boolean("user1_typing").default(false),
+    user2Typing: boolean("user2_typing").default(false),
+  },
+  (table) => ({
+    user1Idx: index("match_user1_idx").on(table.user1Id),
+    user2Idx: index("match_user2_idx").on(table.user2Id),
+    createdAtIdx: index("match_created_at_idx").on(table.createdAt),
+    lastMessageIdx: index("match_last_message_idx").on(table.lastMessageAt),
+    // Compound index for faster match lookups
+    matchComboIdx: index("match_combo_idx").on(table.user1Id, table.user2Id),
+  })
+);
 
 export const feedbacks = pgTable("feedbacks", {
   id: text("id").primaryKey().notNull(),
