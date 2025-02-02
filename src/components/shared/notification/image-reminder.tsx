@@ -43,7 +43,7 @@ export function ImageReminder() {
             <div className="flex justify-center gap-4 mt-6">
               <Button
                 asChild
-                variant="pink"
+                variant="gradient"
                 className="rounded-full px-8 py-6 text-lg font-bold shadow-lg hover:scale-105 transition-transform"
               >
                 <Link href="/profile/setup">
