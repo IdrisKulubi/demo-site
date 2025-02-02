@@ -25,11 +25,12 @@ export async function middleware(request: Request & { nextUrl: URL }) {
 
   // Handle authenticated users
   if (pathname.startsWith("/login")) {
+    // Redirect to profile setup instead of home
     return NextResponse.redirect(new URL("/profile/setup", request.url));
   }
 
   // Get profile status once
-  const { isComplete } = await checkProfileCompletion();
+  const { hasProfile } = await checkProfileCompletion();
 
   // Handle setup page access
   if (pathname.startsWith("/profile/setup")) {
@@ -42,19 +43,20 @@ export async function middleware(request: Request & { nextUrl: URL }) {
       return NextResponse.redirect(new URL("/no-access", request.url));
     }
 
-    // If profile is complete, redirect to explore
-    if (isComplete) {
+    // If they have a profile, redirect away from setup
+    if (hasProfile) {
       return NextResponse.redirect(new URL("/explore", request.url));
     }
 
     return NextResponse.next();
   }
 
-  // For all other protected routes, redirect to setup if profile incomplete
-  if (!isComplete) {
+  // For all other protected routes
+  if (!hasProfile) {
     return NextResponse.redirect(new URL("/profile/setup", request.url));
   }
 
+  // Allow access to all other routes if profile exists
   return NextResponse.next();
 }
 

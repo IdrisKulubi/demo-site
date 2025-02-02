@@ -9,10 +9,10 @@ import { checkProfileCompletion } from "@/lib/checks";
 import { redirect } from "next/navigation";
 
 export default async function Home() {
-  const { hasProfile, isComplete } = await checkProfileCompletion();
+  const { hasProfile } = await checkProfileCompletion();
 
-  // Redirect logged-in users with incomplete profiles
-  if (hasProfile && !isComplete) {
+  // Only redirect if they have no profile
+  if (hasProfile === false) {
     redirect("/profile/setup");
   }
 

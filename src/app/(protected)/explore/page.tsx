@@ -17,11 +17,11 @@ export default async function ExplorePage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  // Check profile completion status
-  const { hasProfile, isComplete } = await checkProfileCompletion();
+  // Only check if profile exists
+  const { hasProfile } = await checkProfileCompletion();
 
-  // Redirect to setup if no profile or incomplete profile
-  if (!hasProfile || !isComplete) {
+  // Redirect to setup only if no profile exists
+  if (!hasProfile) {
     redirect("/profile/setup");
   }
 
@@ -29,7 +29,7 @@ export default async function ExplorePage() {
   const { profiles: likedProfiles } = await getLikedProfiles();
   const { profiles: likedByProfiles } = await getLikedByProfiles();
 
-  // Fetch the current user's profile
+  // Current user's profile
   const currentUserProfile = await getProfile();
 
   return (
