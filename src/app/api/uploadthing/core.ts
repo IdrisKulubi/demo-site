@@ -1,23 +1,18 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { auth } from "@/auth";
-import { UploadThingError } from "uploadthing/server";
 
 const f = createUploadthing();
 
 // FileRouter for your app, can contain multiple FileRoutes
 export const ourFileRouter = {
-  imageUploader: f({ image: { maxFileSize: "8MB", maxFileCount: 6 } })
+  imageUploader: f({ image: { maxFileSize: "4MB" } })
     .middleware(async () => {
       const session = await auth();
-
-      if (!session?.user) {
-        throw new UploadThingError("Bestie, you need to sign in first 🔐");
-      }
-
+      if (!session?.user) throw new Error("Unauthorized");
       return { userId: session.user.id };
     })
-    .onUploadComplete(async ({ metadata }) => {
-      return { uploadedBy: metadata.userId };
+    .onUploadComplete(async ({ metadata, file }) => {
+      return { uploadedBy: metadata.userId, url: file.url };
     }),
 } satisfies FileRouter;
 

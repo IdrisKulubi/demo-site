@@ -8,6 +8,7 @@ import type { Profile } from "@/db/schema";
 import Image from "next/image";
 import { useState } from "react";
 import confetti from "canvas-confetti";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MobileLikesProps {
   profiles: Profile[];
@@ -21,6 +22,7 @@ export function MobileLikes({
   onViewProfile,
 }: MobileLikesProps) {
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
   const handleLikeBackWithAnimation = async (userId: string) => {
     try {
@@ -63,6 +65,9 @@ export function MobileLikes({
             >
               {/* Profile Photo */}
               <div className="relative aspect-[3/4]">
+                {!loadedImages.has(profile.userId) && (
+                  <Skeleton className="absolute inset-0 rounded-none bg-gradient-to-br from-muted/30 to-muted/50 animate-pulse" />
+                )}
                 <Image
                   src={profile.profilePhoto || (profile.photos?.[0] ?? "")}
                   alt={`${profile.firstName}'s photo`}
@@ -70,6 +75,13 @@ export function MobileLikes({
                   height={400}
                   className="object-cover"
                   priority
+                  onLoadingComplete={() =>
+                    setLoadedImages(
+                      (prev) => new Set([...prev, profile.userId])
+                    )
+                  }
+                  placeholder="blur"
+                  blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               </div>

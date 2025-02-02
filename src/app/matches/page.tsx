@@ -5,6 +5,8 @@ import { getMatches } from "@/lib/actions/explore.actions";
 import { Profile } from "@/db/schema";
 import { useInterval } from "@/hooks/use-interval";
 import { EmptyState } from "@/components/ui/empty-state";
+import Image from "next/image";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Match extends Profile {
   matchId: string;
@@ -93,9 +95,18 @@ export default function MatchesPage() {
             className="bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow p-4"
           >
             <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white text-xl font-semibold">
-                {match.firstName?.[0]}
-                {match.lastName?.[0]}
+              <div className="h-16 w-16 rounded-full bg-muted/50 relative overflow-hidden">
+                <Image
+                  src={match.profilePhoto || "/default-avatar.png"}
+                  alt={`${match.firstName} ${match.lastName}`}
+                  width={64}
+                  height={64}
+                  className="object-cover absolute inset-0"
+                  loading="lazy"
+                  placeholder="blur"
+                  blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+                />
+                <Skeleton className="absolute inset-0 rounded-full bg-muted/30 animate-pulse" />
               </div>
               <div>
                 <h3 className="font-semibold text-lg">

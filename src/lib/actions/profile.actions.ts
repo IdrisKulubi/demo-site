@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { profileSchema } from "../validators";
 import { deleteUploadThingFile } from "./upload.actions";
 import { cacheProfilePicture, getCachedProfilePicture } from "../redis";
+import { redis } from "../redis";
 
 export type ProfileFormData = {
   photos: string[];
@@ -286,10 +287,7 @@ export async function updateProfilePhoto(photoUrl: string) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      };
+      return { success: false, error: "Not authenticated" };
     }
 
     await db
@@ -297,8 +295,11 @@ export async function updateProfilePhoto(photoUrl: string) {
       .set({ profilePhoto: photoUrl })
       .where(eq(profiles.userId, session.user.id));
 
-    // Cache the profile photo URL
-    await cacheProfilePicture(session.user.id, photoUrl);
+    // Update cache with new photo
+    await Promise.all([
+      cacheProfilePicture(session.user.id, photoUrl),
+      redis.del("swipable-profiles"), // Invalidate profiles cache
+    ]);
 
     revalidatePath("/profile");
     return { success: true };

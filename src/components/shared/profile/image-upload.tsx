@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { UploadDropzone } from "@/lib/uploadthing";
@@ -8,6 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { deleteUploadThingFile } from "@/lib/actions/upload.actions";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { optimizeImage } from "@/lib/utils/image-utils";
 
 interface ImageUploadProps {
   value: string[];
@@ -25,39 +26,89 @@ export function ImageUpload({
   maxFiles = 6,
 }: ImageUploadProps) {
   const { toast } = useToast();
+  const [isOptimizing, setIsOptimizing] = useState(false);
 
-  const removeImage = async (urlToRemove: string) => {
-    // First remove from UI for immediate feedback
-    onChange(value.filter((url) => url !== urlToRemove));
+  // Validate image before upload
+  const validateImage = async (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.src = URL.createObjectURL(file);
 
-    // Then delete from UploadThing
-    const result = await deleteUploadThingFile(urlToRemove);
-    if (!result.success) {
-      console.error("Failed to delete image from storage");
-    }
+      img.onload = () => {
+        // Check if image dimensions are valid
+        if (img.width < 200 || img.height < 200) {
+          toast({
+            title: "Image too small",
+            description:
+              "Please upload an image that is at least 200x200 pixels",
+            variant: "destructive",
+          });
+          resolve(false);
+          return;
+        }
+
+        // Check if image is not blank/corrupted
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx?.drawImage(img, 0, 0);
+
+        try {
+          const imageData = ctx?.getImageData(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+          if (!imageData) {
+            resolve(false);
+            return;
+          }
+
+          // Check if image is not completely white/blank
+          const isBlank = imageData.data.every((pixel, index) => {
+            return index % 4 === 3 || pixel === 255;
+          });
+
+          if (isBlank) {
+            toast({
+              title: "Invalid image",
+              description: "The image appears to be blank or corrupted",
+              variant: "destructive",
+            });
+            resolve(false);
+            return;
+          }
+
+          resolve(true);
+        } catch (error) {
+          console.error("Error validating image:", error);
+          resolve(false);
+        }
+      };
+
+      img.onerror = () => {
+        toast({
+          title: "Invalid image",
+          description: "The file appears to be corrupted",
+          variant: "destructive",
+        });
+        resolve(false);
+      };
+    });
   };
 
-  const handleUploadComplete = async (res: { url: string }[]) => {
-    if (res) {
-      const newUrls = res.map((file) => file.url);
-      onChange([...value, ...newUrls]);
-    }
-  };
-
-  const handleUploadError = async (error: Error) => {
-    console.error(error);
-    if (error.message.includes("FileSizeMismatch")) {
+  const handleRemove = async (url: string) => {
+    try {
+      await deleteUploadThingFile(url);
+      onRemove?.(url);
+    } catch (error) {
+      console.error("Error removing Image", error)
       toast({
+        title: "Error removing image",
+        description: "Please try again",
         variant: "destructive",
-        title: "File too large! 📏",
-        description: "Please upload a file smaller than 8MB.",
-      });
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Upload Error",
-        description:
-          "An error occurred while uploading your file. Please try again.",
       });
     }
   };
@@ -65,62 +116,126 @@ export function ImageUpload({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <AnimatePresence mode="popLayout">
-          {value.map((url) => (
+        <AnimatePresence>
+          {value.map((url, index) => (
             <motion.div
               key={url}
               layout
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
               className="relative aspect-square rounded-xl overflow-hidden group"
             >
               <Image
                 src={url}
-                alt="Uploaded image"
-                fill
-                className="object-cover"
+                alt={`Upload ${index + 1}`}
+                className="object-cover w-full h-full"
+                width={400}
+                height={400}
+                quality={80}
               />
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => removeImage(url)}
-                className="absolute top-2 right-2 p-1.5 rounded-full bg-rose-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="w-4 h-4" />
-              </motion.button>
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                {onProfilePhotoSelect && (
+                  <button
+                    onClick={() => onProfilePhotoSelect(url)}
+                    className="text-white bg-pink-500/80 hover:bg-pink-500 p-2 rounded-full"
+                  >
+                    Set as Profile
+                  </button>
+                )}
+                <button
+                  onClick={() => handleRemove(url)}
+                  className="text-white bg-red-500/80 hover:bg-red-500 p-2 rounded-full"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>
+
+        {value.length < maxFiles && (
+          <UploadDropzone
+            endpoint="imageUploader"
+            className={cn(
+              "ut-button:bg-pink-500 ut-button:hover:bg-pink-600",
+              "ut-label:text-pink-500 ut-label:hover:text-pink-600"
+            )}
+            onClientUploadComplete={async (res) => {
+              if (res) {
+                setIsOptimizing(true);
+                try {
+                  // Process and validate each uploaded image
+                  const validUrls = await Promise.all(
+                    res.map(async (file) => {
+                      const isValid = await validateImage(
+                        new File(
+                          [await fetch(file.url).then((r) => r.blob())],
+                          file.name,
+                          {
+                            type: file.type,
+                            lastModified: Date.now(),
+                          }
+                        )
+                      );
+                      if (!isValid) return null;
+
+                      // Optimize image before saving
+                      const optimized = await optimizeImage(file.url, {
+                        maxWidth: 1200,
+                        maxHeight: 1200,
+                        quality: 80,
+                        format: "webp",
+                      });
+
+                      return optimized;
+                    })
+                  );
+
+                  // Filter out invalid/null URLs
+                  const newUrls = validUrls.filter(Boolean) as string[];
+                  if (newUrls.length > 0) {
+                    onChange([...value, ...newUrls]);
+                  }
+                } catch (error) {
+                  console.error("Error processing uploads:", error);
+                  toast({
+                    title: "Upload failed",
+                    description: "Please try again",
+                    variant: "destructive",
+                  });
+                } finally {
+                  setIsOptimizing(false);
+                }
+              }
+            }}
+            onUploadError={(error: Error) => {
+              toast({
+                title: "Upload failed",
+                description: error.message,
+                variant: "destructive",
+              });
+            }}
+          />
+        )}
       </div>
 
-      {value.length < maxFiles && (
-        <UploadDropzone
-          endpoint="imageUploader"
-          onClientUploadComplete={handleUploadComplete}
-          onUploadError={handleUploadError}
-          className={cn(
-            "ut-label:text-lg ut-label:text-muted-foreground",
-            "ut-button:bg-pink-500 ut-button:hover:bg-pink-600",
-            "ut-upload-icon:text-pink-500",
-            "border-2 border-dashed border-pink-200 dark:border-pink-800",
-            "hover:border-pink-300 dark:hover:border-pink-700",
-            "ut-allowed-content:text-muted-foreground"
-          )}
-        />
+      {isOptimizing && (
+        <p className="text-sm text-muted-foreground">
+          Optimizing your images for the best quality... ✨
+        </p>
       )}
 
-      {/* Fun messages based on photo count */}
       <p className="text-sm text-muted-foreground mt-2">
         {value.length === 0 && "Time to show off your best angles bestie 📸✨"}
         {value.length === 1 &&
-          "Looking good Add more pics to boost your chances🌟"}
+          "Looking good! Add more pics to boost your chances 🌟"}
         {value.length === 2 && "Now we're talking The more the merrier 💫"}
         {value.length >= 3 &&
           value.length < maxFiles &&
-          "Slay You're killing it 💅"}
+          "Slay! You're killing it 💅"}
         {value.length === maxFiles &&
-          "Perfect You're all set to find your match 💝"}
+          "Perfect! You're all set to find your match 💝"}
       </p>
     </div>
   );
