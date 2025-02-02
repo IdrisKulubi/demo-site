@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { Profile } from "@/db/schema";
 import { profiles } from "@/db/schema";
 import { matches, swipes, users } from "@/db/schema";
+import { setCachedData, getCachedData } from "@/lib/utils/redis-helpers";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type SwipeResult =
@@ -22,13 +23,23 @@ type SwipeResult =
       matchedProfile?: Profile;
     };
 
+const CACHE_KEYS = {
+  SWIPABLE_PROFILES: (userId: string): string => `swipable:${userId}`,
+  LIKED_PROFILES: (userId: string): string => `liked:${userId}`,
+  LIKED_BY_PROFILES: (userId: string): string => `liked_by:${userId}`,
+};
+
 export async function getSwipableProfiles() {
   const session = await auth();
-  if (!session?.user?.id) {
-    return [];
-  }
+  if (!session?.user?.id) return [];
 
   try {
+    // Check cache with proper handling
+    const cached = await getCachedData<Profile[]>(
+      CACHE_KEYS.SWIPABLE_PROFILES(session.user.id)
+    );
+    if (cached) return cached;
+
     // First, get the current user's profile to know their gender
     const currentUserProfile = await db
       .select({
@@ -101,10 +112,20 @@ export async function getSwipableProfiles() {
       .orderBy(sql`RANDOM()`)
       .limit(150);
 
-    return results.map((profile) => ({
+    // Format the profiles before caching
+    const formattedProfiles = results.map((profile) => ({
       ...profile,
       isMatch: !!profile.isMatch,
     }));
+
+    // Cache with proper serialization
+    await setCachedData(
+      CACHE_KEYS.SWIPABLE_PROFILES(session.user.id),
+      formattedProfiles,
+      60 // 1 minute TTL
+    );
+
+    return formattedProfiles;
   } catch (error) {
     console.error("Error fetching swipable profiles:", error);
     return [];
@@ -239,11 +260,15 @@ export async function undoLastSwipe(swipedId: string) {
 
 export async function getLikedProfiles() {
   const session = await auth();
-  if (!session?.user?.id) {
-    return { profiles: [], error: "Unauthorized" };
-  }
+  if (!session?.user?.id) return { profiles: [], error: "Unauthorized" };
 
   try {
+    // Use helper for cache retrieval
+    const cached = await getCachedData<Profile[]>(
+      CACHE_KEYS.LIKED_PROFILES(session.user.id)
+    );
+    if (cached) return { profiles: cached, error: null };
+
     // Optimized query to get profiles liked by the user with match status
     const results = await db
       .select({
@@ -273,6 +298,17 @@ export async function getLikedProfiles() {
       .where(and(eq(swipes.swiperId, session.user.id), eq(swipes.isLike, true)))
       .orderBy(desc(swipes.createdAt));
 
+    // Use helper for cache storage
+    await setCachedData(
+      CACHE_KEYS.LIKED_PROFILES(session.user.id),
+      results.map((r) => ({
+        ...r.profile,
+        swipedAt: r.swipedAt,
+        isMatch: !!r.matchId,
+      })),
+      60
+    );
+
     return {
       profiles: results.map((r) => ({
         ...r.profile,
@@ -294,13 +330,21 @@ export async function getLikedByProfiles() {
   }
 
   try {
+    // Check cache with proper handling
+    const cached = await getCachedData<Profile[]>(
+      CACHE_KEYS.LIKED_BY_PROFILES(session.user.id)
+    );
+    if (cached) {
+      return { profiles: cached, error: null };
+    }
+
     // Get profiles that have liked the current user with match status
     const results = await db
       .select({
         profile: profiles,
         swipeId: swipes.id,
         swipedAt: swipes.createdAt,
-        matchId: matches.id, // Include match ID to check if matched
+        matchId: matches.id,
       })
       .from(swipes)
       .innerJoin(profiles, eq(profiles.userId, swipes.swiperId))
@@ -326,12 +370,21 @@ export async function getLikedByProfiles() {
       )
       .orderBy(desc(swipes.createdAt));
 
+    const formattedProfiles = results.map((r) => ({
+      ...r.profile,
+      swipedAt: r.swipedAt,
+      isMatch: !!r.matchId,
+    }));
+
+    // Cache with proper serialization
+    await setCachedData(
+      CACHE_KEYS.LIKED_BY_PROFILES(session.user.id),
+      formattedProfiles,
+      60
+    );
+
     return {
-      profiles: results.map((r) => ({
-        ...r.profile,
-        swipedAt: r.swipedAt,
-        isMatch: !!r.matchId,
-      })),
+      profiles: formattedProfiles,
       error: null,
     };
   } catch (error) {
@@ -403,8 +456,6 @@ export async function getMatches() {
       )
       .orderBy(desc(matches.createdAt));
 
-   
-
     const formattedMatches = results.map((match) => ({
       matchId: match.id,
       matchedAt: match.matchedAt,
@@ -418,7 +469,6 @@ export async function getMatches() {
       yearOfStudy: match.yearOfStudy,
       phoneNumber: match.phoneNumber,
     }));
-
 
     return {
       matches: formattedMatches,
@@ -442,11 +492,9 @@ export async function getLikesForProfile(profileName: string) {
       )
       .limit(1);
 
-
     if (!profile.length) {
       return { error: "Profile not found", likes: [] };
     }
-
 
     const likes = await db
       .select({
@@ -461,8 +509,6 @@ export async function getLikesForProfile(profileName: string) {
         and(eq(swipes.swipedId, profile[0].userId), eq(swipes.isLike, true))
       )
       .orderBy(desc(swipes.createdAt));
-
- 
 
     return {
       success: true,

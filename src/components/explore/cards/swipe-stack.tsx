@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState, useCallback } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeCard } from "./swipe-card";
 import { AnimatePresence } from "framer-motion";
@@ -16,7 +16,11 @@ interface SwipeStackProps {
   initialProfiles: Profile[];
   currentUserProfile: Profile;
   likedByProfiles: Profile[];
-  currentUser: { id: string };
+  currentUser: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+  };
   onMatch?: (profile: Profile) => void;
 }
 
@@ -41,7 +45,7 @@ export function SwipeStack({
   likedByProfiles,
   currentUser,
 }: SwipeStackProps) {
-  const [profiles, setProfiles] = useState(initialProfiles);
+  const [profiles, setProfiles] = useState<Profile[]>(initialProfiles);
   const [currentIndex, setCurrentIndex] = useState(initialProfiles.length - 1);
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(
     null
@@ -103,6 +107,11 @@ export function SwipeStack({
     await handleSwipe("right");
   };
 
+  // No profiles left to show
+  if (currentIndex < 0) {
+    return null;
+  }
+
   return (
     <div className="flex w-full max-w-7xl mx-auto relative min-h-screen">
       {/* Side Panel - Adjusted positioning */}
@@ -126,7 +135,7 @@ export function SwipeStack({
                   profile={profiles[currentIndex]}
                   onSwipe={handleSwipe}
                   onRevert={handleRevert}
-                  active={false}
+                  active={true}
                   animate={swipeDirection}
                   variants={swipeVariants}
                   isAnimating={isAnimating}

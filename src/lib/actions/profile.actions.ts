@@ -2,13 +2,13 @@
 
 import { auth } from "@/auth";
 import db from "@/db/drizzle";
-import { profiles, users } from "@/db/schema";
+import { Profile, profiles, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { profileSchema } from "../validators";
 import { deleteUploadThingFile } from "./upload.actions";
-import { cacheProfilePicture, getCachedProfilePicture } from "../redis";
-import { redis } from "../redis";
+import { getRedisInstance } from "@/lib/redis";
+import { getCachedData, setCachedData } from "../utils/redis-helpers";
 
 export type ProfileFormData = {
   photos: string[];
@@ -28,12 +28,24 @@ export type ProfileFormData = {
   profilePhoto?: string;
 };
 
+// Add these cache keys
+const CACHE_KEYS = {
+  PROFILE: (userId: string) => `profile:${userId}`,
+  PROFILE_PHOTOS: (userId: string) => `profile:${userId}:photos`,
+} as const;
+
 export async function getProfile() {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
   try {
-    const session = await auth();
-    if (!session?.user?.email) {
-      console.error("No user email in session");
-      return null;
+    const cached = await getCachedData<Profile>(
+      CACHE_KEYS.PROFILE(session.user.id)
+    );
+
+    // Validate cached profile structure
+    if (cached && isValidProfile(cached)) {
+      return cached;
     }
 
     // Find user by email with all user fields
@@ -68,14 +80,11 @@ export async function getProfile() {
       .where(eq(profiles.userId, actualUserId))
       .limit(1);
 
-    // Try to get profile photo from cache first
-    const cachedProfilePhoto = await getCachedProfilePicture(actualUserId);
-
     // If no profile exists yet, return basic user info
     if (!profile || profile.length === 0) {
       return {
         ...user[0],
-        profilePhoto: cachedProfilePhoto || user[0].photos,
+        profilePhoto: user[0].photos,
         profileCompleted: false,
       };
     }
@@ -84,9 +93,7 @@ export async function getProfile() {
     const combinedProfile = {
       ...user[0],
       ...profile[0],
-      profilePhoto:
-        cachedProfilePhoto || profile[0].profilePhoto || user[0].photos,
-      // Check if all required fields are completed
+      profilePhoto: profile[0].profilePhoto || user[0].photos,
       profileCompleted: Boolean(
         profile[0].firstName &&
           profile[0].lastName &&
@@ -103,11 +110,30 @@ export async function getProfile() {
       ),
     };
 
+    // Cache validated profile
+    await setCachedData(
+      CACHE_KEYS.PROFILE(session.user.id),
+      combinedProfile,
+      300
+    );
+
     return combinedProfile;
   } catch (error) {
     console.error("Error in getProfile:", error);
     throw error;
   }
+}
+
+// Validation helper
+function isValidProfile(profile: unknown): profile is Profile {
+  return (
+    typeof profile === "object" &&
+    profile !== null &&
+    "id" in profile &&
+    "userId" in profile &&
+    "firstName" in profile &&
+    "lastName" in profile
+  );
 }
 
 export async function updateProfile(data: ProfileFormData) {
@@ -148,7 +174,7 @@ export async function updateProfile(data: ProfileFormData) {
       console.error("Validation errors:", validatedData.error);
       return {
         success: false,
-        error: "Invalid profile data",
+        error: "Check your phone number  😢",
       };
     }
 
@@ -295,12 +321,6 @@ export async function updateProfilePhoto(photoUrl: string) {
       .set({ profilePhoto: photoUrl })
       .where(eq(profiles.userId, session.user.id));
 
-    // Update cache with new photo
-    await Promise.all([
-      cacheProfilePicture(session.user.id, photoUrl),
-      redis.del("swipable-profiles"), // Invalidate profiles cache
-    ]);
-
     revalidatePath("/profile");
     return { success: true };
   } catch (error) {
@@ -338,7 +358,7 @@ export async function removePhoto(photoUrl: string) {
       };
     }
 
-    const updatedPhotos = profile.photos.filter((p) => p !== photoUrl);
+    const updatedPhotos = profile.photos.filter((p: string) => p !== photoUrl);
     await db
       .update(profiles)
       .set({ photos: updatedPhotos })
@@ -356,4 +376,10 @@ export async function removePhoto(photoUrl: string) {
       error: "Failed to remove photo. Please try again😢",
     };
   }
+}
+
+// Add cache invalidation
+export async function invalidateProfileCache(userId: string) {
+  const redis = await getRedisInstance();
+  await redis.del(CACHE_KEYS.PROFILE(userId));
 }

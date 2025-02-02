@@ -3,13 +3,14 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Profile } from "@/db/schema";
 import { useState } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ViewMoreProfile } from "./view-more-profile";
+import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 
 interface SidePanelsProps {
   profiles: Profile[];
@@ -26,6 +27,7 @@ export function SidePanels({
 }: SidePanelsProps) {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [activeTab, setActiveTab] = useState<"likes" | "matches">("likes");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   return (
     <div className="hidden lg:block w-[380px] h-[calc(100vh-6rem)]">
@@ -55,7 +57,6 @@ export function SidePanels({
             className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-purple-600/20"
           >
             <div className="flex items-center gap-2">
-              <MessageCircle className="w-4 h-4" />
               <span>Matches</span>
               {profiles.length > 0 && (
                 <span className="bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full">
@@ -75,7 +76,7 @@ export function SidePanels({
               <AnimatePresence mode="popLayout">
                 {likedByProfiles.map((profile) => (
                   <motion.div
-                    key={profile.userId}
+                    key={`liked-by-${profile.userId}`}
                     layout
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -86,7 +87,9 @@ export function SidePanels({
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         <Avatar className="h-14 w-14 border-2 border-pink-200 dark:border-pink-800">
-                          <AvatarImage src={profile.profilePhoto || profile.photos?.[0]} />
+                          <AvatarImage
+                            src={profile.profilePhoto || profile.photos?.[0]}
+                          />
                           <AvatarFallback className="bg-gradient-to-br from-pink-400 to-pink-600 text-white">
                             {profile.firstName?.[0]}
                             {profile.lastName?.[0]}
@@ -109,17 +112,38 @@ export function SidePanels({
                           {profile.course}
                         </p>
                       </div>
-                      <Button
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onUnlike(profile.userId);
-                        }}
-                      >
-                        <Heart className="w-4 h-4 mr-1" />
-                        Unlike
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={async () => {
+                            setIsProcessing(true);
+                            await onLikeBack(profile.userId);
+                            setIsProcessing(false);
+                          }}
+                          disabled={isProcessing}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-pink-100/50 dark:hover:bg-pink-950/50 text-pink-500 dark:text-pink-400"
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={async () => {
+                            setIsProcessing(true);
+                            await onUnlike(profile.userId);
+                            setIsProcessing(false);
+                          }}
+                          disabled={isProcessing}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-100/50 dark:hover:bg-rose-950/50 text-rose-500 dark:text-rose-400"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+
+                        <WhatsAppButton
+                          phoneNumber={profile.phoneNumber || ""}
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        />
+                      </div>
                     </div>
                   </motion.div>
                 ))}
@@ -143,7 +167,7 @@ export function SidePanels({
               <AnimatePresence mode="popLayout">
                 {profiles.map((profile) => (
                   <motion.div
-                    key={profile.userId}
+                    key={`matched-with-${profile.userId}`}
                     layout
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -153,7 +177,9 @@ export function SidePanels({
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         <Avatar className="h-14 w-14 border-2 border-purple-200 dark:border-purple-800">
-                          <AvatarImage src={profile.profilePhoto || profile.photos?.[0]} />
+                          <AvatarImage
+                            src={profile.profilePhoto || profile.photos?.[0]}
+                          />
                           <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white">
                             {profile.firstName?.[0]}
                             {profile.lastName?.[0]}
@@ -176,16 +202,38 @@ export function SidePanels({
                           {profile.course}
                         </p>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
-                        asChild
-                      >
-                        <a href={`/messages/${profile.userId}`}>
-                          <MessageCircle className="w-4 h-4" />
-                        </a>
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={async () => {
+                            setIsProcessing(true);
+                            await onLikeBack(profile.userId);
+                            setIsProcessing(false);
+                          }}
+                          disabled={isProcessing}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-pink-100/50 dark:hover:bg-pink-950/50 text-pink-500 dark:text-pink-400"
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={async () => {
+                            setIsProcessing(true);
+                            await onUnlike(profile.userId);
+                            setIsProcessing(false);
+                          }}
+                          disabled={isProcessing}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-100/50 dark:hover:bg-rose-950/50 text-rose-500 dark:text-rose-400"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+
+                        <WhatsAppButton
+                          phoneNumber={profile.phoneNumber || ""}
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        />
+                      </div>
                     </div>
                   </motion.div>
                 ))}
