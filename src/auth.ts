@@ -12,6 +12,7 @@ declare module "next-auth" {
       email: string;
       role?: string;
       profileCompleted?: boolean;
+      hasProfile: boolean;
     } & DefaultSession["user"];
   }
 }
@@ -59,19 +60,13 @@ export const {
         session.user.id = token.sub;
         session.user.email = token.email as string;
         try {
-          const profile = await db
-            .select()
-            .from(profiles)
-            .where(eq(profiles.userId, token.sub))
-            .limit(1);
-
-          if (profile[0]) {
-            session.user.role = profile[0].role || "user";
-            session.user.profileCompleted =
-              profile[0].profileCompleted || false;
-          }
+          const profile = await db.select().from(profiles)
+            .where(eq(profiles.userId, token.sub));
+          
+          session.user.hasProfile = !!profile[0];
         } catch (error) {
-          console.error("Error in session callback:", error);
+          console.error("Profile check error:", error);
+          session.user.hasProfile = false;
         }
       }
       return session;

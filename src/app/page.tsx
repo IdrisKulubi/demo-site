@@ -10,9 +10,8 @@ import { redirect } from "next/navigation";
 
 export default async function Home() {
   const { hasProfile } = await checkProfileCompletion();
-
-  // Only redirect if they have no profile
-  if (hasProfile === false) {
+  
+  if (!hasProfile) {
     redirect("/profile/setup");
   }
 

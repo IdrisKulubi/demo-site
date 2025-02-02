@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -19,11 +18,20 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { deleteUploadThingFile } from "@/lib/actions/upload.actions";
 
-export default function ProfileSetup() {
+import { useSession } from "next-auth/react";
+
+function SetupForm() {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    if (session?.user?.hasProfile) {
+      router.replace("/explore");
+    }
+  }, [session, router]);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -61,9 +69,9 @@ export default function ProfileSetup() {
           variant: "destructive",
           title: "Error",
           description:
-            result.validationErrors?.[0]?.message ||
             result.error ||
             "Something went wrong",
+
         });
       }
     } catch (error) {
@@ -428,3 +436,5 @@ export default function ProfileSetup() {
     </div>
   );
 }
+
+export default SetupForm;   
