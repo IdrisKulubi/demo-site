@@ -19,8 +19,16 @@ export function WhatsAppButton({
   size = "default",
 }: WhatsAppButtonProps) {
   const handleWhatsAppClick = () => {
+    // Format phone number: remove any non-digit characters and ensure it starts with country code
+    const cleanNumber = phoneNumber.replace(/\D/g, "");
+    const formattedNumber = cleanNumber.startsWith("254")
+      ? cleanNumber
+      : cleanNumber.startsWith("0")
+      ? `254${cleanNumber.slice(1)}`
+      : `254${cleanNumber}`;
+
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/${formattedNumber}?text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank");
   };
 
