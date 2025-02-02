@@ -20,10 +20,10 @@ export async function GET() {
   try {
     const profile = await getProfile();
 
-    // Be explicit about the response shape
     return NextResponse.json({
+      hasProfile: !!profile,
       profileCompleted: Boolean(profile?.profileCompleted),
-      hasProfile: Boolean(profile),
+      exists: !!profile,
     });
   } catch (error) {
     console.error("Error checking profile:", error);

@@ -3,6 +3,7 @@ import { getProfile, ProfileFormData } from "@/lib/actions/profile.actions";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Sparkles } from "lucide-react";
+import { checkProfileCompletion } from "@/lib/checks";
 
 // This should remain a Server Component for optimal performance
 export default async function ProfilePage() {
@@ -11,6 +12,9 @@ export default async function ProfilePage() {
   if (!session?.user) {
     redirect("/login");
   }
+
+  const { isComplete } = await checkProfileCompletion();
+  if (!isComplete) redirect("/profile/setup");
 
   const profile = await getProfile();
 

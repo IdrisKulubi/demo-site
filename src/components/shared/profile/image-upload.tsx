@@ -11,7 +11,7 @@ import { useState } from "react";
 import { optimizeImage } from "@/lib/utils/image-utils";
 
 interface ImageUploadProps {
-  value: string[];
+  value?: string[];
   onChange: (value: string[]) => void;
   onRemove?: (photoUrl: string) => void;
   onProfilePhotoSelect?: (photoUrl: string) => void;
@@ -117,7 +117,7 @@ export function ImageUpload({
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <AnimatePresence>
-          {value.map((url, index) => (
+          {Array.isArray(value) && value.map((url, index) => (
             <motion.div
               key={url}
               layout
