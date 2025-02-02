@@ -38,9 +38,8 @@ export default function ProfileSetup() {
 
   useEffect(() => {
     let isMounted = true;
-    let intervalId: NodeJS.Timeout;
 
-    const checkAndRedirect = async () => {
+    const checkProfile = async () => {
       try {
         const response = await fetch("/api/profile/check", {
           cache: "no-store",
@@ -48,24 +47,23 @@ export default function ProfileSetup() {
 
         if (!response.ok) return;
 
-        const { profileCompleted } = await response.json();
+        const { hasProfile } = await response.json();
 
-        if (isMounted && profileCompleted) {
-          router.replace("/explore");
+        // Only redirect if they already have a profile
+        if (isMounted && hasProfile) {
+          router.replace("/profile");
         }
       } catch (error) {
-        console.error("Redirect check failed:", error);
+        console.error("Profile check failed:", error);
       }
     };
 
     if (session?.user) {
-      checkAndRedirect();
-      intervalId = setInterval(checkAndRedirect, 5000);
+      checkProfile();
     }
 
     return () => {
       isMounted = false;
-      if (intervalId) clearInterval(intervalId);
     };
   }, [session, router]);
 

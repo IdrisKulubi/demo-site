@@ -7,6 +7,8 @@ import { useSession } from "next-auth/react";
 export function useImageReminder() {
   const [isOpen, setIsOpen] = useState(false);
   const [hasEnoughImages, setHasEnoughImages] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [hasSeenReminder, setHasSeenReminder] = useState(false);
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -19,7 +21,7 @@ export function useImageReminder() {
         const needsReminder =
           !hasImages || ((profile?.photos ?? []) as string[]).some((p) => !p);
 
-        if (needsReminder) {
+        if (needsReminder && !hasSeenReminder) {
           setIsOpen(true);
           setHasEnoughImages(!!hasImages);
         }
@@ -29,7 +31,7 @@ export function useImageReminder() {
     };
 
     checkImages();
-  }, [session]);
+  }, [session, hasSeenReminder]);
 
-  return { isOpen, setIsOpen, hasEnoughImages };
+  return { isOpen, setIsOpen, hasEnoughImages, hasSeenReminder };
 }

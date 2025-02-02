@@ -13,7 +13,13 @@ import Link from "next/link";
 import { useImageReminder } from "@/hooks/use-image-reminder";
 
 export function ImageReminder() {
-  const { isOpen, setIsOpen, hasEnoughImages } = useImageReminder();
+  const { isOpen, setIsOpen, hasEnoughImages, hasSeenReminder } =
+    useImageReminder();
+
+  // Don't render anything if user has already seen the reminder
+  if (hasSeenReminder) {
+    return null;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -46,7 +52,7 @@ export function ImageReminder() {
                 variant="gradient"
                 className="rounded-full px-8 py-6 text-lg font-bold shadow-lg hover:scale-105 transition-transform"
               >
-                <Link href="/profile/setup">
+                <Link href="/profile">
                   {hasEnoughImages ? "Add More Pics" : "Fix My Profile"}
                   <span className="ml-2">👉</span>
                 </Link>

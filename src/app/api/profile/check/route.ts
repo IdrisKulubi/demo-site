@@ -12,13 +12,21 @@ export async function GET() {
 
   try {
     const profile = await getProfile();
+
+    // Be explicit about the response shape
     return NextResponse.json({
-      profileCompleted: !!profile?.profileCompleted,
+      profileCompleted: Boolean(profile?.profileCompleted),
+      hasProfile: Boolean(profile),
     });
-  } catch {
-    // console.error("Error checking profile:");
+  } catch (error) {
+    console.error("Error checking profile:", error);
+
+    // Return a more specific error response
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error: "Failed to check profile status",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
