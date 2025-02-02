@@ -26,8 +26,7 @@ export function SwipeControls({
         onClick={onUndo}
         disabled={disabled}
         className={cn(
-          "rounded-full h-14 w-14 bg-pink-100/50 dark:bg-pink-950/50",
-          "hover:bg-pink-200/50 dark:hover:bg-pink-900/50",
+          "rounded-full h-14 w-14 bg-pink-200 dark:bg-pink-900",
           "transition-transform duration-200 hover:scale-110",
           disabled && "opacity-50 pointer-events-none"
         )}
@@ -38,7 +37,7 @@ export function SwipeControls({
 
       <Button
         onClick={onSwipeLeft}
-        className="rounded-full h-14 w-14 bg-red-100/50 dark:bg-red-950/50 hover:bg-red-200/50 dark:hover:bg-red-900/50"
+        className="rounded-full h-14 w-14 bg-red-200 dark:bg-red-900"
         aria-label="Swipe left"
       >
         <X className="h-8 w-8 text-red-600 dark:text-red-400" />
@@ -46,7 +45,7 @@ export function SwipeControls({
 
       <Button
         onClick={onSwipeRight}
-        className="rounded-full h-14 w-14 bg-green-100/50 dark:bg-green-950/50 hover:bg-green-200/50 dark:hover:bg-green-900/50"
+        className="rounded-full h-14 w-14 bg-green-200 dark:bg-green-900"
         aria-label="Swipe right"
       >
         <Heart className="h-8 w-8 text-green-600 dark:text-green-400" />

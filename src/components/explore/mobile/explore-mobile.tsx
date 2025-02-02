@@ -227,7 +227,7 @@ export function ExploreMobile({
           </div>
 
           {/* Bottom Controls */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-background/80 backdrop-blur-lg border-t border-pink-100 dark:border-pink-900">
+          <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-background/80 backdrop-blur-lg border-t border-pink-600 dark:border-pink-500">
             <div className="px-6 py-4">
               <SwipeControls
                 onSwipeLeft={() =>
