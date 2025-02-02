@@ -2,12 +2,11 @@
 
 import { getRedisInstance } from "@/lib/redis";
 
-const redis = await getRedisInstance();
-
 export async function getCachedImageUrl(
   userId: string
 ): Promise<string | null> {
   try {
+    const redis = await getRedisInstance();
     const key = `profile:${userId}:photo`;
     const cached = await redis.get<string>(key);
     return cached || null;
@@ -19,6 +18,7 @@ export async function getCachedImageUrl(
 
 export async function prefetchProfileImages(userId: string, photos: string[]) {
   try {
+    const redis = await getRedisInstance();
     const promises = photos.map(async (photo) => {
       const key = `profile:${userId}:photo:${photo}`;
       await redis.set(key, photo, { ex: 3600 }); // Cache for 1 hour
