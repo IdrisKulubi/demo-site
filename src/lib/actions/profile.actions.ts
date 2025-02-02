@@ -147,7 +147,7 @@ export async function updateProfile(data: ProfileFormData) {
       console.error("Validation errors:", validatedData.error);
       return {
         success: false,
-        error: "Invalid profile data",
+        error: "Check your phone number  😢",
       };
     }
 
