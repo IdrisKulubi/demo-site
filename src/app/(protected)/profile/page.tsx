@@ -13,8 +13,8 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
-  const { isComplete } = await checkProfileCompletion();
-  if (!isComplete) redirect("/profile/setup");
+  const { hasProfile } = await checkProfileCompletion();
+  if (!hasProfile) redirect("/profile/setup");
 
   const profile = await getProfile();
 
