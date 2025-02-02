@@ -10,6 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/db/schema";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function ChatWindow({
   matchId,
@@ -22,7 +23,8 @@ export function ChatWindow({
   const { sendMessage, setTyping, messages, onlineStatus } = useChat();
   const [isTypingLocal, setIsTypingLocal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const typingTimeout = useRef<NodeJS.Timeout>( null);
+  const typingTimeout = useRef<NodeJS.Timeout>(null);
+  const [loaded, setLoaded] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -59,10 +61,20 @@ export function ChatWindow({
       {/* Chat Header */}
       <div className="flex items-center p-4 border-b border-pink-100 dark:border-pink-900">
         <Avatar className="h-10 w-10">
-          <AvatarImage src={recipient.profilePhoto || ""} />
+          {!loaded && (
+            <Skeleton className="h-full w-full rounded-full bg-muted/50 animate-pulse" />
+          )}
+          <AvatarImage
+            src={recipient.profilePhoto || ""}
+            onLoadingComplete={() => setLoaded(true)}
+            className={loaded ? "visible" : "hidden"}
+          />
           <AvatarFallback>
-            {recipient.firstName?.[0]}
-            {recipient.lastName?.[0]}
+            {loaded ? (
+              `${recipient.firstName?.[0]}${recipient.lastName?.[0]}`
+            ) : (
+              <span className="text-muted-foreground/50">...</span>
+            )}
           </AvatarFallback>
         </Avatar>
         <div className="ml-3 flex-1">
