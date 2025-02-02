@@ -4,21 +4,18 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Sparkles } from "lucide-react";
 
-// Make this a Client Component to avoid hydration issues
+// This should remain a Server Component for optimal performance
 export default async function ProfilePage() {
   const session = await auth();
 
-  // Redirect unauthenticated users
-  if (!session?.user) redirect("/login");
-
-  const profile = await getProfile();
-
-  // Handle missing profile or user not found
-  if (!profile) {
+  if (!session?.user) {
     redirect("/login");
   }
 
-  if (!profile.profileCompleted) {
+  const profile = await getProfile();
+
+  // Only redirect if there's no profile at all
+  if (!profile) {
     redirect("/profile/setup");
   }
 

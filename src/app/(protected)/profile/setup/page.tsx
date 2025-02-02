@@ -19,45 +19,53 @@ import { useSession } from "next-auth/react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { deleteUploadThingFile } from "@/lib/actions/upload.actions";
-import { auth } from "@/auth";
 
 export default function ProfileSetup() {
-  const [step, setStep] = useState(0);
-  const { toast } = useToast();
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { data: session } = useSession();
-
-  useEffect(() => {
-    const existingProfile = session?.user?.profileCompleted;
-
-    // Only redirect users with completed profiles
-    if (existingProfile) {
-      router.replace("/explore");
-    }
-  }, [session, router]);
+  const [step, setStep] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    mode: "onChange",
     defaultValues: {
       photos: [],
       interests: [],
       bio: "",
-      lookingFor: "friends",
-      course: "",
-      yearOfStudy: 1,
-      instagram: "",
-      spotify: "",
-      snapchat: "",
-      gender: "other",
-      age: 18,
-      firstName: "",
-      lastName: "",
-      phoneNumber: "",
-      profilePhoto: "",
     },
   });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkProfile = async () => {
+      try {
+        const response = await fetch("/api/profile/check", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) return;
+
+        const { hasProfile } = await response.json();
+
+        // Only redirect if they already have a profile
+        if (isMounted && hasProfile) {
+          router.replace("/profile");
+        }
+      } catch (error) {
+        console.error("Profile check failed:", error);
+      }
+    };
+
+    if (session?.user) {
+      checkProfile();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [session, router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -221,7 +229,6 @@ export default function ProfileSetup() {
     const digitsOnly = formData.phoneNumber?.replace(/[^0-9]/g, "") || "";
 
     // Add console logs to debug validation
-   
 
     return (
       // Required fields from schema
@@ -256,49 +263,6 @@ export default function ProfileSetup() {
       }
     };
   }, [form]);
-
-  useEffect(() => {
-    let isMounted = true;
-    let intervalId: NodeJS.Timeout;
-
-    const checkAndRedirect = async () => {
-      try {
-        const response = await fetch("/api/profile/check", {
-          cache: "no-store",
-        });
-
-        if (!response.ok) return;
-
-        const { profileCompleted } = await response.json();
-
-        if (isMounted && profileCompleted) {
-          window.location.href = "/explore";
-        }
-      } catch (error) {
-        console.error("Redirect check failed:", error);
-      }
-    };
-
-    if (session?.user) {
-      checkAndRedirect();
-      intervalId = setInterval(checkAndRedirect, 5000);
-    }
-
-    return () => {
-      isMounted = false;
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [session]);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const session = await auth();
-      if (!session?.user) {
-        router.replace("/login");
-      }
-    };
-    checkAuth();
-  }, [router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white dark:from-pink-950 dark:to-background p-6 pt-16">
