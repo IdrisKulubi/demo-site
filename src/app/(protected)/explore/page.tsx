@@ -11,10 +11,19 @@ import { type Profile } from "@/db/schema";
 import { getProfile } from "@/lib/actions/profile.actions";
 import { ExploreMobileV2 } from "@/components/explore/mobile/explore-mobile-v2";
 import { ImageReminder } from "@/components/shared/notification/image-reminder";
+import { checkProfileCompletion } from "@/lib/checks";
 
 export default async function ExplorePage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
+
+  // Check profile completion status
+  const { hasProfile, isComplete } = await checkProfileCompletion();
+
+  // Redirect to setup if no profile or incomplete profile
+  if (!hasProfile || !isComplete) {
+    redirect("/profile/setup");
+  }
 
   const profiles = await getSwipableProfiles();
   const { profiles: likedProfiles } = await getLikedProfiles();

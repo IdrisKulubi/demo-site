@@ -163,7 +163,7 @@ export function DetailsInput({
             Year of Study 🎓
           </Label>
           <Select
-            value={values.yearOfStudy.toString()}
+            value={(values.yearOfStudy ?? "").toString()}
             onValueChange={(value) => onChange("yearOfStudy", parseInt(value))}
           >
             <SelectTrigger className="bg-pink-50/50 dark:bg-pink-950/50 border-pink-200">
@@ -213,8 +213,8 @@ export function DetailsInput({
             How old are you? 🎂
           </Label>
           <Select
-            value={values.age?.toString()}
-            onValueChange={(value) => onChange("age", parseInt(value))}
+            value={values.age?.toString() || ""}
+            onValueChange={(value) => onChange("age", parseInt(value) || 0)}
           >
             <SelectTrigger className="bg-pink-50/50 dark:bg-pink-950/50 border-pink-200">
               <SelectValue placeholder="Select your age" />
@@ -236,8 +236,11 @@ export function DetailsInput({
             Phone Number 📱
           </Label>
           <Input
-            value={values.phoneNumber || ""}
-            onChange={handlePhoneNumberChange}
+            value={values.phoneNumber?.toString() || ""}
+            onChange={(e) => {
+              const formatted = e.target.value.replace(/[^0-9+-\s()]/g, "");
+              onChange("phoneNumber", formatted);
+            }}
             placeholder="e.g., +254 712 345 678"
             className={`bg-pink-50/50 dark:bg-pink-950/50 border-pink-200 ${
               errors?.phoneNumber ? "border-red-500" : ""
@@ -249,9 +252,17 @@ export function DetailsInput({
           {errors?.phoneNumber && (
             <p className="text-sm text-red-500">{errors.phoneNumber}</p>
           )}
-          {values.phoneNumber && !validatePhoneNumber(values.phoneNumber) && !errors?.phoneNumber && (
-            <p className="text-sm text-yellow-500">Please enter a valid phone number,<span className="text-xs animate-pulse text-gray-500">It will be used for matching purposes</span> (at least 10 digits)</p>
-          )}
+          {values.phoneNumber &&
+            !validatePhoneNumber(values.phoneNumber) &&
+            !errors?.phoneNumber && (
+              <p className="text-sm text-yellow-500">
+                Please enter a valid phone number,
+                <span className="text-xs animate-pulse text-gray-500">
+                  It will be used for matching purposes
+                </span>{" "}
+                (at least 10 digits)
+              </p>
+            )}
         </div>
       </div>
 

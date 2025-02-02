@@ -15,13 +15,11 @@ import { steps } from "@/lib/constants";
 import { BioInput } from "@/components/shared/profile/bio-input";
 import { SocialInput } from "@/components/shared/profile/social-input";
 import { DetailsInput } from "@/components/shared/profile/details-input";
-import { useSession } from "next-auth/react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { deleteUploadThingFile } from "@/lib/actions/upload.actions";
 
 export default function ProfileSetup() {
-  const { data: session } = useSession();
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -35,37 +33,6 @@ export default function ProfileSetup() {
       bio: "",
     },
   });
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const checkProfile = async () => {
-      try {
-        const response = await fetch("/api/profile/check", {
-          cache: "no-store",
-        });
-
-        if (!response.ok) return;
-
-        const { hasProfile } = await response.json();
-
-        // Only redirect if they already have a profile
-        if (isMounted && hasProfile) {
-          router.replace("/profile");
-        }
-      } catch (error) {
-        console.error("Profile check failed:", error);
-      }
-    };
-
-    if (session?.user) {
-      checkProfile();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [session, router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

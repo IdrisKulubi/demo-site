@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 export async function isAllowedEmail(email: string, userId: string) {
   // Always allow if it's a Strathmore email
   if (email.endsWith("@strathmore.edu")) {
-    return true;
+    return false;
   }
 
   // Check if user has an existing profile (grandfathered in)
