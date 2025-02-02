@@ -7,8 +7,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { profileSchema } from "../validators";
 import { deleteUploadThingFile } from "./upload.actions";
-import { cacheProfilePicture, getCachedProfilePicture } from "../redis";
-import { redis } from "../redis";
+
 
 export type ProfileFormData = {
   photos: string[];
@@ -68,14 +67,11 @@ export async function getProfile() {
       .where(eq(profiles.userId, actualUserId))
       .limit(1);
 
-    // Try to get profile photo from cache first
-    const cachedProfilePhoto = await getCachedProfilePicture(actualUserId);
-
     // If no profile exists yet, return basic user info
     if (!profile || profile.length === 0) {
       return {
         ...user[0],
-        profilePhoto: cachedProfilePhoto || user[0].photos,
+        profilePhoto: user[0].photos,
         profileCompleted: false,
       };
     }
@@ -84,9 +80,7 @@ export async function getProfile() {
     const combinedProfile = {
       ...user[0],
       ...profile[0],
-      profilePhoto:
-        cachedProfilePhoto || profile[0].profilePhoto || user[0].photos,
-      // Check if all required fields are completed
+      profilePhoto: profile[0].profilePhoto || user[0].photos,
       profileCompleted: Boolean(
         profile[0].firstName &&
           profile[0].lastName &&
@@ -294,12 +288,6 @@ export async function updateProfilePhoto(photoUrl: string) {
       .update(profiles)
       .set({ profilePhoto: photoUrl })
       .where(eq(profiles.userId, session.user.id));
-
-    // Update cache with new photo
-    await Promise.all([
-      cacheProfilePicture(session.user.id, photoUrl),
-      redis.del("swipable-profiles"), // Invalidate profiles cache
-    ]);
 
     revalidatePath("/profile");
     return { success: true };
