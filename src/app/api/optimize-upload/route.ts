@@ -1,26 +1,9 @@
-import { createUploadthing, type FileRouter } from "uploadthing/next";
-import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { UTApi } from "uploadthing/server";
 
-const f = createUploadthing();
 const utapi = new UTApi();
 
-
-// Regular uploadthing router for initial uploads
-export const ourFileRouter = {
-  imageUploader: f({ image: { maxFileSize: "4MB" } })
-    .middleware(async () => {
-      const session = await auth();
-      if (!session?.user) throw new Error("Unauthorized");
-      return { userId: session.user.id };
-    })
-    .onUploadComplete(async ({ metadata, file }) => {
-      return { uploadedBy: metadata.userId, url: file.url };
-    }),
-} satisfies FileRouter;
-
-// Separate POST handler for optimized image uploads
 export async function POST(request: Request) {
   try {
     const session = await auth();
@@ -35,7 +18,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Upload directly using UTApi
     const uploadResponse = await utapi.uploadFiles(file);
 
     if (!uploadResponse?.data?.url) {
@@ -51,5 +33,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
-export type OurFileRouter = typeof ourFileRouter;

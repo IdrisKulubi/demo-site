@@ -15,8 +15,9 @@ export function useImageReminder() {
 
       try {
         const profile = await getProfile();
-        const hasImages = profile?.photos && profile.photos.length >= 3;
-        const needsReminder = !hasImages || profile?.photos.some((p) => !p);
+        const hasImages = (profile?.photos ?? []).length >= 3;
+        const needsReminder =
+          !hasImages || ((profile?.photos ?? []) as string[]).some((p) => !p);
 
         if (needsReminder) {
           setIsOpen(true);

@@ -34,11 +34,11 @@ export function ImageReminder() {
           </DialogHeader>
 
           <DialogDescription className="text-center mt-4 space-y-4">
-            <p className="text-lg">
+            <div className="text-lg">
               {hasEnoughImages
                 ? "Your current pics are cute but... we know you've got better ones! Add more to boost your matches by 300% 🚀"
                 : "Can't start swiping without at least 3 fire photos! Time to show off your best angles bestie 😏"}
-            </p>
+            </div>
 
             <div className="flex justify-center gap-4 mt-6">
               <Button
@@ -61,11 +61,11 @@ export function ImageReminder() {
               </Button>
             </div>
 
-            <p className="text-sm text-muted-foreground mt-4">
+            <div className="text-sm text-muted-foreground mt-4">
               {hasEnoughImages
                 ? "Pro tip: Include pics with your pet 🐶 or hobby 🎸"
                 : "Don't be shy, we've seen worse! 😜"}
-            </p>
+            </div>
           </DialogDescription>
         </motion.div>
       </DialogContent>

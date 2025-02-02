@@ -66,7 +66,7 @@ export function ChatWindow({
           )}
           <AvatarImage
             src={recipient.profilePhoto || ""}
-            onLoadingComplete={() => setLoaded(true)}
+            onLoad={() => setLoaded(true)}
             className={loaded ? "visible" : "hidden"}
           />
           <AvatarFallback>

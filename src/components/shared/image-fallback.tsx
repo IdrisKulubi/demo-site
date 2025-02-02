@@ -48,6 +48,7 @@ export function ImageFallback({
         setImgSrc(src);
         setIsLoading(false);
       } catch (error) {
+        console.error(error);
         if (retryCount < 2) {
           // Retry with exponential backoff
           setTimeout(() => {
