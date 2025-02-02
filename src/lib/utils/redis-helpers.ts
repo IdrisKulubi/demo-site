@@ -1,14 +1,16 @@
 "use server";
 
 import { getRedisInstance } from "@/lib/redis";
-const redis = await getRedisInstance();
 
 export async function setCachedData<T>(
   key: string,
   data: T,
   expirationSeconds = 60
-) {
+): Promise<boolean> {
   try {
+    const redis = await getRedisInstance();
+    if (!redis) return false;
+
     // Ensure data is properly serialized, handling Date objects and undefined values
     const serializedData = JSON.stringify(data, (_, value) => {
       if (value instanceof Date) {
@@ -27,6 +29,9 @@ export async function setCachedData<T>(
 
 export async function getCachedData<T>(key: string): Promise<T | null> {
   try {
+    const redis = await getRedisInstance();
+    if (!redis) return null;
+
     const cached = await redis.get(key);
     if (!cached) return null;
 
@@ -53,7 +58,6 @@ export async function getCachedData<T>(key: string): Promise<T | null> {
     return parsed as T;
   } catch (error) {
     console.error("Error getting cache:", error);
-    await redis.del(key);
     return null;
   }
 }
@@ -67,6 +71,9 @@ export async function clearUserCache(userId: string) {
       `liked_by:${userId}`,
       `profile:${userId}`,
     ];
+
+    const redis = await getRedisInstance();
+    if (!redis) return false;
 
     await Promise.all(keys.map((key) => redis.del(key)));
     return true;
