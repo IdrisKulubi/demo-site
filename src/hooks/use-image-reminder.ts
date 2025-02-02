@@ -7,8 +7,10 @@ import { useSession } from "next-auth/react";
 export function useImageReminder() {
   const [isOpen, setIsOpen] = useState(false);
   const [hasEnoughImages, setHasEnoughImages] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [hasSeenReminder, setHasSeenReminder] = useState(false);
+  const [hasSeenReminder, setHasSeenReminder] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("hasSeenImageReminder") === "true";
+  });
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -24,6 +26,8 @@ export function useImageReminder() {
         if (needsReminder && !hasSeenReminder) {
           setIsOpen(true);
           setHasEnoughImages(!!hasImages);
+          setHasSeenReminder(true);
+          localStorage.setItem("hasSeenImageReminder", "true");
         }
       } catch (error) {
         console.error("Image check failed:", error);
