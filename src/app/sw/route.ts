@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import { headers } from "next/headers";
 
 export async function GET() {
-  const headersList = headers();
-  const domain = headersList.get("host") || "";
+ 
 
   const serviceWorkerContent = `
     const CACHE_NAME = 'image-cache-v1';
