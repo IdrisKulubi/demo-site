@@ -28,7 +28,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/sw',
+        source: '/sw.js',
         headers: [
           {
             key: 'Service-Worker-Allowed',
@@ -36,7 +36,11 @@ const nextConfig = {
           },
           {
             key: 'Cache-Control',
-            value: 'public, max-age=0, must-revalidate',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/javascript; charset=utf-8',
           },
         ],
       },

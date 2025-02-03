@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 
 export async function GET() {
- 
-
   const serviceWorkerContent = `
     const CACHE_NAME = 'image-cache-v1';
     const CACHE_LIMIT = 200;
@@ -71,7 +69,8 @@ export async function GET() {
   return new NextResponse(serviceWorkerContent, {
     headers: {
       "Content-Type": "application/javascript",
-      "Cache-Control": "public, max-age=0, must-revalidate",
+      "Service-Worker-Allowed": "/",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
     },
   });
 }

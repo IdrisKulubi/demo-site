@@ -1,10 +1,11 @@
 export const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
-    const swUrl = "/sw"; // Updated path to match the new route
+    const swUrl = "/sw.js"; // Updated path to match the new route
 
     try {
       const registration = await navigator.serviceWorker.register(swUrl, {
         scope: "/",
+        type: "module",
       });
 
       // Wait for the service worker to be ready
