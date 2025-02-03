@@ -9,6 +9,7 @@ import { profileSchema } from "../validators";
 import { deleteUploadThingFile } from "./upload.actions";
 import { getRedisInstance } from "@/lib/redis";
 import { getCachedData, setCachedData } from "../utils/redis-helpers";
+import { prefetchProfileImages } from "@/lib/actions/image-prefetch";
 
 export type ProfileFormData = {
   photos: string[];
@@ -45,6 +46,9 @@ export async function getProfile() {
 
     // Validate cached profile structure
     if (cached && isValidProfile(cached)) {
+      if (cached.photos?.length) {
+        await prefetchProfileImages(cached.photos);
+      }
       return cached;
     }
 
@@ -116,6 +120,10 @@ export async function getProfile() {
       combinedProfile,
       300
     );
+
+    if (combinedProfile.photos?.length) {
+      await prefetchProfileImages(combinedProfile.photos);
+    }
 
     return combinedProfile;
   } catch (error) {
