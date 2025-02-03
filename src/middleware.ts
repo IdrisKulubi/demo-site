@@ -13,7 +13,9 @@ export async function middleware(request: Request & { nextUrl: URL }) {
   if (publicRoutes.some((route) => pathname.startsWith(route))) {
     return NextResponse.next();
   }
-
+  if (request.nextUrl.pathname === "/sw.js") {
+    return NextResponse.rewrite(new URL("/sw", request.url));
+  }
   // Handle non-authenticated users
   if (!isAuth) {
     return NextResponse.redirect(new URL("/login", request.url));
@@ -43,6 +45,8 @@ export async function middleware(request: Request & { nextUrl: URL }) {
   return NextResponse.next();
 }
 
+
+
 export const config = {
   matcher: [
     /*
@@ -53,5 +57,6 @@ export const config = {
      * 4. /*.* (files with extensions)
      */
     "/((?!api|_next/static|_next/image|favicon.ico|static|.*\\.).*)",
+    '/sw.js',
   ],
 };

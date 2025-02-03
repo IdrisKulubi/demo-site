@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getCachedProfilePicture } from "@/lib/redis";
 import { cn } from "@/lib/utils";
 
 type ImageFallbackProps = {
@@ -33,31 +32,27 @@ export function ImageFallback({
   useEffect(() => {
     const loadImage = async () => {
       try {
-        // Check cache first
-        const cached = await getCachedProfilePicture(userId);
-        if (cached) {
-          setImgSrc(cached);
-          setIsLoading(false);
-          return;
-        }
-
-        // Validate image existence
-        const res = await fetch(src, { method: "HEAD" });
-        if (!res.ok) throw new Error("Image not found");
+        // Directly try to load the image
+        await new Promise((resolve, reject) => {
+          const img = new HTMLImageElement();
+          img.width = width;
+          img.height = height;
+          img.src = src;
+          img.onload = resolve;
+          img.onerror = reject;
+        });
 
         setImgSrc(src);
         setIsLoading(false);
       } catch (error) {
         console.error(error);
         if (retryCount < 2) {
-          // Retry with exponential backoff
           setTimeout(() => {
             setRetryCount((prev) => prev + 1);
           }, Math.pow(2, retryCount) * 1000);
           return;
         }
 
-        // After retries, try fallback
         try {
           const fallback = await fetch(`/api/profile/${userId}/photo`).then(
             (res) => res.json()
@@ -71,7 +66,7 @@ export function ImageFallback({
     };
 
     loadImage();
-  }, [userId, src, retryCount]);
+  }, [userId, src, retryCount,width,height]);
 
   return (
     <div className="relative overflow-hidden">

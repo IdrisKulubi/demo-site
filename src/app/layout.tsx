@@ -11,7 +11,8 @@ import { Analytics } from "@vercel/analytics/react";
 import { SwipeCounterProvider } from "@/context/swipe-counter-context";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme/theme-provider";
-
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { ServiceWorkerInit } from "@/components/service-worker/service-worker-init";
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -44,12 +45,14 @@ export default async function RootLayout({
           <SessionProvider session={session}>
             <MusicProvider>
               <SwipeCounterProvider>
+                <ServiceWorkerInit />
                 <div className="relative min-h-screen">
                   <Navbar />
-                    <main className="flex-1">{children}</main>
-                    <Analytics />
-                    <Toaster />
-                  </div>
+                  <main className="flex-1">{children}</main>
+                  <Analytics />
+                  <SpeedInsights />
+                  <Toaster />
+                </div>
               </SwipeCounterProvider>
             </MusicProvider>
           </SessionProvider>

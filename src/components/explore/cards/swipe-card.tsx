@@ -22,7 +22,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import Link from "next/link";
-import { getCachedProfilePicture } from "@/lib/redis";
+import { OptimizedImage } from "@/components/shared/optimized-image";
 
 interface SwipeCardProps {
   profile: Profile;
@@ -52,8 +52,6 @@ export function SwipeCard({
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [cachedPhotos, setCachedPhotos] = useState<string[]>([]);
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
@@ -76,33 +74,32 @@ export function SwipeCard({
     setTouchEnd(null);
   };
 
-  // Memoize the photo list with cache-aware URLs
+  // Update the optimizedPhotos memo to use webp format
   const optimizedPhotos = useMemo(() => {
-    return [profile.profilePhoto, ...(profile.photos || [])].map((photo) =>
-      photo ? `${photo}?width=500&quality=70` : photo
-    );
+    return [profile.profilePhoto, ...(profile.photos || [])]
+      .filter(Boolean)
+      .map((photo) => `${photo}?width=500&quality=70&format=webp`);
   }, [profile]);
 
-  // Prefetch images on mount
+  // Replace the entire useEffect with:
   useEffect(() => {
     const prefetchImages = async () => {
-      const cachedMain = await getCachedProfilePicture(profile.userId);
-      if (cachedMain) {
-        setCachedPhotos((prev) => [...new Set([...prev, cachedMain])]);
+      try {
+        const { prefetchProfileImages } = await import(
+          "@/lib/actions/image-prefetch"
+        );
+        await prefetchProfileImages(
+          optimizedPhotos.filter(Boolean) as string[]
+        );
+      } catch (error) {
+        console.error("Prefetch failed:", error);
       }
-
-      optimizedPhotos.forEach((photo) => {
-        if (photo) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const img = new (window as any).Image();
-          img.src = photo;
-          img.decode().catch(() => {});
-        }
-      });
     };
 
-    prefetchImages();
-  }, [profile.userId, optimizedPhotos]);
+    if (optimizedPhotos.length > 0) {
+      prefetchImages();
+    }
+  }, [optimizedPhotos]);
 
   return (
     <motion.div
@@ -141,27 +138,13 @@ export function SwipeCard({
               <SwiperSlide key={index} className="relative">
                 <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/60" />
                 {photo && (
-                  <Image
+                  <OptimizedImage
                     src={photo}
                     alt={`${profile.firstName}'s photo ${index + 1}`}
-                    className="w-full h-full object-cover"
                     width={500}
                     height={500}
-                    quality={70}
-                    priority={index < 2} // Prioritize first two images
-                    placeholder={
-                      cachedPhotos.includes(photo) ? "blur" : "empty"
-                    }
-                    blurDataURL={
-                      cachedPhotos.includes(photo)
-                        ? `${photo}?width=50&quality=10`
-                        : undefined
-                    }
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        "/default-profile.png";
-                    }}
+                    className="w-full h-full object-cover"
+                    priority={index < 3}
                   />
                 )}
               </SwiperSlide>
