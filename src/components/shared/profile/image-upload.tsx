@@ -104,7 +104,7 @@ export function ImageUpload({
       await deleteUploadThingFile(url);
       onRemove?.(url);
     } catch (error) {
-      console.error("Error removing Image", error)
+      console.error("Error removing Image", error);
       toast({
         title: "Error removing image",
         description: "Please try again",
@@ -117,41 +117,42 @@ export function ImageUpload({
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <AnimatePresence>
-          {Array.isArray(value) && value.map((url, index) => (
-            <motion.div
-              key={url}
-              layout
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="relative aspect-square rounded-xl overflow-hidden group"
-            >
-              <Image
-                src={url}
-                alt={`Upload ${index + 1}`}
-                className="object-cover w-full h-full"
-                width={400}
-                height={400}
-                quality={80}
-              />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                {onProfilePhotoSelect && (
+          {Array.isArray(value) &&
+            value.map((url, index) => (
+              <motion.div
+                key={url}
+                layout
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="relative aspect-square rounded-xl overflow-hidden group"
+              >
+                <Image
+                  src={url}
+                  alt={`Upload ${index + 1}`}
+                  className="object-cover w-full h-full"
+                  width={400}
+                  height={400}
+                  quality={80}
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  {onProfilePhotoSelect && (
+                    <button
+                      onClick={() => onProfilePhotoSelect(url)}
+                      className="text-white bg-pink-500/80 hover:bg-pink-500 p-2 rounded-full"
+                    >
+                      Set as Profile
+                    </button>
+                  )}
                   <button
-                    onClick={() => onProfilePhotoSelect(url)}
-                    className="text-white bg-pink-500/80 hover:bg-pink-500 p-2 rounded-full"
+                    onClick={() => handleRemove(url)}
+                    className="text-white bg-red-500/80 hover:bg-red-500 p-2 rounded-full"
                   >
-                    Set as Profile
+                    <X className="h-4 w-4" />
                   </button>
-                )}
-                <button
-                  onClick={() => handleRemove(url)}
-                  className="text-white bg-red-500/80 hover:bg-red-500 p-2 rounded-full"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </motion.div>
-          ))}
+                </div>
+              </motion.div>
+            ))}
         </AnimatePresence>
 
         {value.length < maxFiles && (
