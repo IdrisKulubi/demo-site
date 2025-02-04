@@ -11,11 +11,24 @@ export function FeedbackModal() {
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSeenModal, setHasSeenModal] = useState(true); // Start true to prevent flash
   const { toast } = useToast();
 
   useEffect(() => {
-    setIsOpen(true);
+    // Check if user has seen the modal before
+    const hasSeenBefore = localStorage.getItem("hasSeenMaintenanceModal");
+    if (!hasSeenBefore) {
+      setHasSeenModal(false);
+      setIsOpen(true);
+      // Mark as seen
+      localStorage.setItem("hasSeenMaintenanceModal", "true");
+    }
   }, []);
+
+  // Don't render anything if user has already seen the modal
+  if (hasSeenModal) {
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
