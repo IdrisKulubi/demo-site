@@ -7,7 +7,6 @@ import { AnimatedSection } from "@/components/shared/sections/animated-section";
 import { Footer } from "@/components/shared/layout/footer";
 import { checkProfileCompletion } from "@/lib/checks";
 import { redirect } from "next/navigation";
-import { FeedbackModal } from "@/components/shared/notification/maintenance-modal";
 
 export default async function Home() {
   const { hasProfile } = await checkProfileCompletion();
@@ -18,7 +17,6 @@ export default async function Home() {
 
   return (
     <main className="relative min-h-screen bg-gradient-to-b from-pink-50 to-white dark:from-pink-950 dark:to-background overflow-x-hidden">
-      <FeedbackModal/>
       {/* <GenderUpdateNotification /> */}
       <Scene3DWrapper />
       <FloatingHearts />
