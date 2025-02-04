@@ -31,7 +31,7 @@ export function ImageReminder({ userPhotos }: ImageReminderProps) {
         (photo) =>
           photo.includes("utfs.io") ||
           photo.includes("uploadthing") ||
-          photo.includes("pub-fd999fa4db5f45aea35c41c909f365ca.r2.dev") ||
+          !photo.includes("pub-fd999fa4db5f45aea35c41c909f365ca.r2.dev") ||
           !photo.includes("cdn.strathspace.com")
       );
 
