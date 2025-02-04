@@ -17,7 +17,6 @@ export async function optimizeImage(
   } = options;
 
   try {
-    // Load and validate the image first
     const response = await fetch(url);
     const blob = await response.blob();
 
@@ -25,23 +24,18 @@ export async function optimizeImage(
       throw new Error("Invalid image format");
     }
 
-    // Create an off-screen canvas
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Could not get canvas context");
 
-    // Load the image
     const img = await createImage(blob);
 
-    // Calculate new dimensions while maintaining aspect ratio
     const { width, height } = calculateDimensions(img, maxWidth, maxHeight);
 
-    // Set canvas dimensions and draw
     canvas.width = width;
     canvas.height = height;
     ctx.drawImage(img, 0, 0, width, height);
 
-    // Convert to desired format with quality
     const optimizedBlob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
         (blob) => {
@@ -53,11 +47,10 @@ export async function optimizeImage(
       );
     });
 
-    // Create form data for upload
     const formData = new FormData();
     formData.append("file", optimizedBlob, `optimized.${format}`);
 
-    // Upload optimized image
+    //  optimized image
     const uploadResponse = await fetch("/api/optimize-upload", {
       method: "POST",
       body: formData,
@@ -72,9 +65,7 @@ export async function optimizeImage(
     return optimizedUrl;
   } catch (error) {
     console.error("Image optimization failed:", error);
-    return url; // Fallback to original URL if optimization fails
-  } finally {
-    // Cleanup any object URLs
+    return url;
     URL.revokeObjectURL(url);
   }
 }
@@ -131,7 +122,6 @@ export async function isValidImage(url: string): Promise<boolean> {
   }
 }
 
-// Add this function to handle both URL sources
 export const getOptimizedImageUrl = (
   url: string,
   options?: {
@@ -144,7 +134,6 @@ export const getOptimizedImageUrl = (
 
   const { width = 800, quality = 80, format = "webp" } = options ?? {};
 
-  // If it's an R2 image, add optimization parameters
   if (url.includes(process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL!)) {
     return `${url}?width=${width}&quality=${quality}&format=${format}`;
   }
