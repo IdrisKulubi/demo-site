@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema } from "@/lib/validators";
 import { useToast } from "@/hooks/use-toast";
-import { ImageUpload } from "@/components/shared/profile/image-upload";
 import { BioInput } from "@/components/shared/profile/bio-input";
 import { InterestSelector } from "@/components/shared/profile/interest-selector";
 import { DetailsInput } from "@/components/shared/profile/details-input";
@@ -27,6 +26,7 @@ import {
 } from "@/lib/actions/profile.actions";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { ImageUpload } from "../shared/profile/image-upload";
 
 interface ProfileFormProps {
   initialData: ProfileFormData;
@@ -206,7 +206,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
             onMouseLeave={() => setActiveSection(null)}
           >
             <motion.div
-              className="absolute inset-0 bg-gradient-to-br from-pink-100/20 to-transparent dark:from-pink-950/20"
+              className="absolute inset-0 bg-gradient-to-br from-pink-100/20 to-transparent dark:from-pink-950/20 pointer-events-none"
               animate={{
                 opacity: activeSection === "photos" ? 1 : 0,
               }}

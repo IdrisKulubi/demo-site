@@ -5,25 +5,18 @@ import { redirect } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { checkProfileCompletion } from "@/lib/checks";
 
+
 // This should remain a Server Component for optimal performance
 export default async function ProfilePage() {
   const session = await auth();
-
-  if (!session?.user) {
-    redirect("/login");
-  }
+  if (!session?.user) redirect("/login");
 
   const { hasProfile } = await checkProfileCompletion();
   if (!hasProfile) redirect("/profile/setup");
 
   const profile = await getProfile();
+  if (!profile) redirect("/profile/setup");
 
-  // Only redirect if there's no profile at all
-  if (!profile) {
-    redirect("/profile/setup");
-  }
-
-  // Remove dynamic content that could cause hydration mismatches
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white dark:from-pink-950/30 dark:to-background">
       <div className="container max-w-4xl pt-24 pb-12">

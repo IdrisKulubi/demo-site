@@ -5,7 +5,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeCard } from "../cards/swipe-card";
 import { AnimatePresence } from "framer-motion";
-import { Heart, X, User2, Bell, ArrowLeft, Star } from "lucide-react";
+import { Heart, X, User2, Bell, Undo, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   recordSwipe,
@@ -233,35 +233,47 @@ export function ExploreMobileV2({
                   }
                 >
                   {/* Controls Inside Card */}
-                  <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-4 z-10">
+                  <div className="absolute -bottom-20 left-0 right-0 flex justify-center items-center gap-6 z-10">
                     <Button
                       size="icon"
                       variant="outline"
-                      className="h-14 w-14 rounded-full border-2 shadow-lg bg-white/90"
+                      className="h-16 w-16 rounded-full border-none shadow-xl bg-white hover:bg-white/90 dark:bg-background dark:hover:bg-background/90 backdrop-blur-sm hover:scale-110 transition-transform duration-200"
                       onClick={() => handleSwipe("left")}
                       disabled={isAnimating}
+                      style={{
+                        boxShadow: "0 10px 25px rgba(239, 68, 68, 0.2)",
+                        border: "2px solid rgb(239, 68, 68)",
+                      }}
                     >
-                      <X className="h-6 w-6 text-red-500" />
+                      <X className="h-8 w-8 text-red-500" />
                     </Button>
 
                     <Button
                       size="icon"
                       variant="outline"
-                      className="h-12 w-12 rounded-full border-2 shadow-lg bg-white/90"
+                      className="h-12 w-12 rounded-full border-none shadow-xl bg-white hover:bg-white/90 dark:bg-background dark:hover:bg-background/90 backdrop-blur-sm hover:scale-110 transition-transform duration-200"
                       onClick={handleRevert}
                       disabled={swipedProfiles.length === 0 || isAnimating}
+                      style={{
+                        boxShadow: "0 10px 25px rgba(59, 130, 246, 0.2)",
+                        border: "2px solid rgb(59, 130, 246)",
+                      }}
                     >
-                      <ArrowLeft className="h-5 w-5 text-blue-500" />
+                      <Undo className="h-6 w-6 text-blue-500" />
                     </Button>
 
                     <Button
                       size="icon"
                       variant="outline"
-                      className="h-14 w-14 rounded-full border-2 shadow-lg bg-white/90"
+                      className="h-16 w-16 rounded-full border-none shadow-xl bg-white hover:bg-white/90 dark:bg-background dark:hover:bg-background/90 backdrop-blur-sm hover:scale-110 transition-transform duration-200"
                       onClick={() => handleSwipe("right")}
                       disabled={isAnimating}
+                      style={{
+                        boxShadow: "0 10px 25px rgba(236, 72, 153, 0.2)",
+                        border: "2px solid rgb(236, 72, 153)",
+                      }}
                     >
-                      <Heart className="h-6 w-6 text-pink-500" />
+                      <Heart className="h-8 w-8 text-pink-500" />
                     </Button>
                   </div>
                 </SwipeCard>

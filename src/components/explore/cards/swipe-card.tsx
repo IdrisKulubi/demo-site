@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { AnimationControls, motion } from "framer-motion";
@@ -12,11 +11,10 @@ import {
   Instagram,
   Music,
   X,
-  ArrowLeft,
+  Undo,
   Heart,
   User,
 } from "lucide-react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -51,6 +49,7 @@ export function SwipeCard({
 }: SwipeCardProps) {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -212,30 +211,31 @@ export function SwipeCard({
         </div>
 
         {/* Controls overlay */}
-        <div className="absolute bottom-0 left-0 right-0 flex justify-center items-center gap-4 z-20 mb-6 md:mb-0  rounded-tl-3xl rounded-tr-3xl">
+        <div className="fixed   bottom-16 left-0 right-0 flex justify-center items-center gap-6 z-20">
           <Button
             size="icon"
             variant="outline"
-            className="h-12 w-12 rounded-full border-2 shadow-lg bg-transparent hover:border-blue-500 hover:bg-blue-500/20"
+            className="h-12 w-12 rounded-full border-2 shadow-lg bg-blue-500/20 border-blue-500 transition-transform duration-200 hover:scale-110"
             onClick={onRevert}
             disabled={isAnimating}
           >
-            <ArrowLeft className="h-5 w-5 text-blue-500" />
+            <Undo className="h-5 w-5 text-blue-500" />
           </Button>
 
           <Button
             size="icon"
             variant="outline"
-            className="h-14 w-14 rounded-full border-2 shadow-lg bg-transparent hover:border-red-500 hover:bg-red-500/20"
+            className="h-14 w-14 rounded-full border-2 shadow-lg bg-red-500/20 border-red-500 transition-transform duration-200 hover:scale-110"
             onClick={() => onSwipe("left")}
             disabled={isAnimating}
           >
             <X className="h-6 w-6 text-red-500" />
           </Button>
+
           <Button
             size="icon"
             variant="outline"
-            className="h-14 w-14 rounded-full border-2 shadow-lg bg-transparent hover:border-pink-500 hover:bg-pink-500/20"
+            className="h-14 w-14 rounded-full border-2 shadow-lg bg-pink-500/20 border-pink-500 transition-transform duration-200 hover:scale-110"
             onClick={() => onSwipe("right")}
             disabled={isAnimating}
           >
