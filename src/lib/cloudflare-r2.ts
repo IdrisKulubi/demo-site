@@ -57,12 +57,18 @@ export const deleteR2File = async (fileUrl: string) => {
       throw new Error("CLOUDFLARE_R2_BUCKET_NAME is not configured");
     }
 
-    if (!fileUrl.startsWith(process.env.CLOUDFLARE_R2_PUBLIC_URL)) {
+    // Update to handle both old and new URLs
+    const isOldUrl = fileUrl.includes(
+      "pub-fd999fa4db5f45aea35c41c909f365ca.r2.dev"
+    );
+    const isCdnUrl = fileUrl.includes("cdn.strathspace.com");
+
+    if (!isOldUrl && !isCdnUrl) {
       throw new Error("Invalid R2 file URL");
     }
 
     const url = new URL(fileUrl);
-    const fileKey = url.pathname.slice(1);
+    const fileKey = url.pathname.slice(1); // Remove leading slash
     const s3 = getS3Client();
 
     await s3.send(

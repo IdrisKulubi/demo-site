@@ -9,6 +9,7 @@ export const getCloudflareUploadUrl = async () => {
       throw new Error("R2 bucket name is not configured");
     }
 
+    // Use timestamp and random string for unique filenames
     const fileName = `${Date.now()}-${Math.random()
       .toString(36)
       .slice(2, 7)}.webp`;
@@ -19,7 +20,9 @@ export const getCloudflareUploadUrl = async () => {
       throw new Error("Failed to generate presigned URL");
     }
 
-    return { presignedUrl, fileName };
+    // Return both the presigned URL and the CDN URL for the file
+    const cdnUrl = `${process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL}/${fileName}`;
+    return { presignedUrl, fileName, cdnUrl };
   } catch (error) {
     console.error("Upload preparation failed:", error);
     throw new Error(

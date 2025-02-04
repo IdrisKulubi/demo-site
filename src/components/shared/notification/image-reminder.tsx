@@ -31,7 +31,8 @@ export function ImageReminder({ userPhotos }: ImageReminderProps) {
         (photo) =>
           photo.includes("utfs.io") ||
           photo.includes("uploadthing") ||
-          !photo.includes("pub-fd999fa4db5f45aea35c41c909f365ca.r2.dev")
+          photo.includes("pub-fd999fa4db5f45aea35c41c909f365ca.r2.dev") ||
+          !photo.includes("cdn.strathspace.com")
       );
 
       setShowReminder(hasOldPhotos);
@@ -96,8 +97,9 @@ export function ImageReminder({ userPhotos }: ImageReminderProps) {
                 transition={{ delay: 0.2 }}
                 className="text-pink-600 dark:text-pink-400 font-semibold"
               >
-                You may have noticed some of your photos  or profile photos aren&apos;t loading properly oe not showing at all -
-                let&apos;s fix that
+                You may have noticed some of your photos or profile photos
+                aren&apos;t loading properly oe not showing at all - let&apos;s
+                fix that
               </motion.div>
 
               <motion.div

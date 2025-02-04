@@ -3,7 +3,8 @@ const nextConfig = {
   optimizeFonts: true,
   images: {
     remotePatterns: [
-        {
+    
+      {
         protocol: "https",
         hostname: "pub-fd999fa4db5f45aea35c41c909f365ca.r2.dev",
         pathname: "/**",
@@ -15,14 +16,22 @@ const nextConfig = {
         pathname: "/f/**",
       },
     ],
+    minimumCacheTTL: 604800,
+    formats: ["image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    formats: ["image/webp"],
-    minimumCacheTTL: 604800,
-    disableStaticImages: false,
-    contentSecurityPolicy: "default-src 'self'",
-    dangerouslyAllowSVG: true,
-    contentDispositionType: 'inline',
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/cdn-images/:path*",
+        destination: "https://cdn.strathspace.com/:path*",
+      },
+      {
+        source: "/r2-images/:path*",
+        destination: "https://pub-fd999fa4db5f45aea35c41c909f365ca.r2.dev/:path*",
+      },
+    ];
   },
   experimental: {
     optimizeCss: true,
