@@ -4,6 +4,7 @@ interface EmptyStateProps {
   icon: string;
   title: string;
   description: string;
+  className?: string;
 }
 
 export function EmptyState({ icon, title, description }: EmptyStateProps) {

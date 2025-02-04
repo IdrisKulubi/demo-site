@@ -121,34 +121,52 @@ export function LikesModal({
         onClose();
       }}
     >
-      <DialogContent className="max-w-md p-4">
-        <h2 className="text-2xl font-bold mb-4">
-          People who liked you
-          <span className="text-base font-normal text-muted-foreground ml-2">
-            {visibleLikes.length > 0 ? "✨ go bestie!" : ""}
-          </span>
-        </h2>
-        <ScrollArea className="h-[60vh]">
+      <DialogContent className="max-w-md p-6 bg-gradient-to-b from-white to-purple-50/50 dark:from-background dark:to-purple-950/20">
+        <div className="relative">
+          {/* Decorative hearts */}
+          <div className="absolute -top-1 -left-1 text-pink-400 opacity-50">
+            💝
+          </div>
+          <div className="absolute -top-1 -right-1 text-purple-400 opacity-50">
+            💜
+          </div>
+
+          <h2 className="text-2xl font-bold mb-4 text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-500 to-purple-400 dark:from-purple-400 dark:via-pink-300 dark:to-purple-200">
+            People who liked you
+            <span className="block text-base font-normal text-muted-foreground mt-1">
+              {visibleLikes.length > 0 ? "✨ go bestie!" : ""}
+            </span>
+          </h2>
+        </div>
+
+        <ScrollArea className="h-[60vh] px-1">
           {visibleLikes.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-4 pr-4">
               {visibleLikes.map((profile) => (
-                <MatchCard
+                <div
                   key={`like-${profile.userId}-${
                     profile.createdAt.getTime() ?? Date.now()
                   }`}
-                  profile={profile}
-                  onLikeBack={handleLikeBack}
-                  onUnlike={handleUnlikeAction}
-                  isProcessing={isProcessing === profile.userId}
-                />
+                  className="transform transition-all duration-200 hover:scale-[1.02] hover:shadow-lg rounded-xl"
+                >
+                  <MatchCard
+                    profile={profile}
+                    onLikeBack={handleLikeBack}
+                    onUnlike={handleUnlikeAction}
+                    isProcessing={isProcessing === profile.userId}
+                  />
+                </div>
               ))}
             </div>
           ) : (
-            <EmptyState
-              icon="✨"
-              title="No likes yet bestie"
-              description="Keep that profile glowing! Your future matches are loading... 💫"
-            />
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 p-6 rounded-xl border border-purple-100 dark:border-purple-800/30">
+              <EmptyState
+                icon="✨"
+                title="No likes yet bestie"
+                description="Keep that profile glowing! Your future matches are loading... 💫"
+                className="[&>h3]:bg-clip-text [&>h3]:text-transparent [&>h3]:bg-gradient-to-r [&>h3]:from-purple-600 [&>h3]:to-pink-500 [&>h3]:dark:from-purple-400 [&>h3]:dark:to-pink-300"
+              />
+            </div>
           )}
         </ScrollArea>
       </DialogContent>

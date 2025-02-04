@@ -328,20 +328,20 @@ export function ExploreMobileV2({
       )}
 
       {/* Modals */}
-      <MatchModal
+     <MatchModal
         isOpen={!!matchedProfile}
         onClose={() => setMatchedProfile(null)}
         matchedProfile={matchedProfile!}
         currentUserProfile={currentUserProfile}
         currentUser={currentUser}
-      />
+      /> 
 
-      <MatchesModal
+       <MatchesModal
         isOpen={showMatches}
         onClose={() => setShowMatches(false)}
         matches={matches}
         currentUser={currentUser}
-      />
+      /> 
 
       <LikesModal
         isOpen={showLikes}
