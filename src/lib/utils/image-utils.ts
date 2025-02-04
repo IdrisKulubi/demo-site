@@ -130,3 +130,24 @@ export async function isValidImage(url: string): Promise<boolean> {
     return false;
   }
 }
+
+// Add this function to handle both URL sources
+export const getOptimizedImageUrl = (
+  url: string,
+  options?: {
+    width?: number;
+    quality?: number;
+    format?: "webp" | "jpeg" | "png";
+  }
+) => {
+  if (!url) return "";
+
+  const { width = 800, quality = 80, format = "webp" } = options ?? {};
+
+  // If it's an R2 image, add optimization parameters
+  if (url.includes(process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL!)) {
+    return `${url}?width=${width}&quality=${quality}&format=${format}`;
+  }
+
+  return url;
+};

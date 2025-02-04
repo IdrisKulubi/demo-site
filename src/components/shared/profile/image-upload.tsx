@@ -1,22 +1,25 @@
 "use client";
 
-import { UploadDropzone } from "@/lib/uploadthing";
-import { X } from "lucide-react";
+import { X, UploadCloud, Loader2, User } from "lucide-react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { deleteUploadThingFile } from "@/lib/actions/upload.actions";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { optimizeImage } from "@/lib/utils/image-utils";
+import { getCloudflareUploadUrl } from "@/lib/actions/cloudflare-upload";
+import { deleteR2File } from "@/lib/cloudflare-r2";
+import { optimizeImageClient } from "@/lib/utils/client-image-utils";
+import { cn } from "@/lib/utils";
 
 interface ImageUploadProps {
   value?: string[];
   onChange: (value: string[]) => void;
   onRemove?: (photoUrl: string) => void;
   onProfilePhotoSelect?: (photoUrl: string) => void;
-  maxFiles: number;
+  maxFiles?: number;
 }
+
+// Use NEXT_PUBLIC_ prefix for client-side access
 
 export function ImageUpload({
   value = [],
@@ -26,7 +29,10 @@ export function ImageUpload({
   maxFiles = 6,
 }: ImageUploadProps) {
   const { toast } = useToast();
-  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{
+    [key: string]: number;
+  }>({});
 
   // Validate image before upload
   const validateImage = async (file: File): Promise<boolean> => {
@@ -101,7 +107,11 @@ export function ImageUpload({
 
   const handleRemove = async (url: string) => {
     try {
-      await deleteUploadThingFile(url);
+      if (url.includes(process.env.CLOUDFLARE_R2_PUBLIC_URL!)) {
+        await deleteR2File(url);
+      } else {
+        await deleteUploadThingFile(url);
+      }
       onRemove?.(url);
     } catch (error) {
       console.error("Error removing Image", error);
@@ -113,131 +123,206 @@ export function ImageUpload({
     }
   };
 
+  const handleFileSelect = async (files: FileList) => {
+    const publicUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL?.replace(
+      /^https?:\/\//,
+      ""
+    ).replace(/\/$/, "");
+
+    if (!publicUrl) {
+      toast({
+        title: "Configuration Error",
+        description: "Image upload is not properly configured",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (value.length + files.length > maxFiles) {
+      toast({
+        title: "Too many files",
+        description: `You can only upload up to ${maxFiles} images`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    const newUploadProgress: { [key: string]: number } = {};
+
+    try {
+      const uploadPromises = Array.from(files).map(async (file, index) => {
+        const fileId = `${Date.now()}-${index}`;
+        newUploadProgress[fileId] = 0;
+        setUploadProgress((prev) => ({ ...prev, [fileId]: 0 }));
+
+        // Validate and optimize image
+        const isValid = await validateImage(file);
+        if (!isValid) throw new Error("Invalid image");
+        setUploadProgress((prev) => ({ ...prev, [fileId]: 20 }));
+
+        const optimizedBlob = await optimizeImageClient(file);
+        setUploadProgress((prev) => ({ ...prev, [fileId]: 40 }));
+
+        // Get upload URL
+        const { presignedUrl, fileName } = await getCloudflareUploadUrl();
+        setUploadProgress((prev) => ({ ...prev, [fileId]: 60 }));
+
+        // Upload to R2
+        const uploadResponse = await fetch(presignedUrl, {
+          method: "PUT",
+          body: optimizedBlob,
+          headers: { "Content-Type": "image/webp" },
+        });
+
+        if (!uploadResponse.ok) throw new Error("Failed to upload image");
+        setUploadProgress((prev) => ({ ...prev, [fileId]: 80 }));
+
+        // Construct the final URL correctly without the 'uploads/' segment
+        const imageUrl = `https://${publicUrl}/${fileName}`;
+
+        // Add a small delay to ensure R2 has processed the upload
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        setUploadProgress((prev) => ({ ...prev, [fileId]: 100 }));
+
+        return imageUrl;
+      });
+
+      const newUrls = await Promise.all(uploadPromises);
+      onChange([...value, ...newUrls]);
+
+      toast({
+        title: "Success!",
+        description: `${newUrls.length} ${
+          newUrls.length === 1 ? "image" : "images"
+        } uploaded successfully`,
+      });
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      toast({
+        title: "Upload failed",
+        description:
+          error instanceof Error ? error.message : "Couldn't upload images",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      setUploadProgress({});
+    }
+  };
+
+  // Add this function to handle image load errors
+  const handleImageError = (url: string) => {
+    console.error(`Failed to load image: ${url}`);
+    toast({
+      title: "Image load error",
+      description: "Failed to load the uploaded image",
+      variant: "destructive",
+    });
+  };
+
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <AnimatePresence>
-          {Array.isArray(value) &&
-            value.map((url, index) => (
-              <motion.div
-                key={url}
-                layout
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="relative aspect-square rounded-xl overflow-hidden group"
-              >
-                <Image
-                  src={url}
-                  alt={`Upload ${index + 1}`}
-                  className="object-cover w-full h-full"
-                  width={400}
-                  height={400}
-                  quality={80}
-                />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  {onProfilePhotoSelect && (
-                    <button
-                      onClick={() => onProfilePhotoSelect(url)}
-                      className="text-white bg-pink-500/80 hover:bg-pink-500 p-2 rounded-full"
-                    >
-                      Set as Profile
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleRemove(url)}
-                    className="text-white bg-red-500/80 hover:bg-red-500 p-2 rounded-full"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-        </AnimatePresence>
-
-        {value.length < maxFiles && (
-          <UploadDropzone
-            endpoint="imageUploader"
-            className={cn(
-              "ut-button:bg-pink-500 ut-button:hover:bg-pink-600",
-              "ut-label:text-pink-500 ut-label:hover:text-pink-600"
+      {/* Image Upload Area */}
+      <div className="flex items-center justify-center w-full">
+        <label
+          htmlFor="image-upload"
+          className={cn(
+            "flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer",
+            isUploading
+              ? "border-gray-300 bg-gray-50"
+              : "border-gray-300 hover:bg-gray-50",
+            "transition-all duration-200"
+          )}
+        >
+          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+            {isUploading ? (
+              <div className="text-center">
+                <Loader2 className="w-8 h-8 mb-4 animate-spin text-gray-500" />
+                <p className="text-sm text-gray-500">Uploading images...</p>
+              </div>
+            ) : (
+              <>
+                <UploadCloud className="w-8 h-8 mb-4 text-gray-500" />
+                <p className="mb-2 text-sm text-gray-500">
+                  <span className="font-semibold">Click to upload</span> or drag
+                  and drop
+                </p>
+                <p className="text-xs text-gray-500">
+                  PNG, JPG or WEBP (MAX. {maxFiles} images)
+                </p>
+              </>
             )}
-            onClientUploadComplete={async (res) => {
-              if (res) {
-                setIsOptimizing(true);
-                try {
-                  // Process and validate each uploaded image
-                  const validUrls = await Promise.all(
-                    res.map(async (file) => {
-                      const isValid = await validateImage(
-                        new File(
-                          [await fetch(file.url).then((r) => r.blob())],
-                          file.name,
-                          {
-                            type: file.type,
-                            lastModified: Date.now(),
-                          }
-                        )
-                      );
-                      if (!isValid) return null;
-
-                      // Optimize image before saving
-                      const optimized = await optimizeImage(file.url, {
-                        maxWidth: 1200,
-                        maxHeight: 1200,
-                        quality: 80,
-                        format: "webp",
-                      });
-
-                      return optimized;
-                    })
-                  );
-
-                  // Filter out invalid/null URLs
-                  const newUrls = validUrls.filter(Boolean) as string[];
-                  if (newUrls.length > 0) {
-                    onChange([...value, ...newUrls]);
-                  }
-                } catch (error) {
-                  console.error("Error processing uploads:", error);
-                  toast({
-                    title: "Upload failed",
-                    description: "Please try again",
-                    variant: "destructive",
-                  });
-                } finally {
-                  setIsOptimizing(false);
-                }
-              }
-            }}
-            onUploadError={(error: Error) => {
-              toast({
-                title: "Upload failed",
-                description: error.message,
-                variant: "destructive",
-              });
-            }}
+          </div>
+          <input
+            id="image-upload"
+            type="file"
+            className="hidden"
+            multiple
+            accept="image/*"
+            onChange={(e) => e.target.files && handleFileSelect(e.target.files)}
+            disabled={isUploading}
           />
-        )}
+        </label>
       </div>
 
-      {isOptimizing && (
-        <p className="text-sm text-muted-foreground">
-          Optimizing your images for the best quality... ✨
-        </p>
-      )}
+      {/* Image Preview Grid */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+        <AnimatePresence>
+          {value.map((url, index) => (
+            <motion.div
+              key={url}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="relative aspect-square group"
+            >
+              <Image
+                src={url}
+                alt={`Uploaded image ${index + 1}`}
+                fill
+                className="object-cover rounded-lg"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                onError={() => handleImageError(url)}
+                priority={index < 4} // Prioritize loading first 4 images
+              />
+              <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 bg-black/50 group-hover:opacity-100 transition-opacity rounded-lg">
+                <button
+                  onClick={() => onProfilePhotoSelect?.(url)}
+                  className="p-2 text-white bg-blue-500 rounded-full hover:bg-blue-600"
+                  title="Set as profile photo"
+                >
+                  <User className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleRemove(url)}
+                  className="p-2 text-white bg-red-500 rounded-full hover:bg-red-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
 
-      <p className="text-sm text-muted-foreground mt-2">
-        {value.length === 0 && "Time to show off your best angles bestie 📸✨"}
-        {value.length === 1 &&
-          "Looking good! Add more pics to boost your chances 🌟"}
-        {value.length === 2 && "Now we're talking The more the merrier 💫"}
-        {value.length >= 3 &&
-          value.length < maxFiles &&
-          "Slay! You're killing it 💅"}
-        {value.length === maxFiles &&
-          "Perfect! You're all set to find your match 💝"}
-      </p>
+      {/* Progress bars */}
+      <div className="space-y-2">
+        {Object.entries(uploadProgress).map(([fileId, progress]) => (
+          <div key={fileId} className="w-full">
+            <div className="flex justify-between text-sm text-gray-500 mb-1">
+              <span>Uploading...</span>
+              <span>{progress}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
