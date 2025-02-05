@@ -110,7 +110,7 @@ export async function getSwipableProfiles() {
       )
       .where(and(...whereConditions))
       .orderBy(sql`RANDOM()`)
-      .limit(150);
+      .limit(200);
 
     // Format the profiles before caching
     const formattedProfiles = results.map((profile) => ({
