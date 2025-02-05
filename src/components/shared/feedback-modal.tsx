@@ -38,7 +38,7 @@ export function FeedbackModal() {
 
       toast({
         title: "Feedback sent",
-        description: "vehem23 gonna read this while sipping matcha latte",
+        description: "Idris gonna read this while sipping matcha latte",
       });
 
       setMessage("");
@@ -151,7 +151,7 @@ export function FeedbackModal() {
                       transition={{ delay: 0.2 }}
                     >
                       <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-                        Slide to vehem23&apos;s DMs 📩
+                        Slide into Idris&apos; DMs 📩
                       </h2>
                     </motion.div>
                   </motion.div>
@@ -170,8 +170,8 @@ export function FeedbackModal() {
                     >
                       🔥
                     </motion.span>
-                    hot takes, or feature suggestions. I&apos;m chronically
-                    online anyway.
+                    hot takes, or feature suggestions. Your boy Idris stays
+                    chronically online fr fr.
                   </motion.p>
 
                   <motion.div
