@@ -12,7 +12,7 @@ import { getProfile } from "@/lib/actions/profile.actions";
 import { ExploreMobileV2 } from "@/components/explore/mobile/explore-mobile-v2";
 import { checkProfileCompletion } from "@/lib/checks";
 import { FeedbackModal } from "@/components/shared/notification/maintenance-modal";
- import { ImageReminder } from "@/components/shared/notification/image-reminder";
+import { ImageReminder } from "@/components/shared/notification/image-reminder";
 
 export default async function ExplorePage() {
   const session = await auth();
@@ -35,8 +35,7 @@ export default async function ExplorePage() {
 
   return (
     <div className="h-full">
-       <ImageReminder userPhotos={currentUserProfile?.photos as string[]} /> 
-
+      <ImageReminder userPhotos={currentUserProfile?.photos as string[]} />
 
       <FeedbackModal />
 
@@ -72,11 +71,19 @@ export default async function ExplorePage() {
         {/* Conditional Rendering based on screen size */}
         <div className="md:hidden">
           <ExploreMobileV2
-            currentUser={session.user}
-  currentUser={session.user as { id: string; image: string; name: string; email: string; }}      
+            currentUser={
+              session.user as {
+                id: string;
+                image: string;
+                name: string;
+                email: string;
+              }
+            }
+            currentUserProfile={currentUserProfile as Profile}
             initialProfiles={profiles as Profile[]}
             likedByProfiles={likedByProfiles}
             likedProfiles={likedProfiles}
+
           />
         </div>
         <div className="hidden md:block">
