@@ -89,6 +89,9 @@ export function SidePanels({
                         <Avatar className="h-14 w-14 border-2 border-pink-200 dark:border-pink-800">
                           <AvatarImage
                             src={profile.profilePhoto || profile.photos?.[0]}
+                            width={56}
+                            height={56}
+                            alt={`${profile.firstName}'s photo`}
                           />
                           <AvatarFallback className="bg-gradient-to-br from-pink-400 to-pink-600 text-white">
                             {profile.firstName?.[0]}
@@ -179,6 +182,9 @@ export function SidePanels({
                         <Avatar className="h-14 w-14 border-2 border-purple-200 dark:border-purple-800">
                           <AvatarImage
                             src={profile.profilePhoto || profile.photos?.[0]}
+                            width={56}
+                            height={56}
+                            alt={`${profile.firstName}'s photo`}
                           />
                           <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white">
                             {profile.firstName?.[0]}

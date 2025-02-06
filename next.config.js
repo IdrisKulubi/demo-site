@@ -3,7 +3,12 @@ const nextConfig = {
   optimizeFonts: true,
   images: {
     remotePatterns: [
-    
+      {
+        protocol: "https",
+        hostname: "cdn.strathspace.com",
+        pathname: "/**",
+        port: "",
+      },
       {
         protocol: "https",
         hostname: "pub-fd999fa4db5f45aea35c41c909f365ca.r2.dev",
@@ -15,6 +20,11 @@ const nextConfig = {
         hostname: "utfs.io",
         pathname: "/f/**",
       },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/a/**",
+      }
     ],
     minimumCacheTTL: 604800,
     formats: ["image/webp"],

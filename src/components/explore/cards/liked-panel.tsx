@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {  X } from "lucide-react";
+import { X } from "lucide-react";
 import type { Profile } from "@/db/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProfileDetails } from "@/components/explore/cards/profile-details";
@@ -50,7 +50,12 @@ export function LikedPanel({
                   onClick={() => setSelectedProfile(profile)}
                 >
                   <Avatar>
-                    <AvatarImage src={profile.photos?.[0]} />
+                    <AvatarImage
+                      src={profile.photos?.[0]}
+                      width={40}
+                      height={40}
+                      alt={`${profile.firstName}'s photo`}
+                    />
                     <AvatarFallback className="bg-gradient-to-br from-pink-400 to-pink-600 text-white">
                       {profile.firstName?.[0]}
                     </AvatarFallback>
@@ -88,7 +93,12 @@ export function LikedPanel({
                   className="group relative bg-white dark:bg-background rounded-2xl p-3 shadow-sm border border-pink-100 dark:border-pink-900 flex items-center gap-3 cursor-pointer"
                 >
                   <Avatar className="h-12 w-12 border-2 border-pink-200 dark:border-pink-800">
-                    <AvatarImage src={profile.profilePhoto || ""} />
+                    <AvatarImage
+                      src={profile.profilePhoto || ""}
+                      width={48}
+                      height={48}
+                      alt={`${profile.firstName}'s photo`}
+                    />
                     <AvatarFallback className="bg-gradient-to-br from-pink-400 to-pink-600 text-white">
                       {profile.firstName?.[0]}
                       {profile.lastName?.[0]}

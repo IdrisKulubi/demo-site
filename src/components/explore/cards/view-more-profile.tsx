@@ -1,6 +1,6 @@
 "use client";
 
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogTitle, DialogContent } from "@/components/ui/dialog";
 import { Profile } from "@/db/schema";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,14 +23,23 @@ export function ViewMoreProfile({
 }: ViewMoreProfileProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogTitle>{profile.firstName}</DialogTitle>
       <DialogContent className="max-w-md p-0 overflow-hidden">
         <div className="relative">
           {/* Cover Photo */}
           <div className="h-48 overflow-hidden">
             <Image
-              src={profile.photos?.[0] || profile.profilePhoto || ""}
-              alt={profile.firstName}
+              src={
+                profile.photos?.[0] ||
+                profile.profilePhoto ||
+                "/default-avatar.png"
+              }
+              alt={`${profile.firstName}'s photo`}
               className="w-full h-full object-cover"
+              width={600}
+              height={300}
+              priority
+              sizes="(max-width: 768px) 100vw, 600px"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
           </div>
@@ -45,7 +54,9 @@ export function ViewMoreProfile({
                 </h2>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <GraduationCap className="h-4 w-4" />
-                  <span>{profile.course}, Year {profile.yearOfStudy}</span>
+                  <span>
+                    {profile.course}, Year {profile.yearOfStudy}
+                  </span>
                 </div>
               </div>
 
@@ -110,4 +121,4 @@ export function ViewMoreProfile({
       </DialogContent>
     </Dialog>
   );
-} 
+}

@@ -54,7 +54,12 @@ export function MobileCrushesModal({
                   >
                     <div className="flex items-center gap-4">
                       <Avatar className="h-14 w-14 ring-2 ring-pink-200 dark:ring-pink-800 ring-offset-2 ring-offset-white dark:ring-offset-background">
-                        <AvatarImage src={profile.profilePhoto || ""} />
+                        <AvatarImage
+                          src={profile.profilePhoto || ""}
+                          alt={`${profile.firstName}'s photo`}
+                          width={56}
+                          height={56}
+                        />
                         <AvatarFallback className="bg-gradient-to-br from-pink-400 to-pink-600 text-white">
                           {profile.firstName?.[0]}
                           {profile.lastName?.[0]}
