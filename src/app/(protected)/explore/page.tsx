@@ -73,7 +73,7 @@ export default async function ExplorePage() {
         <div className="md:hidden">
           <ExploreMobileV2
             currentUser={session.user}
-            currentUserProfile={currentUserProfile as Profile}
+  currentUser={session.user as { id: string; image: string; name: string; email: string; }}      
             initialProfiles={profiles as Profile[]}
             likedByProfiles={likedByProfiles}
             likedProfiles={likedProfiles}
