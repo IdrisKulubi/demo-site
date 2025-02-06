@@ -33,7 +33,7 @@ export function ImageFallback({
 
   // Mobile-specific URL handling
   const getOptimizedUrl = (url: string) => {
-    if (isMobile && url.includes('r2.dev')) {
+    if (isMobile && url.includes("r2.dev")) {
       return `${url}?width=${Math.min(width, 750)}&quality=75&format=webp`;
     }
     return url;
@@ -42,18 +42,18 @@ export function ImageFallback({
   useEffect(() => {
     const loadImage = async () => {
       const optimizedUrl = getOptimizedUrl(src);
-      
+
       try {
         await new Promise((resolve, reject) => {
-          const img = new Image();
+          const img = new window.Image();
           img.src = optimizedUrl;
-          img.onload = resolve;
+          img.onload = () => resolve(img);
           img.onerror = reject;
         });
         setImgSrc(optimizedUrl);
         setIsLoading(false);
       } catch (error) {
-        console.error('Image load error:', error);
+        console.error("Image load error:", error);
         handleFallback();
       }
     };
@@ -61,14 +61,16 @@ export function ImageFallback({
     const handleFallback = async () => {
       if (retryCount < 2) {
         setTimeout(() => {
-          setRetryCount(prev => prev + 1);
+          setRetryCount((prev) => prev + 1);
           loadImage();
         }, 1000 * retryCount);
         return;
       }
 
       try {
-        const fallback = await fetch(`/api/profile/${userId}/photo`).then(res => res.json());
+        const fallback = await fetch(`/api/profile/${userId}/photo`).then(
+          (res) => res.json()
+        );
         setImgSrc(fallback.url || "/default-avatar.png");
       } catch {
         setImgSrc("/default-avatar.png");
