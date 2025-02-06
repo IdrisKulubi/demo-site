@@ -20,7 +20,6 @@ import { useToast } from "@/hooks/use-toast";
 import { recordSwipe, undoLastSwipe } from "@/lib/actions/explore.actions";
 import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { MobileLikes } from "./mobile-likes";
-import { MobileNav } from "./mobile-nav";
 import { MobileViewMore } from "./mobile-view-more";
 import { EmptyMobileView } from "../cards/empty-mobile";
 
@@ -119,7 +118,6 @@ export function ExploreMobile({
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white dark:from-pink-950/30 dark:to-background">
       {/* Mobile Navigation */}
-      <MobileNav />
 
       {/* Top Controls - Only show when there are profiles */}
       {profiles.length > 0 && (

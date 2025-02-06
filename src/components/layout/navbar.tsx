@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { signOut } from "next-auth/react";
 import { UserCircle, LogOut, Settings, User, Sparkles } from "lucide-react";
 import { FeedbackModal } from "@/components/shared/feedback-modal";
+import { cn } from "@/lib/utils";
 
 interface NavbarProps {
   className?: string;
@@ -22,6 +23,9 @@ interface NavbarProps {
 export function Navbar({ className }: NavbarProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
+
+  // Update the visibility logic
+  const isExplorePage = pathname === "/explore";
   const showNavigation = pathname === "/";
 
   const scrollToSection = (sectionId: string) => {
@@ -32,7 +36,16 @@ export function Navbar({ className }: NavbarProps) {
   };
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-background/80 backdrop-blur-sm border-b ${className}`}>
+    <nav
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-background/80 backdrop-blur-sm border-b transition-transform duration-300",
+        // Hide on mobile for explore page, show on desktop
+        isExplorePage ? "hidden md:block" : "",
+        // Show navigation items only on home page
+        showNavigation ? "translate-y-0" : "-translate-y-full md:translate-y-0",
+        className
+      )}
+    >
       <div className="container flex items-center justify-between h-16">
         <div className="flex items-center gap-8">
           <Link

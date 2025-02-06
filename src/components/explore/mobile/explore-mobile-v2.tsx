@@ -21,11 +21,22 @@ import { ProfilePreviewModal } from "../modals/profile-preview-modal";
 import { useInterval } from "@/hooks/use-interval";
 import { handleLike, handleUnlike } from "@/lib/actions/like.actions";
 import { MatchesModal } from "../modals/matches-modal";
+import { FeedbackModal } from "@/components/shared/feedback-modal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { signOut } from "next-auth/react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LogOut } from "lucide-react";
+import Link from "next/link";
 
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];
   currentUserProfile: Profile;
-  currentUser: { id: string };
+  currentUser: { id: string; image: string; name: string };
   likedProfiles: Profile[];
   likedByProfiles: Profile[];
 }
@@ -298,9 +309,49 @@ export function ExploreMobileV2({
                 )}
               </Button>
 
-              <Button variant="ghost" size="icon">
-                <User2 className="h-6 w-6 text-muted-foreground" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative hover:bg-accent/50 transition-colors duration-200"
+                  >
+                    <Avatar className="h-8 w-8 ring-2 ring-primary/20 hover:ring-primary/40 transition-all duration-200">
+                      <AvatarImage
+                        src={currentUser?.image || undefined}
+                        alt={currentUser?.name || "User"}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="bg-gradient-to-br from-pink-500 to-purple-500 text-white">
+                        {currentUser?.name?.[0]?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56 p-2 backdrop-blur-lg bg-white/90 dark:bg-gray-950/90 border border-border/50 shadow-lg shadow-primary/5"
+                >
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/profile"
+                      className="flex items-center px-3 py-2 rounded-md hover:bg-accent/80 transition-colors duration-200"
+                    >
+                      <User2 className="mr-2 h-4 w-4 text-primary" />
+                      <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="flex items-center px-3 py-2 rounded-md text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors duration-200 mt-1"
+                    onClick={() => signOut()}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <FeedbackModal />
 
               <Button
                 variant="ghost"
@@ -328,20 +379,20 @@ export function ExploreMobileV2({
       )}
 
       {/* Modals */}
-     <MatchModal
+      <MatchModal
         isOpen={!!matchedProfile}
         onClose={() => setMatchedProfile(null)}
         matchedProfile={matchedProfile!}
         currentUserProfile={currentUserProfile}
         currentUser={currentUser}
-      /> 
+      />
 
-       <MatchesModal
+      <MatchesModal
         isOpen={showMatches}
         onClose={() => setShowMatches(false)}
         matches={matches}
         currentUser={currentUser}
-      /> 
+      />
 
       <LikesModal
         isOpen={showLikes}
