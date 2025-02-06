@@ -32,6 +32,7 @@ import { signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
+import { ImageFallback } from "@/components/shared/image-fallback";
 
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];

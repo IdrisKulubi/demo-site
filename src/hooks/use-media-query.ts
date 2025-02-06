@@ -1,29 +1,23 @@
 "use client";
 
-import * as React from "react";
+import { useState, useEffect } from "react";
 
-export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = React.useState<boolean>(false);
+export function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(false);
 
-  React.useEffect(() => {
-    const mediaQuery = window.matchMedia(query);
-
-    // Set initial value
-    setMatches(mediaQuery.matches);
-
-    // Create event listener function
-    const listener = (event: MediaQueryListEvent) => {
-      setMatches(event.matches);
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    
+    const listener = () => {
+      // Use setTimeout to prevent frequent updates during orientation changes
+      setTimeout(() => setMatches(media.matches), 100);
     };
 
-    // Add the listener
-    mediaQuery.addEventListener("change", listener);
-
-    // Clean up
-    return () => {
-      mediaQuery.removeEventListener("change", listener);
-    };
-  }, [query]); // Re-run effect if query changes
+    media.addEventListener("change", listener);
+    listener(); // Initial check
+    
+    return () => media.removeEventListener("change", listener);
+  }, [query]);
 
   return matches;
 }
