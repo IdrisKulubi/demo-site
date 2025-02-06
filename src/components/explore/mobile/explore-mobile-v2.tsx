@@ -5,7 +5,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeCard } from "../cards/swipe-card";
 import { AnimatePresence } from "framer-motion";
-import { Heart, X, User2, Bell, Undo, Star } from "lucide-react";
+import { Heart, X, User2, Bell, Undo, Star, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   recordSwipe,
@@ -36,7 +36,7 @@ import Link from "next/link";
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];
   currentUserProfile: Profile;
-  currentUser: { id: string; image: string; name: string };
+  currentUser: { id: string; image: string; name: string; email: string };
   likedProfiles: Profile[];
   likedByProfiles: Profile[];
 }
@@ -293,8 +293,19 @@ export function ExploreMobileV2({
           </div>
 
           {/* Bottom Navigation */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-background/80 backdrop-blur-lg border-t border-border">
-            <div className="flex justify-around items-center h-16 px-4">
+          <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-background border-t border-border">
+            <div className="flex items-center justify-around p-4">
+              <Button
+                asChild
+                variant="ghost"
+                size="icon"
+                className="rounded-full h-12 w-12"
+              >
+                <Link href="/leaderboard">
+                  <Trophy className="h-6 w-6 text-pink-500" />
+                </Link>
+              </Button>
+
               <Button
                 variant="ghost"
                 size="icon"

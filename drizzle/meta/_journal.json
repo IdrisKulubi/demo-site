@@ -64,6 +64,20 @@
       "when": 1738487514959,
       "tag": "0008_chilly_iron_monger",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1738822936755,
+      "tag": "0009_volatile_karma",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1738823490113,
+      "tag": "0010_mysterious_reaper",
+      "breakpoints": true
     }
   ]
 }

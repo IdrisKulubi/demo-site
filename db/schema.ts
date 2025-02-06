@@ -134,13 +134,14 @@ export const swipes = pgTable(
       .notNull()
       .references(() => users.id),
     isLike: boolean("is_like").notNull(),
+    type: text("type").notNull().default("regular"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
     swiperIdx: index("swipe_swiper_idx").on(table.swiperId),
     swipedIdx: index("swipe_swiped_idx").on(table.swipedId),
     createdAtIdx: index("swipe_created_at_idx").on(table.createdAt),
-    // Compound index for faster lookups
+    typeIdx: index("swipe_type_idx").on(table.type),
     swipeComboIdx: index("swipe_combo_idx").on(table.swiperId, table.swipedId),
   })
 );
@@ -226,6 +227,37 @@ export const starredProfiles = pgTable("starred_profiles", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Add this new table definition after the existing tables
+export const achievements = pgTable(
+  "achievements",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").notNull(), // e.g., 'first_match', 'streak_7', 'likes_100'
+    unlockedAt: timestamp("unlocked_at").defaultNow().notNull(),
+    title: text("title").notNull(), // e.g., "Match Maker", "Hot Streak"
+    description: text("description").notNull(),
+    icon: text("icon").notNull(), // emoji or icon identifier
+    level: integer("level").default(1), // for tiered achievements
+    progress: integer("progress").default(0), // for tracking progress
+    maxProgress: integer("max_progress"), // for progress-based achievements
+    isSecret: boolean("is_secret").default(false),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdIdx: index("achievement_user_id_idx").on(table.userId),
+    typeIdx: index("achievement_type_idx").on(table.type),
+    unlockedAtIdx: index("achievement_unlocked_at_idx").on(table.unlockedAt),
+    // Compound index for faster user achievement lookups
+    userTypeIdx: index("achievement_user_type_idx").on(
+      table.userId,
+      table.type
+    ),
+  })
+);
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(profiles, {
@@ -239,10 +271,19 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   starredProfiles: many(starredProfiles, {
     relationName: "userStarredProfiles",
   }),
+  achievements: many(achievements),
 }));
 
 export const matchesRelations = relations(matches, ({ many }) => ({
   messages: many(messages, { relationName: "matchMessages" }),
+}));
+
+// Add the achievements relations
+export const achievementsRelations = relations(achievements, ({ one }) => ({
+  user: one(users, {
+    fields: [achievements.userId],
+    references: [users.id],
+  }),
 }));
 
 // Then create type references at the end

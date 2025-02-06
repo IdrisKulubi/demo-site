@@ -12,7 +12,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { signOut } from "next-auth/react";
-import { UserCircle, LogOut, Settings, User, Sparkles } from "lucide-react";
+import {
+  UserCircle,
+  LogOut,
+  Settings,
+  User,
+  Sparkles,
+  Trophy,
+} from "lucide-react";
 import { FeedbackModal } from "@/components/shared/feedback-modal";
 import { cn } from "@/lib/utils";
 
@@ -90,6 +97,20 @@ export function Navbar({ className }: NavbarProps) {
               <Link href="/explore">
                 <Sparkles className="h-4 w-4" />
                 <span>Explore</span>
+              </Link>
+            </Button>
+          )}
+
+          {session?.user && pathname !== "/explore" && (
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="hidden md:flex items-center gap-2 hover:bg-pink-500/10 hover:text-pink-500"
+            >
+              <Link href="/leaderboard">
+                <Trophy className="h-4 w-4 text-pink-500" />
+                <span>Leaderboard</span>
               </Link>
             </Button>
           )}

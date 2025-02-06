@@ -72,7 +72,7 @@ export default async function ExplorePage() {
         {/* Conditional Rendering based on screen size */}
         <div className="md:hidden">
           <ExploreMobileV2
-            currentUser={session.user}
+            currentUser={session.user as { id: string; image: string; name: string; email: string; }}
             currentUserProfile={currentUserProfile as Profile}
             initialProfiles={profiles as Profile[]}
             likedByProfiles={likedByProfiles}

@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ServiceWorkerInit } from "@/components/service-worker/service-worker-init";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -46,13 +47,15 @@ export default async function RootLayout({
             <MusicProvider>
               <SwipeCounterProvider>
                 <ServiceWorkerInit />
-                <div className="relative min-h-screen">
-                  <Navbar />
-                  <main className="flex-1">{children}</main>
-                  <Analytics />
-                  <SpeedInsights />
-                  <Toaster />
-                </div>
+                <TooltipProvider>
+                  <div className="relative min-h-screen">
+                    <Navbar />
+                    <main className="flex-1">{children}</main>
+                    <Analytics />
+                    <SpeedInsights />
+                    <Toaster />
+                  </div>
+                </TooltipProvider>
               </SwipeCounterProvider>
             </MusicProvider>
           </SessionProvider>
