@@ -38,32 +38,36 @@ export function MatchCard({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, x: -100 }}
         className="group relative bg-white dark:bg-background rounded-xl p-3 shadow-sm border border-purple-100 dark:border-purple-900 hover:border-purple-300 dark:hover:border-purple-700 transition-colors"
-        onClick={() => setShowDetails(true)}
       >
         <div className="flex items-center gap-3">
-          <Avatar className="h-12 w-12 border-2 border-purple-200 dark:border-purple-800">
-            <AvatarImage src={profile.profilePhoto || profile.photos?.[0]} />
-            <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white">
-              {profile.firstName?.[0]}
-              {profile.lastName?.[0]}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <h3 className="font-medium">{profile.firstName}</h3>
-            <p className="text-sm text-muted-foreground">
-              {profile.course?.trim().slice(0, 3)} • Year {profile.yearOfStudy}
-            </p>
+          {/* Profile Info Section */}
+          <div
+            className="flex items-center gap-3 flex-1 cursor-pointer z-10"
+            onClick={() => setShowDetails(true)}
+          >
+            <Avatar className="h-12 w-12 border-2 border-purple-200 dark:border-purple-800">
+              <AvatarImage src={profile.profilePhoto || profile.photos?.[0]} />
+              <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white">
+                {profile.firstName?.[0]}
+                {profile.lastName?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <h3 className="font-medium">{profile.firstName}</h3>
+              <p className="text-sm text-muted-foreground">
+                {profile.course?.trim().slice(0, 3)} • Year{" "}
+                {profile.yearOfStudy}
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 z-20">
             <Button
               size="sm"
               variant="ghost"
-              onClick={(e) => {
-                e.stopPropagation();
-                onLikeBack(profile.userId);
-              }}
+              onClick={() => onLikeBack(profile.userId)}
               disabled={isProcessing}
               className="hover:bg-pink-100/50 dark:hover:bg-pink-950/50 text-pink-500 dark:text-pink-400"
             >
@@ -82,19 +86,13 @@ export function MatchCard({
             <Button
               size="sm"
               variant="ghost"
-              onClick={(e) => {
-                e.stopPropagation();
-                onUnlike(profile.userId);
-              }}
+              onClick={() => onUnlike(profile.userId)}
               disabled={isProcessing}
               className="hover:bg-rose-100/50 dark:hover:bg-rose-950/50 text-rose-500 dark:text-rose-400"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
-        </div>
-        <div className="absolute inset-0 cursor-pointer">
-          <ChevronRight className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
       </motion.div>
 
