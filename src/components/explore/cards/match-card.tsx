@@ -88,7 +88,7 @@ export function MatchCard({
               variant="ghost"
               onClick={() => onUnlike(profile.userId)}
               disabled={isProcessing}
-              className="hover:bg-rose-100/50 dark:hover:bg-rose-950/50 text-rose-500 dark:text-rose-400"
+              className="hover:bg-rose-100/50 dark:hover:bg-rose-950/50 text-rose-500 dark:text-rose-400 min-w-[40px] p-2"
             >
               <X className="h-4 w-4" />
             </Button>
