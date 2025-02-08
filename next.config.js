@@ -7,15 +7,28 @@ const nextConfig = {
         hostname: "pub-fd999fa4db5f45aea35c41c909f365ca.r2.dev",
         pathname: "/**",
       },
-      // Keep other image sources...
+      {
+        protocol: "https",
+        hostname: "utfs.io",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "uploadthing.com",
+        port: "",
+        pathname: "/**",
+      }, 
     ],
-    deviceSizes: [360, 480, 640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     formats: ["image/webp", "image/avif"],
     minimumCacheTTL: 604800,
     dangerouslyAllowSVG: false,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    unoptimized: process.env.NODE_ENV === "development" // Disable optimization in dev
+    unoptimized: true,
+    domains: ["utfs.io", "uploadthing.com"],
+    loader: "default",
   },
   experimental: {
     serverActions: {

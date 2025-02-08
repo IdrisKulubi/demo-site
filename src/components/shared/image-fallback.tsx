@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -79,29 +80,26 @@ export function ImageFallback({
     };
 
     loadImage();
-  }, [src, retryCount, isMobile, userId, width]);
+  }, [src, retryCount, isMobile, userId, width, getOptimizedUrl]);
 
   return (
-    <div className="relative overflow-hidden">
+    <div className={cn("relative aspect-square w-full", className)}>
       {isLoading && (
         <div className="absolute inset-0">
           <Skeleton className="h-full w-full animate-shimmer" />
         </div>
       )}
       <Image
-        {...props}
         src={imgSrc}
         alt={alt}
-        width={width}
-        height={height}
+        fill
         className={cn(
           "transition-opacity duration-300",
           isLoading ? "opacity-0" : "opacity-100",
-          className
+          "object-cover"
         )}
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         loading={priority ? "eager" : "lazy"}
-        sizes={`(max-width: 768px) 100vw, ${width}px`}
-        quality={80}
         onError={() => {
           setImgSrc("/default-avatar.png");
           setIsLoading(false);

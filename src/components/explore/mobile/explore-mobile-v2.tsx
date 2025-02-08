@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeCard } from "../cards/swipe-card";
 import { AnimatePresence } from "framer-motion";
-import { Heart, X, User2, Bell, Undo, Star } from "lucide-react";
+import { Heart, X, User2,  Undo, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   recordSwipe,
@@ -19,6 +18,7 @@ import { EmptyMobileView } from "../cards/empty-mobile";
 import { LikesModal } from "../modals/likes-modal";
 import { ProfilePreviewModal } from "../modals/profile-preview-modal";
 import { useInterval } from "@/hooks/use-interval";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { handleLike, handleUnlike } from "@/lib/actions/like.actions";
 import { MatchesModal } from "../modals/matches-modal";
 import { FeedbackModal } from "@/components/shared/feedback-modal";
@@ -32,7 +32,7 @@ import { signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
-import { ImageFallback } from "@/components/shared/image-fallback";
+import confetti from "canvas-confetti";
 
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];
@@ -175,6 +175,7 @@ export function ExploreMobileV2({
     });
   }, [swipedProfiles, toast]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleLikeBack = async (userId: string) => {
     try {
       const result = await handleLike(userId);
@@ -184,15 +185,43 @@ export function ExploreMobileV2({
 
         if (result.isMatch && result.matchedProfile) {
           // Add to matches immediately
-          setMatches((prev) => [...prev, result.matchedProfile as Profile]);
+          setMatches((prev) => {
+            // Avoid duplicate matches
+            if (prev.some((p) => p.userId === result.matchedProfile!.userId)) {
+              return prev;
+            }
+            return [...prev, result.matchedProfile!];
+          });
+
+          // Show match modal with the matched profile
+          setMatchedProfile(result.matchedProfile);
+
+          // Trigger confetti
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+          });
+
+          toast({
+            title: "It's a match! ✨",
+            description: "You can now chat with each other!",
+            className:
+              "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-none",
+          });
         }
 
-        // Sync with server
-        syncMatchesAndLikes();
+        // Sync with server to ensure consistency
+        await syncMatchesAndLikes();
       }
       return result;
     } catch (error) {
       console.error("Error in handleLikeBack:", error);
+      toast({
+        title: "Oops! 🙈",
+        description: "Something went wrong while matching. Try again!",
+        variant: "destructive",
+      });
       return { success: false };
     }
   };
