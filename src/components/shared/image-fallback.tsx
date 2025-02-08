@@ -80,7 +80,7 @@ export function ImageFallback({
     };
 
     loadImage();
-  }, [src, retryCount, isMobile, userId, width]);
+  }, [src, retryCount, isMobile, userId, width, getOptimizedUrl]);
 
   return (
     <div className={cn("relative aspect-square w-full", className)}>

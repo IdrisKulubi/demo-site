@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeCard } from "../cards/swipe-card";
 import { AnimatePresence } from "framer-motion";
-import { Heart, X, User2, Bell, Undo, Star } from "lucide-react";
+import { Heart, X, User2,  Undo, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   recordSwipe,
@@ -19,6 +18,7 @@ import { EmptyMobileView } from "../cards/empty-mobile";
 import { LikesModal } from "../modals/likes-modal";
 import { ProfilePreviewModal } from "../modals/profile-preview-modal";
 import { useInterval } from "@/hooks/use-interval";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { handleLike, handleUnlike } from "@/lib/actions/like.actions";
 import { MatchesModal } from "../modals/matches-modal";
 import { FeedbackModal } from "@/components/shared/feedback-modal";
@@ -32,7 +32,6 @@ import { signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
-import { ImageFallback } from "@/components/shared/image-fallback";
 import confetti from "canvas-confetti";
 
 interface ExploreMobileV2Props {
@@ -176,6 +175,7 @@ export function ExploreMobileV2({
     });
   }, [swipedProfiles, toast]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleLikeBack = async (userId: string) => {
     try {
       const result = await handleLike(userId);
