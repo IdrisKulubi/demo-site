@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Profile } from "@/db/schema";
-import { Heart, X, ChevronRight } from "lucide-react";
+import { Heart, ChevronRight } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,7 @@ interface MatchCardProps {
 export function MatchCard({
   profile,
   onLikeBack,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onUnlike,
   isProcessing,
 }: MatchCardProps) {
@@ -83,7 +84,9 @@ export function MatchCard({
                 </>
               )}
             </Button>
-            <Button
+
+            {/* TODO: Add unlike button */}
+            {/* <Button
               size="sm"
               variant="ghost"
               onClick={() => onUnlike(profile.userId)}
@@ -91,7 +94,7 @@ export function MatchCard({
               className="hover:bg-rose-100/50 dark:hover:bg-rose-950/50 text-rose-500 dark:text-rose-400 min-w-[40px] p-2"
             >
               <X className="h-4 w-4" />
-            </Button>
+            </Button> */}
           </div>
         </div>
       </motion.div>
