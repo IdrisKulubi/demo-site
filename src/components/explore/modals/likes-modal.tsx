@@ -45,6 +45,7 @@ export function LikesModal({
         setRemovedIds((prev) => new Set([...prev, userId]));
 
         if (result.isMatch) {
+          // Show match celebration
           confetti({
             particleCount: 100,
             spread: 70,
@@ -54,17 +55,24 @@ export function LikesModal({
           toast({
             title: "It's a match! ✨",
             description: "You can now chat with each other!",
+            className:
+              "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-none",
           });
+
+          // Close the likes modal after a short delay to show the match modal
+          setTimeout(() => {
+            onClose();
+          }, 1500);
         }
 
-        // Update parent components to refresh the likes list
-        onUpdate?.();
+        // Update parent components to refresh the likes and matches lists
+        await onUpdate?.();
       }
     } catch (error) {
       console.error("Failed to like back", error);
       toast({
         title: "Oops! 🙈",
-        description: "Something went wrong while liking back. Try again!",
+        description: "Something went wrong while matching. Try again!",
         variant: "destructive",
       });
     } finally {

@@ -141,29 +141,13 @@ export async function recordSwipe(
   isMatch?: boolean;
   matchedProfile?: Profile;
 }> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return { success: false, error: "Not authenticated" };
-    }
-
-    // Check if there's an existing swipe to prevent duplicates
-    const existingSwipe = await db
-      .select()
-      .from(swipes)
-      .where(
-        and(
-          eq(swipes.swiperId, session.user.id),
-          eq(swipes.swipedId, profileId)
-        )
-      )
-      .limit(1);
-
-    if (existingSwipe.length > 0) {
-      return { success: false, error: "Already swiped on this profile" };
-    }
-
-    // Record the swipe
+    // Insert the current user's swipe record first
     await db.insert(swipes).values({
       swiperId: session.user.id,
       swipedId: profileId,
@@ -171,23 +155,22 @@ export async function recordSwipe(
       createdAt: new Date(),
     });
 
-    // If it's a like, check for a match
+    // If it's a like, check for a mutual like (i.e. the other user liked you already)
     if (type === "like") {
       const mutualLike = await db
         .select()
         .from(swipes)
         .where(
           and(
-            eq(swipes.swiperId, profileId),
+            eq(swipes.swiperId, profileId), // other user's swipe record
             eq(swipes.swipedId, session.user.id),
             eq(swipes.isLike, true)
           )
         )
         .limit(1);
 
-      // If there's a mutual like, create a match
       if (mutualLike.length > 0) {
-        // Create a match with a proper UUID
+        // Create a match only if a mutual like exists.
         const matchId = crypto.randomUUID();
         await db.insert(matches).values({
           id: matchId,

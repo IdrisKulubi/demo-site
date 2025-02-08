@@ -33,6 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { ImageFallback } from "@/components/shared/image-fallback";
+import confetti from "canvas-confetti";
 
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];
@@ -184,15 +185,43 @@ export function ExploreMobileV2({
 
         if (result.isMatch && result.matchedProfile) {
           // Add to matches immediately
-          setMatches((prev) => [...prev, result.matchedProfile as Profile]);
+          setMatches((prev) => {
+            // Avoid duplicate matches
+            if (prev.some((p) => p.userId === result.matchedProfile!.userId)) {
+              return prev;
+            }
+            return [...prev, result.matchedProfile!];
+          });
+
+          // Show match modal with the matched profile
+          setMatchedProfile(result.matchedProfile);
+
+          // Trigger confetti
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+          });
+
+          toast({
+            title: "It's a match! ✨",
+            description: "You can now chat with each other!",
+            className:
+              "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-none",
+          });
         }
 
-        // Sync with server
-        syncMatchesAndLikes();
+        // Sync with server to ensure consistency
+        await syncMatchesAndLikes();
       }
       return result;
     } catch (error) {
       console.error("Error in handleLikeBack:", error);
+      toast({
+        title: "Oops! 🙈",
+        description: "Something went wrong while matching. Try again!",
+        variant: "destructive",
+      });
       return { success: false };
     }
   };
