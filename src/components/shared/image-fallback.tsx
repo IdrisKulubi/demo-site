@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -32,13 +32,15 @@ export function ImageFallback({
   const [isLoading, setIsLoading] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
 
-  // Mobile-specific URL handling
-  const getOptimizedUrl = (url: string) => {
-    if (isMobile && url.includes("r2.dev")) {
-      return `${url}?width=${Math.min(width, 750)}&quality=75&format=webp`;
-    }
-    return url;
-  };
+  const getOptimizedUrl = useCallback(
+    (url: string) => {
+      if (isMobile && url.includes("r2.dev")) {
+        return `${url}?width=${Math.min(width, 750)}&quality=75&format=webp`;
+      }
+      return url;
+    },
+    [isMobile, width]
+  );
 
   useEffect(() => {
     const loadImage = async () => {
@@ -69,10 +71,7 @@ export function ImageFallback({
       }
 
       try {
-        const fallback = await fetch(`/api/profile/${userId}/photo`).then(
-          (res) => res.json()
-        );
-        setImgSrc(fallback.url || "/default-avatar.png");
+        setImgSrc("/default-avatar.png");
       } catch {
         setImgSrc("/default-avatar.png");
       }
