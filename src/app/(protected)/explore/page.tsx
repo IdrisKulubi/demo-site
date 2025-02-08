@@ -12,7 +12,6 @@ import { getProfile } from "@/lib/actions/profile.actions";
 import { ExploreMobileV2 } from "@/components/explore/mobile/explore-mobile-v2";
 import { checkProfileCompletion } from "@/lib/checks";
 import { FeedbackModal } from "@/components/shared/notification/maintenance-modal";
-import { ImageReminder } from "@/components/shared/notification/image-reminder";
 
 export default async function ExplorePage() {
   const session = await auth();
@@ -35,7 +34,6 @@ export default async function ExplorePage() {
 
   return (
     <div className="h-full">
-      <ImageReminder userPhotos={currentUserProfile?.photos as string[]} />
 
       <FeedbackModal />
 
