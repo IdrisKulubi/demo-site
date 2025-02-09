@@ -50,7 +50,8 @@ export function useSocket(url: string) {
         clearTimeout(reconnectTimeout.current);
       }
     };
-  }, [url, session?.user?.id]);
+  }, [url, session?.user?.id, socket]);
+
 
   return socket;
 }

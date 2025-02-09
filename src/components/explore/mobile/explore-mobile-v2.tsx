@@ -2,9 +2,9 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { Profile } from "@/db/schema";
-import { SwipeCard } from "../cards/swipe-card";
+import { SwipeableCard } from "../cards/swipeable-card";
 import { AnimatePresence } from "framer-motion";
-import { Heart, X, User2,  Undo, Star } from "lucide-react";
+import { Heart, User2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   recordSwipe,
@@ -33,6 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
+import { SwipeControls } from "../controls/swipe-controls";
 
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];
@@ -51,6 +52,7 @@ export function ExploreMobileV2({
 }: ExploreMobileV2Props) {
   const [profiles, setProfiles] = useState(initialProfiles);
   const [currentIndex, setCurrentIndex] = useState(initialProfiles.length - 1);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(
     null
   );
@@ -250,80 +252,48 @@ export function ExploreMobileV2({
   };
 
   return (
-    <div className="relative h-screen">
-      {currentIndex >= 0 ? (
+    <div className="relative h-[calc(100vh-4rem)] w-full overflow-hidden bg-background">
+      {profiles.length > 0 ? (
         <>
           <div className="relative w-[calc(100%-32px)] mx-auto h-[calc(100vh-5rem)]">
             <AnimatePresence>
               {profiles[currentIndex] && (
-                <SwipeCard
-                  key={profiles[currentIndex].userId}
-                  profile={profiles[currentIndex]}
-                  onSwipe={handleSwipe}
-                  onRevert={handleRevert}
-                  active={true}
-                  animate={swipeDirection}
-                  style={{
-                    position: "absolute",
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "16px",
-                  }}
-                  onViewProfile={() =>
-                    setPreviewProfile(profiles[currentIndex])
-                  }
-                >
-                  {/* Controls Inside Card */}
-                  <div className="absolute -bottom-20 left-0 right-0 flex justify-center items-center gap-6 z-10">
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="h-16 w-16 rounded-full border-none shadow-xl bg-white hover:bg-white/90 dark:bg-background dark:hover:bg-background/90 backdrop-blur-sm hover:scale-110 transition-transform duration-200"
-                      onClick={() => handleSwipe("left")}
-                      disabled={isAnimating}
-                      style={{
-                        boxShadow: "0 10px 25px rgba(239, 68, 68, 0.2)",
-                        border: "2px solid rgb(239, 68, 68)",
-                      }}
-                    >
-                      <X className="h-8 w-8 text-red-500" />
-                    </Button>
-
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="h-12 w-12 rounded-full border-none shadow-xl bg-white hover:bg-white/90 dark:bg-background dark:hover:bg-background/90 backdrop-blur-sm hover:scale-110 transition-transform duration-200"
-                      onClick={handleRevert}
-                      disabled={swipedProfiles.length === 0 || isAnimating}
-                      style={{
-                        boxShadow: "0 10px 25px rgba(59, 130, 246, 0.2)",
-                        border: "2px solid rgb(59, 130, 246)",
-                      }}
-                    >
-                      <Undo className="h-6 w-6 text-blue-500" />
-                    </Button>
-
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="h-16 w-16 rounded-full border-none shadow-xl bg-white hover:bg-white/90 dark:bg-background dark:hover:bg-background/90 backdrop-blur-sm hover:scale-110 transition-transform duration-200"
-                      onClick={() => handleSwipe("right")}
-                      disabled={isAnimating}
-                      style={{
-                        boxShadow: "0 10px 25px rgba(236, 72, 153, 0.2)",
-                        border: "2px solid rgb(236, 72, 153)",
-                      }}
-                    >
-                      <Heart className="h-8 w-8 text-pink-500" />
-                    </Button>
-                  </div>
-                </SwipeCard>
+                <>
+                  <SwipeableCard
+                    key={profiles[currentIndex].userId}
+                    profile={
+                      profiles[currentIndex] as Profile & { photos?: string[] }
+                    }
+                    onSwipe={handleSwipe}
+                    active={true}
+                  />
+                </>
               )}
             </AnimatePresence>
           </div>
 
+          {/* Swipe Controls - Fixed at bottom */}
+          <div className="fixed bottom-12 left-0 right-0 px-4 pb-4 z-50">
+            <SwipeControls
+              onSwipeLeft={() => handleSwipe("left")}
+              onSwipeRight={() => handleSwipe("right")}
+              onUndo={handleRevert}
+              onSuperLike={() => {
+                toast({
+                  title: "bestie wait ⭐️✨",
+                  description:
+                    "super likes coming soon & they're gonna be lit fr fr 🔥",
+                  className:
+                    "bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-none",
+                });
+              }}
+              disabled={isAnimating || currentIndex < 0}
+              className="mx-auto max-w-lg"
+            />
+          </div>
+
           {/* Bottom Navigation */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-background/80 backdrop-blur-lg border-t border-border">
+          <div className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border/50">
             <div className="flex justify-around items-center h-16 px-4">
               <Button
                 variant="ghost"
