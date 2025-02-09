@@ -1,58 +1,48 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import type { messages, users } from "@/db/schema";
+import { motion } from "framer-motion";
 
 export function MessageBubble({
   message,
   isOwn,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   showStatus,
+  showTimestamp = true,
+  senderPhoto,
 }: {
   message: typeof messages.$inferSelect & {
     sender?: typeof users.$inferSelect | string;
   };
   isOwn: boolean;
   showStatus: boolean;
+  senderPhoto: string | null;
 }) {
-  const senderPhoto =
-    typeof message.sender === "object" && message.sender
-      ? (message.sender as typeof users.$inferSelect).profilePhoto
-      : null;
-
   return (
-    <div className={cn("flex gap-2", isOwn && "flex-row-reverse")}>
-      {!isOwn && (
-        <Avatar className="h-8 w-8">
-          <AvatarImage src={senderPhoto ?? ""} />
-        </Avatar>
-      )}
-
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn("flex flex-col gap-1", isOwn ? "items-end" : "items-start")}
+    >
       <div
         className={cn(
-          "p-3 rounded-2xl max-w-[70%]",
+          "rounded-2xl p-3 max-w-[80%]",
           isOwn
             ? "bg-pink-500 text-white rounded-br-none"
-            : "bg-gray-100 dark:bg-gray-800 rounded-bl-none"
+            : "bg-muted rounded-bl-none"
         )}
       >
-        <p>{message.content}</p>
-        <div className="flex items-center gap-1.5 mt-1.5 justify-end">
-          <span className="text-xs opacity-70">
-            {new Date(message.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-
-          </span>
-          {isOwn && (
-            <span className="text-xs">
-              {message.isRead ? "👁️✔️" : message.id? "✔️" : "🕒"}
-            </span>
-          )}
-        </div>
+        <p className="text-sm">{message.content}</p>
       </div>
-    </div>
+      {showTimestamp && (
+        <span className="text-xs text-muted-foreground px-2">
+          {new Date(message.createdAt).toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit",
+          })}
+        </span>
+      )}
+    </motion.div>
   );
 }

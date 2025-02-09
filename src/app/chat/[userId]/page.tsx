@@ -9,5 +9,5 @@ export default async function ChatPage(
   const params = await props.params;
   const { match, recipient } = await getMatchDetails(params.userId);
 
-  return <ChatWindow matchId={match.id} recipient={recipient} />;
+  return <ChatWindow matchId={match.id} recipient={recipient} currentUserId={recipient.user.id} initialMessages={[]} />;
 }

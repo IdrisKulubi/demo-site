@@ -1,0 +1,1 @@
+ALTER TABLE "message" ADD COLUMN "type" text DEFAULT 'text' NOT NULL;

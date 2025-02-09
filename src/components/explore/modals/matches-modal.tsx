@@ -4,9 +4,9 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Profile } from "@/db/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
-import { motion, AnimatePresence } from "framer-motion";
+import {  AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { WhatsAppButton } from "@/components/shared/whatsapp-button";
+import { ChatWindow } from '@/components/chat/chat-window';
 
 interface MatchesModalProps {
   isOpen: boolean;
@@ -19,7 +19,7 @@ export function MatchesModal({
   isOpen,
   onClose,
   matches,
-  // currentUser,
+   currentUser,
 }: MatchesModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -38,40 +38,29 @@ export function MatchesModal({
         <ScrollArea className="h-[60vh]">
           <div className="space-y-4">
             <AnimatePresence>
-              {matches.map((profile) => (
-                <motion.div
-                  key={profile.userId}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center justify-between bg-white/50 dark:bg-background/50 p-3 rounded-2xl border border-purple-100 dark:border-purple-900"
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-14 w-14 border-2 border-purple-200 dark:border-purple-800">
-                      <AvatarImage src={profile.profilePhoto || ""} />
-                      <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white">
-                        {profile.firstName?.[0]}
-                        {profile.lastName?.[0]}
-                      </AvatarFallback>
+              {matches.map((match) => (
+                <div key={match.id} className="border rounded-lg p-4">
+                  <div className="flex items-center gap-4 mb-4">
+                    <Avatar>
+                      <AvatarImage src={match.profilePhoto || ""} />
+                      <AvatarFallback>{match.firstName[0]}</AvatarFallback>
                     </Avatar>
-                    <div className="flex-1">
-                      <h3 className="font-medium">
-                        {profile.firstName} {profile.lastName}
-                      </h3>
+                    <div>
+                      <h3 className="font-semibold">{match.firstName}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {profile.course} • {profile.yearOfStudy}
+                        Matched {new Date(match.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
-                  <WhatsAppButton
-                    phoneNumber={profile.phoneNumber || ""}
-                    size="sm"
-                  />
-                  {/* <ChatButton
-                    matchId={profile.matchId || ""}
+                  <ChatWindow
+                    matchId={match.id}
+                    recipient={match}
                     currentUserId={currentUser.id}
-                    unreadCount={profile.unreadMessages || 0}
-                  /> */}
-                </motion.div>
+                    initialMessages={match.messages || []}
+
+                  />
+
+                </div>
               ))}
             </AnimatePresence>
 

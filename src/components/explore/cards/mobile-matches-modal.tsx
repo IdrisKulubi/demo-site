@@ -10,8 +10,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { ChatButton } from "@/components/chat/chat-button";
+import { MessageCircle } from "lucide-react";
 
 interface MobileMatchesModalProps {
   isOpen: boolean;
@@ -72,15 +72,23 @@ export function MobileMatchesModal({
                       </p>
                     </div>
                   </div>
-                  <WhatsAppButton
-                    phoneNumber={profile.phoneNumber || ""}
-                    size="sm"
-                  />
-                  <ChatButton
-                    matchId={profile.matchId || ""}
-                    currentUserId={currentUser.id}
-                    unreadCount={profile.unreadMessages || 0}
-                  />
+
+                  <motion.div className="relative">
+                    {profile.unreadMessages && profile.unreadMessages > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full h-5 w-5 text-xs flex items-center justify-center">
+                        {profile.unreadMessages}
+                      </span>
+                    )}
+                    <ChatButton
+                      matchId={profile.matchId || ""}
+                      currentUserId={currentUser.id}
+                      unreadCount={profile.unreadMessages || 0}
+                      recipient={profile}
+                      className="flex items-center gap-2 p-2 rounded-full bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                    >
+                      <MessageCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                    </ChatButton>
+                  </motion.div>
                 </motion.div>
               ))}
             </AnimatePresence>

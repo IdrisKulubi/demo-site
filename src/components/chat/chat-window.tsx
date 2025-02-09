@@ -7,38 +7,99 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import type { Profile } from "@/db/schema";
+import type { Profile, Message } from "@/db/schema";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePusher } from "@/hooks/use-pusher";
+import { sendMessage } from "@/lib/actions/chat.actions";
+import { ArrowLeft } from "lucide-react";
+import { useInView } from "react-intersection-observer";
+
+interface ChatWindowProps {
+  matchId: string;
+  recipient: Profile;
+  currentUserId: string;
+  initialMessages: Message[];
+}
 
 export function ChatWindow({
   matchId,
   recipient,
-}: {
-  matchId: string;
-  recipient: Profile;
-}) {
+  currentUserId,
+  initialMessages,
+}: ChatWindowProps) {
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [draft, setDraft] = useState("");
-  const { sendMessage, setTyping, messages, onlineStatus } = useChat();
+  const { setTyping, onlineStatus } = useChat();
   const [isTypingLocal, setIsTypingLocal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeout = useRef<NodeJS.Timeout>(null);
   const [loaded, setLoaded] = useState(false);
+  const { channel } = usePusher(`private-match-${matchId}`);
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const { ref: loadMoreRef, inView } = useInView();
+  const [hasMore, setHasMore] = useState(true);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  useEffect(() => {
+    const handleNewMessage = (message: Message) => {
+      setMessages((prev) => [...prev, message]);
+    };
+
+    if (channel) {
+      channel.bind("new-message", handleNewMessage);
+    }
+
+    return () => {
+      if (channel) {
+        channel.unbind_all();
+      }
+    };
+  }, [channel]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = () => {
-    if (draft.trim()) {
-      sendMessage(draft);
+  useEffect(() => {
+    if (inView && hasMore && !loadingMore) {
+      setLoadingMore(true);
+      setTimeout(() => {
+        setPage((prev) => prev + 1);
+        setLoadingMore(false);
+      }, 1000);
+    }
+  }, [inView, hasMore, loadingMore]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleSend = async () => {
+    if (draft.trim() && matchId) {
+      const optimisticId = Date.now().toString();
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: optimisticId,
+          matchId,
+          senderId: currentUserId,
+          content: draft,
+          createdAt: new Date(),
+          type: "text",
+          isRead: false,
+          isOptimistic: true,
+        } as Message,
+      ]);
+
       setDraft("");
       setTyping(matchId, false);
+
+      const result = await sendMessage(matchId, draft);
+      if (!result.success) {
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+        console.error("Failed to send message:", result.error);
+      }
     }
   };
 
@@ -56,10 +117,23 @@ export function ChatWindow({
     }, 2000);
   };
 
+  if (!matchId) {
+    console.error("ChatWindow: matchId is required");
+    return null;
+  }
+
   return (
     <div className="flex flex-col h-[100dvh] bg-white dark:bg-background">
-      {/* Chat Header */}
+      {/* Updated Header with Back Button */}
       <div className="flex items-center p-4 border-b border-pink-100 dark:border-pink-900">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => window.history.back()}
+          className="mr-2"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
         <Avatar className="h-10 w-10">
           {!loaded && (
             <Skeleton className="h-full w-full rounded-full bg-muted/50 animate-pulse" />
@@ -91,44 +165,28 @@ export function ChatWindow({
             <p className="text-xs text-muted-foreground">
               {onlineStatus[recipient.userId] ? "Online" : "Offline"}
             </p>
+            {isTypingLocal && (
+              <span className="text-xs text-muted-foreground">typing...</span>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Messages Area */}
-      <ScrollArea className="flex-1 px-4 py-4">
-        <div className="space-y-4">
+      {/* Updated Messages Area with Infinite Scroll */}
+      <ScrollArea className="flex-1">
+        <div className="space-y-4 p-4">
+          {hasMore && <div ref={loadMoreRef} className="h-8" />}
           {messages.map((message) => (
             <MessageBubble
               key={message.id}
               message={message}
-              isOwn={message.senderId === recipient.userId}
+              isOwn={message.senderId === currentUserId}
               showStatus={true}
+              senderPhoto={recipient.profilePhoto}
             />
           ))}
           <div ref={messagesEndRef} />
         </div>
-
-        {/* Typing Indicator */}
-        <AnimatePresence>
-          {isTypingLocal && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center gap-2 mt-4"
-            >
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce delay-100" />
-                <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce delay-200" />
-                <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce delay-300" />
-              </div>
-              <span className="text-sm text-muted-foreground">
-                {recipient.firstName} is typing...
-              </span>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </ScrollArea>
 
       {/* Input Area */}

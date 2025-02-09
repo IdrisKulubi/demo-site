@@ -193,12 +193,17 @@ export const messages = pgTable("message", {
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   isRead: boolean("is_read").default(false).notNull(),
+  type: text("type").default("text").notNull(),
 });
 
 export const messagesRelations = relations(messages, ({ one }) => ({
   sender: one(users, {
     fields: [messages.senderId],
     references: [users.id],
+  }),
+  match: one(matches, {
+    fields: [messages.matchId],
+    references: [matches.id],
   }),
 }));
 
@@ -251,6 +256,7 @@ export type Profile = typeof profiles.$inferSelect & {
   userId: string;
   unreadMessages?: number;
   matchId?: string;
+  messages?: (typeof messages.$inferSelect)[];
 };
 
 // Export the Message type if needed

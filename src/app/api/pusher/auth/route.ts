@@ -1,3 +1,4 @@
+import { auth } from '@/auth';
 import { NextResponse } from "next/server";
 import Pusher from "pusher";
 
@@ -9,12 +10,21 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
-export async function POST(req: Request) {
-  const data = await req.text();
-  const [socketId, channelName] = data
-    .split("&")
-    .map((part) => part.split("=")[1]);
+export async function POST(request: Request) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const auth = pusher.authenticate(socketId, channelName);
-  return NextResponse.json(auth);
+  const data = await request.text();
+  const params = new URLSearchParams(data);
+  
+  try {
+    const authResponse = pusher.authorizeChannel(
+      params.get('socket_id')!,
+      params.get('channel_name')!
+    );
+    return NextResponse.json(authResponse);
+  } catch (error) {
+    console.error('Pusher authorization error:', error);
+    return NextResponse.json({ error: 'Auth failed' }, { status: 403 });
+  }
 }

@@ -1,26 +1,31 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Chat } from "./chat";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { ChatWindow } from "./chat-window";
+import { Profile } from "@/db/schema";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MessageCircle } from "lucide-react";
 
 interface ChatButtonProps {
   matchId: string;
   currentUserId: string;
   unreadCount: number;
+  recipient: Profile;
 }
 
 export function ChatButton({
   matchId,
   currentUserId,
   unreadCount,
+  recipient,
 }: ChatButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  if (!matchId) {
+    console.error("ChatButton: matchId is required");
+    return null;
+  }
 
   return (
     <>
@@ -28,35 +33,37 @@ export function ChatButton({
         variant="ghost"
         size="icon"
         onClick={() => setIsOpen(true)}
-        className="relative"
+        className="relative hover:bg-pink-50 dark:hover:bg-pink-900/20"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-          />
-        </svg>
+        <MessageCircle className="h-5 w-5 text-pink-500" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full h-5 w-5 text-xs flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full h-4 w-4 text-xs flex items-center justify-center">
             {unreadCount}
           </span>
         )}
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Chat</DialogTitle>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader className="flex items-center gap-4 p-4 border-b">
+            <Avatar>
+              <AvatarImage src={recipient.profilePhoto || ""} />
+              <AvatarFallback>{recipient.firstName[0]}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-semibold">{recipient.firstName}</h3>
+              <p className="text-sm text-muted-foreground">
+                {recipient.bio?.substring(0, 50)}...
+              </p>
+            </div>
           </DialogHeader>
-          <Chat currentUser={currentUserId} matchId={matchId} />
+
+          <ChatWindow
+            matchId={matchId}
+            recipient={recipient}
+            currentUserId={currentUserId}
+            initialMessages={[]}
+          />
         </DialogContent>
       </Dialog>
     </>
