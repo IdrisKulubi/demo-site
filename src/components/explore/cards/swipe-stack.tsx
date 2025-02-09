@@ -3,7 +3,7 @@
 
 import { useState, useCallback } from "react";
 import { Profile } from "@/db/schema";
-import { SwipeCard } from "./swipe-card";
+import { SwipeableCard } from "./swipeable-card";
 import { AnimatePresence } from "framer-motion";
 import { recordSwipe, undoLastSwipe } from "@/lib/actions/explore.actions";
 import { MatchModal } from "@/components/explore/modals/match-modal";
@@ -130,24 +130,13 @@ export function SwipeStack({
           <div className="relative h-[650px] w-full flex items-center justify-center">
             <AnimatePresence>
               {profiles[currentIndex] ? (
-                <SwipeCard
+                <SwipeableCard
                   key={profiles[currentIndex].userId}
-                  profile={profiles[currentIndex]}
+                  profile={profiles[currentIndex] as Profile & { photos: string[] }}
                   onSwipe={handleSwipe}
                   onRevert={handleRevert}
                   active={true}
-                  animate={swipeDirection}
-                  variants={swipeVariants}
-                  isAnimating={isAnimating}
-                  canRevert={swipedProfiles.length > 0}
-                  style={{
-                    position: "absolute",
-                    width: "100%",
-                    height: "90%",
-                    maxWidth: "450px",
-                    borderRadius: "16px",
-                    boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)",
-                  }}
+
                 />
               ) : (
                 <NoMoreProfiles

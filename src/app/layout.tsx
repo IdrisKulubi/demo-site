@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Permanent_Marker } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { MusicProvider } from "@/context/music-context";
@@ -20,6 +20,12 @@ const fontSans = Geist({
   variable: "--font-sans",
 });
 
+const graffiti = Permanent_Marker({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-graffiti",
+});
+
 export const metadata: Metadata = constructMetadata();
 
 export default async function RootLayout({
@@ -30,7 +36,7 @@ export default async function RootLayout({
   const session = await auth();
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${graffiti.variable}`}>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
