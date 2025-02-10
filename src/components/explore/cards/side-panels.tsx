@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Heart, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Profile } from "@/db/schema";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ViewMoreProfile } from "./view-more-profile";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
+import { getMatches } from "@/lib/actions/explore.actions";
 
 interface SidePanelsProps {
   profiles: Profile[];
@@ -28,6 +29,28 @@ export function SidePanels({
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [activeTab, setActiveTab] = useState<"likes" | "matches">("likes");
   const [isProcessing, setIsProcessing] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [matches, setMatches] = useState<Profile[]>([]);
+
+  useEffect(() => {
+    const fetchMatches = async () => {
+      const result = await getMatches();
+      if (!result.error) {
+        setMatches(result.matches as Profile[]);
+      }
+    };
+    fetchMatches();
+  }, []);
+
+  // Deduplicate profiles based on userId
+  const uniqueProfiles = profiles.filter((profile, index, self) => 
+    index === self.findIndex((p) => p.userId === profile.userId)
+  );
+
+  // Deduplicate likedByProfiles based on userId
+  const uniqueLikedByProfiles = likedByProfiles.filter((profile, index, self) => 
+    index === self.findIndex((p) => p.userId === profile.userId)
+  );
 
   return (
     <div className="hidden lg:block w-[380px] h-[calc(100vh-6rem)]">
@@ -45,9 +68,9 @@ export function SidePanels({
             <div className="flex items-center gap-2">
               <Heart className="w-4 h-4" />
               <span>Likes You</span>
-              {likedByProfiles.length > 0 && (
+              {uniqueLikedByProfiles.length > 0 && (
                 <span className="bg-pink-500 text-white text-xs px-2 py-0.5 rounded-full">
-                  {likedByProfiles.length}
+                  {uniqueLikedByProfiles.length}
                 </span>
               )}
             </div>
@@ -58,9 +81,9 @@ export function SidePanels({
           >
             <div className="flex items-center gap-2">
               <span>Matches</span>
-              {profiles.length > 0 && (
+              {uniqueProfiles.length > 0 && (
                 <span className="bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full">
-                  {profiles.length}
+                  {uniqueProfiles.length}
                 </span>
               )}
             </div>
@@ -74,84 +97,32 @@ export function SidePanels({
           >
             <ScrollArea className="h-full p-4">
               <AnimatePresence mode="popLayout">
-                {likedByProfiles.map((profile) => (
-                  <motion.div
+                {uniqueLikedByProfiles.map((profile) => (
+                  <ProfileCard
                     key={`liked-by-${profile.userId}`}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -100 }}
-                    className="group relative bg-white dark:bg-background rounded-xl p-3 mb-3 shadow-sm border border-pink-100 dark:border-pink-900 hover:border-pink-300 dark:hover:border-pink-700 transition-all cursor-pointer"
+                    profile={profile}
+                    variant="likes"
+                    onLikeBack={async (profileId) => {
+                      setIsProcessing(true);
+                      try {
+                        await onLikeBack(profileId);
+                      } finally {
+                        setIsProcessing(false);
+                      }
+                    }}
+                    onUnlike={async (profileId) => {
+                      setIsProcessing(true);
+                      try {
+                        await onUnlike(profileId);
+                      } finally {
+                        setIsProcessing(false);
+                      }
+                    }}
+                    isProcessing={isProcessing}
                     onClick={() => setSelectedProfile(profile)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <Avatar className="h-14 w-14 border-2 border-pink-200 dark:border-pink-800">
-                          <AvatarImage
-                            src={profile.profilePhoto || profile.photos?.[0]}
-                            width={56}
-                            height={56}
-                            alt={`${profile.firstName}'s photo`}
-                          />
-                          <AvatarFallback className="bg-gradient-to-br from-pink-400 to-pink-600 text-white">
-                            {profile.firstName?.[0]}
-                            {profile.lastName?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <motion.div
-                          className="absolute -right-1 -bottom-1 text-lg"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: 0.2 }}
-                        >
-                          💝
-                        </motion.div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-base">
-                          {profile.firstName}, {profile.age}
-                        </h3>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {profile.course}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={async () => {
-                            setIsProcessing(true);
-                            await onLikeBack(profile.userId);
-                            setIsProcessing(false);
-                          }}
-                          disabled={isProcessing}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-pink-100/50 dark:hover:bg-pink-950/50 text-pink-500 dark:text-pink-400"
-                        />
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={async () => {
-                            setIsProcessing(true);
-                            await onUnlike(profile.userId);
-                            setIsProcessing(false);
-                          }}
-                          disabled={isProcessing}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-100/50 dark:hover:bg-rose-950/50 text-rose-500 dark:text-rose-400"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-
-                        <WhatsAppButton
-                          phoneNumber={profile.phoneNumber || ""}
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
+                  />
                 ))}
-
-                {likedByProfiles.length === 0 && (
+                {uniqueLikedByProfiles.length === 0 && (
                   <EmptyState
                     icon="💝"
                     title="No likes yet"
@@ -168,83 +139,17 @@ export function SidePanels({
           >
             <ScrollArea className="h-full p-4">
               <AnimatePresence mode="popLayout">
-                {profiles.map((profile) => (
-                  <motion.div
+                {uniqueProfiles.map((profile) => (
+                  <ProfileCard
                     key={`matched-with-${profile.userId}`}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -100 }}
-                    className="group relative bg-white dark:bg-background rounded-xl p-3 mb-3 shadow-sm border border-purple-100 dark:border-purple-900 hover:border-purple-300 dark:hover:border-purple-700 transition-all"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <Avatar className="h-14 w-14 border-2 border-purple-200 dark:border-purple-800">
-                          <AvatarImage
-                            src={profile.profilePhoto || profile.photos?.[0]}
-                            width={56}
-                            height={56}
-                            alt={`${profile.firstName}'s photo`}
-                          />
-                          <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white">
-                            {profile.firstName?.[0]}
-                            {profile.lastName?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <motion.div
-                          className="absolute -right-1 -bottom-1 text-lg"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: 0.2 }}
-                        >
-                          ✨
-                        </motion.div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-base">
-                          {profile.firstName}, {profile.age}
-                        </h3>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {profile.course}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={async () => {
-                            setIsProcessing(true);
-                            await onLikeBack(profile.userId);
-                            setIsProcessing(false);
-                          }}
-                          disabled={isProcessing}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-pink-100/50 dark:hover:bg-pink-950/50 text-pink-500 dark:text-pink-400"
-                        />
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={async () => {
-                            setIsProcessing(true);
-                            await onUnlike(profile.userId);
-                            setIsProcessing(false);
-                          }}
-                          disabled={isProcessing}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-100/50 dark:hover:bg-rose-950/50 text-rose-500 dark:text-rose-400"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-
-                        <WhatsAppButton
-                          phoneNumber={profile.phoneNumber || ""}
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
+                    profile={profile}
+                    variant="matches"
+                    onLikeBack={onLikeBack}
+                    onUnlike={onUnlike}
+                    isProcessing={isProcessing}
+                  />
                 ))}
-
-                {profiles.length === 0 && (
+                {uniqueProfiles.length === 0 && (
                   <EmptyState
                     icon="✨"
                     title="No matches yet"
@@ -266,5 +171,111 @@ export function SidePanels({
         />
       )}
     </div>
+  );
+}
+
+function ProfileCard({
+  profile,
+  variant,
+  onLikeBack,
+  onUnlike,
+  isProcessing,
+  onClick,
+}: {
+  profile: Profile;
+  variant: "likes" | "matches";
+  onLikeBack: (profileId: string) => Promise<void>;
+  onUnlike: (profileId: string) => Promise<void>;
+  isProcessing: boolean;
+  onClick?: () => void;
+}) {
+  const colors = {
+    likes: {
+      border: "border-pink-100 dark:border-pink-900",
+      hoverBorder: "hover:border-pink-300 dark:hover:border-pink-700",
+      avatarBorder: "border-pink-200 dark:border-pink-800",
+      emoji: "💝",
+    },
+    matches: {
+      border: "border-purple-100 dark:border-purple-900",
+      hoverBorder: "hover:border-purple-300 dark:hover:border-purple-700",
+      avatarBorder: "border-purple-200 dark:border-purple-800",
+      emoji: "✨",
+    },
+  };
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      className={`group relative bg-white dark:bg-background rounded-lg p-2 mb-2 shadow-sm border ${
+        colors[variant].border
+      } ${colors[variant].hoverBorder} transition-all ${
+        onClick ? "cursor-pointer" : ""
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <div className="relative">
+          <Avatar className={`h-12 w-12 border-2 ${colors[variant].avatarBorder}`}>
+            <AvatarImage
+              src={profile.profilePhoto || profile.photos?.[0]}
+              width={48}
+              height={48}
+              alt={`${profile.firstName}'s photo`}
+            />
+            <AvatarFallback className={`text-sm bg-gradient-to-br from-${variant === 'likes' ? 'pink' : 'purple'}-400 to-${variant === 'likes' ? 'pink' : 'purple'}-600 text-white`}>
+              {profile.firstName?.[0]}
+              {profile.lastName?.[0]}
+            </AvatarFallback>
+          </Avatar>
+          <motion.div
+            className="absolute -right-1 -bottom-1 text-base"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            {colors[variant].emoji}
+          </motion.div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-sm">
+            {profile.firstName}, {profile.age}
+          </h3>
+          <p className="text-xs text-muted-foreground truncate">
+            {profile.course}
+          </p>
+        </div>
+        <div className="flex gap-1">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={async (e) => {
+              e.stopPropagation();
+              await onLikeBack(profile.userId);
+            }}
+            disabled={isProcessing}
+            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-pink-100/50 dark:hover:bg-pink-950/50 text-pink-500 dark:text-pink-400"
+          />
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={async (e) => {
+              e.stopPropagation();
+              await onUnlike(profile.userId);
+            }}
+            disabled={isProcessing}
+            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-100/50 dark:hover:bg-rose-950/50 text-rose-500 dark:text-rose-400"
+          >
+            <X className="h-3 w-3" />
+          </Button>
+          <WhatsAppButton
+            phoneNumber={profile.phoneNumber || ""}
+            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+          />
+        </div>
+      </div>
+    </motion.div>
   );
 }
