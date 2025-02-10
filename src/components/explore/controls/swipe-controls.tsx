@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 interface SwipeControlsProps {
   onSwipeLeft: () => void;
@@ -11,6 +11,7 @@ interface SwipeControlsProps {
   onSuperLike?: () => void;
   className?: string;
   disabled?: boolean;
+  currentProfileId?: string;
 }
 
 export function SwipeControls({
@@ -20,19 +21,38 @@ export function SwipeControls({
   onSuperLike,
   className,
   disabled,
+  currentProfileId,
 }: SwipeControlsProps) {
   const [activeButton, setActiveButton] = useState<
     "left" | "right" | "undo" | "superLike" | null
   >(null);
 
-  const handleButtonClick = (
-    type: "left" | "right" | "undo" | "superLike",
-    handler: () => void
-  ) => {
-    setActiveButton(type);
-    handler();
-    setTimeout(() => setActiveButton(null), 200); // Reset after 200ms
-  };
+  const handleButtonClick = useCallback(
+    async (type: "left" | "right" | "undo" | "superLike", handler: () => void) => {
+      if (disabled) return;
+      
+      setActiveButton(type);
+
+      const swipeHandler = currentProfileId 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ? (window as any )[`handleSwipe_${currentProfileId}`] 
+        : null;
+
+      if (type === "left" || type === "right") {
+        if (swipeHandler) {
+          swipeHandler(type);
+          setTimeout(handler, 600);
+        } else {
+          handler();
+        }
+      } else {
+        handler();
+      }
+
+      setTimeout(() => setActiveButton(null), 200);
+    },
+    [disabled, currentProfileId]
+  );
 
   return (
     <div className={cn("flex items-center justify-center gap-4", className)}>

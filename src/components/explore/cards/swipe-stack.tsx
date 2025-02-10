@@ -87,7 +87,7 @@ export function SwipeStack({
         setCurrentIndex((prev) => prev - 1);
         setSwipeDirection(null);
         setIsAnimating(false);
-      }, 300);
+      }, 600);
     },
     [currentIndex, isAnimating, profiles, toast]
   );

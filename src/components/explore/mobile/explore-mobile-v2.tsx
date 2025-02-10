@@ -288,6 +288,7 @@ export function ExploreMobileV2({
               }}
               disabled={isAnimating || currentIndex < 0}
               className="mx-auto max-w-lg"
+              currentProfileId={profiles[currentIndex]?.userId}
             />
           </div>
 
