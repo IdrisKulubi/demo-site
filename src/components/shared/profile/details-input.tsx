@@ -11,11 +11,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Heart, GraduationCap, Calendar } from "lucide-react";
+import { Heart, GraduationCap, Calendar, Phone } from "lucide-react";
 import { genders, ageRange } from "@/lib/constants";
 import { ProfileFormData } from "@/lib/actions/profile.actions";
 import { Control } from "react-hook-form";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { parsePhoneNumber, isValidPhoneNumber, CountryCode, parsePhoneNumberWithError } from 'libphonenumber-js';
+import {
+  Select as PhoneSelect,
+  SelectContent as PhoneSelectContent,
+  SelectItem as PhoneSelectItem,
+  SelectTrigger as PhoneSelectTrigger,
+  SelectValue as PhoneSelectValue,
+} from "@/components/ui/select";
+import { countries } from "@/lib/constants/countries";
 
 interface DetailsInputProps {
   values: {
@@ -63,18 +72,67 @@ export function DetailsInput({
   children,
   control,
 }: DetailsInputProps) {
-  useEffect(() => {
-    return;
-  }, []);
+  const [selectedCountry, setSelectedCountry] = useState<CountryCode>("KE");
+  const [phoneInput, setPhoneInput] = useState(values.phoneNumber || "");
+  const [isValid, setIsValid] = useState(false);
+  const [formattedNumber, setFormattedNumber] = useState("");
 
-  const validatePhoneNumber = (phone: string) => {
-    const phoneRegex = /^[0-9+\-\s()]+$/;
-    return phoneRegex.test(phone) && phone.length >= 10;
+  // Initialize phone number format if there's an initial value
+  useEffect(() => {
+    if (values.phoneNumber && values.phoneNumber !== phoneInput) {
+      setPhoneInput(values.phoneNumber);
+    }
+  }, [values.phoneNumber, phoneInput]);
+
+  // Validate and format phone number
+  useEffect(() => {
+    try {
+      if (!phoneInput) {
+        setIsValid(false);
+        setFormattedNumber("");
+        return;
+      }
+
+      const phoneNumber = parsePhoneNumberWithError(phoneInput, selectedCountry);
+      const valid = phoneNumber.isValid();
+      
+      setIsValid(valid);
+      if (valid) {
+        const formatted = phoneNumber.formatInternational();
+        setFormattedNumber(formatted);
+        // Only update the form value if the number is valid
+        if (phoneNumber.format("E.164") !== values.phoneNumber) {
+          onChange("phoneNumber", phoneNumber.format("E.164"));
+        }
+      } else {
+        setFormattedNumber("");
+      }
+    } catch (error) {
+      setIsValid(false);
+      setFormattedNumber("");
+    }
+  }, [phoneInput, selectedCountry]);
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^\d+\s()-]/g, "");
+    setPhoneInput(value);
   };
 
-  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    onChange("phoneNumber", value);
+  const handleCountryChange = (country: CountryCode) => {
+    setSelectedCountry(country);
+    // Don't clear the input when changing country, just revalidate with new country code
+    if (phoneInput) {
+      try {
+        const phoneNumber = parsePhoneNumberWithError(phoneInput, country);
+        if (phoneNumber.isValid()) {
+          onChange("phoneNumber", phoneNumber.format("E.164"));
+        }
+      } catch (error) {
+        // Invalid number for new country, clear the input
+        setPhoneInput("");
+        onChange("phoneNumber", "");
+      }
+    }
   };
 
   return (
@@ -232,37 +290,74 @@ export function DetailsInput({
 
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-pink-500" />
+            <Phone className="w-4 h-4 text-pink-500" />
             Phone Number 📱
           </Label>
-          <Input
-            value={values.phoneNumber?.toString() || ""}
-            onChange={(e) => {
-              const formatted = e.target.value.replace(/[^0-9+-\s()]/g, "");
-              onChange("phoneNumber", formatted);
-            }}
-            placeholder="e.g., +254 712 345 678"
-            className={`bg-pink-50/50 dark:bg-pink-950/50 border-pink-200 ${
-              errors?.phoneNumber ? "border-red-500" : ""
-            }`}
-            required
-            type="tel"
-            pattern="[0-9+\-\s()]+"
-          />
+          <div className="flex gap-2">
+            <PhoneSelect
+              value={selectedCountry}
+              onValueChange={(value) => handleCountryChange(value as CountryCode)}
+            >
+              <PhoneSelectTrigger className="w-[120px] bg-pink-50/50 dark:bg-pink-950/50 border-pink-200">
+                <PhoneSelectValue placeholder="Country">
+                  <span className="flex items-center gap-2">
+                    <span>{countries.find(c => c.code === selectedCountry)?.flag}</span>
+                    <span className="text-sm">{countries.find(c => c.code === selectedCountry)?.dialCode}</span>
+                  </span>
+                </PhoneSelectValue>
+              </PhoneSelectTrigger>
+              <PhoneSelectContent>
+                {countries.map((country) => (
+                  <PhoneSelectItem
+                    key={country.code}
+                    value={country.code}
+                    className="flex items-center gap-2"
+                  >
+                    <span className="w-6">{country.flag}</span>
+                    <span className="text-sm">{country.dialCode}</span>
+                  </PhoneSelectItem>
+                ))}
+              </PhoneSelectContent>
+            </PhoneSelect>
+
+            <div className="flex-1 relative">
+              <Input
+                value={phoneInput}
+                onChange={handlePhoneChange}
+                placeholder={`e.g., ${
+                  selectedCountry === "KE" ? "0712 345 678" : "area code and number"
+                }`}
+                className={`bg-pink-50/50 dark:bg-pink-950/50 border-pink-200 ${
+                  phoneInput && !isValid ? "border-red-500" : ""
+                } ${isValid ? "border-green-500" : ""}`}
+                type="tel"
+              />
+              {phoneInput && formattedNumber && (
+                <div className="absolute -bottom-5 left-0 text-xs text-muted-foreground">
+                  {formattedNumber}
+                </div>
+              )}
+            </div>
+          </div>
+
           {errors?.phoneNumber && (
             <p className="text-sm text-red-500">{errors.phoneNumber}</p>
           )}
-          {values.phoneNumber &&
-            !validatePhoneNumber(values.phoneNumber) &&
-            !errors?.phoneNumber && (
-              <p className="text-sm text-yellow-500">
-                Please enter a valid phone number,
-                <span className="text-xs animate-pulse text-gray-500">
-                  It will be used for matching purposes
-                </span>{" "}
-                (at least 10 digits)
-              </p>
-            )}
+          
+          {phoneInput && !isValid && !errors?.phoneNumber && (
+            <p className="text-sm text-yellow-500">
+              Please enter a valid phone number for {countries.find(c => c.code === selectedCountry)?.name}
+              <span className="block text-xs text-muted-foreground mt-1">
+                This will be used for matching purposes
+              </span>
+            </p>
+          )}
+
+          {isValid && (
+            <p className="text-sm text-green-500">
+              ✓ Valid phone number
+            </p>
+          )}
         </div>
       </div>
 

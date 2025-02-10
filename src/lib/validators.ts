@@ -47,15 +47,12 @@ export const profileSchema = z
     phoneNumber: z
       .string()
       .trim()
-      .regex(/^[0-9+\-\s()]+$/, "Please enter a valid phone number format")
+      .regex(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number")
       .refine((phone) => {
         const digitsOnly = phone.replace(/[^0-9]/g, '');
-        return digitsOnly.length === 10;
+        return digitsOnly.length >= 10 && digitsOnly.length <= 15;
       }, {
-        message: "Phone number must be exactly 10 digits"
-      })
-      .refine((phone) => phone.trim() !== "", {
-        message: "Phone number cannot be empty"
+        message: "Phone number must be between 10 and 15 digits"
       }),
     age: z
       .number()
