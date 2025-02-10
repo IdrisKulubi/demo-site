@@ -142,12 +142,12 @@ export function SwipeableCard({
           />
         </div>
 
-        {/* PASS Text */}
+        {/* NOPE Text */}
         <motion.div
           style={{ opacity: leftTextOpacity, scale: textScale }}
-          className="absolute top-8 right-8 rotate-[12deg] pointer-events-none z-10"
+          className="absolute top-12 left-8 rotate-[-15deg] pointer-events-none z-10"
         >
-          <span className="font-graffiti text-5xl font-black text-red-500 drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
+          <span className="font-graffiti text-6xl font-black text-red-500 tracking-wider uppercase border-[4px] border-red-500 px-4 py-1 rounded-lg bg-white/10 backdrop-blur-sm drop-shadow-[0_4px_12px_rgba(239,68,68,0.4)]">
             PASS
           </span>
         </motion.div>
@@ -155,9 +155,9 @@ export function SwipeableCard({
         {/* LIKE Text */}
         <motion.div
           style={{ opacity: rightTextOpacity, scale: textScale }}
-          className="absolute top-8 left-8 rotate-[-12deg] pointer-events-none z-10"
+          className="absolute top-12 right-8 rotate-[15deg] pointer-events-none z-10"
         >
-          <span className="font-graffiti text-5xl font-black text-green-500 drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
+          <span className="font-graffiti text-6xl font-black text-emerald-500 tracking-wider uppercase border-[4px] border-emerald-500 px-4 py-1 rounded-lg bg-white/10 backdrop-blur-sm drop-shadow-[0_4px_12px_rgba(16,185,129,0.4)]">
             LIKE
           </span>
         </motion.div>
