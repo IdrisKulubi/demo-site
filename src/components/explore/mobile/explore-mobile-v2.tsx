@@ -13,7 +13,6 @@ import {
   getLikedByProfiles,
 } from "@/lib/actions/explore.actions";
 import { useToast } from "@/hooks/use-toast";
-import { MatchModal } from "../modals/match-modal";
 import { EmptyMobileView } from "../cards/empty-mobile";
 import { LikesModal } from "../modals/likes-modal";
 import { ProfilePreviewModal } from "../modals/profile-preview-modal";
@@ -45,7 +44,6 @@ interface ExploreMobileV2Props {
 
 export function ExploreMobileV2({
   initialProfiles,
-  currentUserProfile,
   currentUser,
   likedProfiles: initialLikedProfiles,
   likedByProfiles: initialLikedByProfiles,
@@ -57,6 +55,7 @@ export function ExploreMobileV2({
     null
   );
   const [isAnimating, setIsAnimating] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
   const [swipedProfiles, setSwipedProfiles] = useState<Profile[]>([]);
   const [showMatches, setShowMatches] = useState(false);
@@ -379,13 +378,7 @@ export function ExploreMobileV2({
       )}
 
       {/* Modals */}
-      <MatchModal
-        isOpen={!!matchedProfile}
-        onClose={() => setMatchedProfile(null)}
-        matchedProfile={matchedProfile!}
-        currentUserProfile={currentUserProfile}
-        currentUser={currentUser}
-      />
+    
 
       <MatchesModal
         isOpen={showMatches}
