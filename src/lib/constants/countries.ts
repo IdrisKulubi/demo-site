@@ -19,5 +19,5 @@ export const countries: {
   { code: "IN", name: "India", flag: "🇮🇳", dialCode: "+91" },
   { code: "NG", name: "Nigeria", flag: "🇳🇬", dialCode: "+234" },
   { code: "ZA", name: "South Africa", flag: "🇿🇦", dialCode: "+27" },
-  // Add more countries as needed
+  { code: "GH", name: "Ghana", flag: "🇬🇭", dialCode: "+233" },
 ]; 

@@ -15,6 +15,7 @@ import { signOut } from "next-auth/react";
 import { UserCircle, LogOut, Settings, User, Sparkles } from "lucide-react";
 import { FeedbackModal } from "@/components/shared/feedback-modal";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface NavbarProps {
   className?: string;
@@ -47,12 +48,25 @@ export function Navbar({ className }: NavbarProps) {
       )}
     >
       <div className="container flex items-center justify-between h-16">
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-8 ml-8">
           <Link
             href="/"
             className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent hover:from-pink-600 hover:to-purple-600 transition-colors"
           >
-            Strathspace 💝
+            <Image
+              src="/LOGO.png"
+              alt="Strathspace"
+              width={40}
+              height={40}
+              className="block md:hidden"
+            />
+            <Image
+              src="/logo3.svg"
+              alt="Strathspace"
+              width={170}
+              height={170}
+              className="hidden md:block"
+            />
           </Link>
 
           {showNavigation && (
