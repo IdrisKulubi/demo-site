@@ -255,3 +255,4 @@ export type Profile = typeof profiles.$inferSelect & {
 
 // Export the Message type if needed
 export type Message = typeof messages.$inferSelect;
+

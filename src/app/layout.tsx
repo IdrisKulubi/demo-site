@@ -14,6 +14,7 @@ import { ThemeProvider } from "@/components/theme/theme-provider";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ServiceWorkerInit } from "@/components/service-worker/service-worker-init";
 import { PHProvider, PostHogPageview } from "@/components/providers/posthog";
+import { ChatProvider } from "@/providers/chat-provider";
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -52,17 +53,19 @@ export default async function RootLayout({
           <SessionProvider session={session}>
             <MusicProvider>
               <SwipeCounterProvider>
-                <ServiceWorkerInit />
-                <PHProvider>
-                  <div className="relative min-h-screen">
-                    <Navbar />
-                    <main className="flex-1">{children}</main>
-                    <Analytics />
-                    <SpeedInsights />
-                    <Toaster />
-                    <PostHogPageview />
-                  </div>
-                </PHProvider>
+                <ChatProvider>
+                  <ServiceWorkerInit />
+                  <PHProvider>
+                    <div className="relative min-h-screen">
+                      <Navbar />
+                      <main className="flex-1">{children}</main>
+                      <Analytics />
+                      <SpeedInsights />
+                      <Toaster />
+                      <PostHogPageview />
+                    </div>
+                  </PHProvider>
+                </ChatProvider>
               </SwipeCounterProvider>
             </MusicProvider>
           </SessionProvider>
