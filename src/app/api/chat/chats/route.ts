@@ -1,64 +1,95 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import db from "@/db/drizzle";
-import { eq, or, and, desc } from "drizzle-orm";
-import { messages, matches, profiles } from "@/db/schema";
+import { matches, profiles } from "@/db/schema";
+import { desc, eq, and, or, sql } from "drizzle-orm";
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
-    // Get all chats where the user has exchanged messages
-    const activeChats = await db
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Cast session.user.id to text for comparison with user1Id/user2Id
+    const userId = sql.raw(`'${session.user.id}'::text`);
+
+    const userChats = await db
       .select({
         matchId: matches.id,
         userId: profiles.userId,
         firstName: profiles.firstName,
         lastName: profiles.lastName,
         profilePhoto: profiles.profilePhoto,
-        lastMessage: messages.content,
-        lastMessageAt: messages.createdAt,
-        unreadCount: messages.id, // We'll count these in the code
+        course: profiles.course,
+        yearOfStudy: profiles.yearOfStudy,
+        lastMessage: sql`(
+          SELECT content 
+          FROM "message" 
+          WHERE match_id::text = matches.id::text
+          ORDER BY created_at DESC 
+          LIMIT 1
+        )`.mapWith(String),
+        lastMessageTime: sql`(
+          SELECT created_at 
+          FROM "message" 
+          WHERE match_id::text = matches.id::text
+          ORDER BY created_at DESC 
+          LIMIT 1
+        )`.mapWith(Date),
+        unreadCount: sql`(
+          SELECT COUNT(*) 
+          FROM "message" 
+          WHERE match_id::text = matches.id::text
+          AND sender_id != ${userId}
+          AND is_read = false
+        )`.mapWith(Number),
       })
       .from(matches)
-      .innerJoin(
-        messages,
-        eq(matches.id, messages.matchId)
-      )
       .innerJoin(
         profiles,
         and(
           or(
-            eq(matches.user1Id, profiles.userId),
-            eq(matches.user2Id, profiles.userId)
-          ),
-          // Exclude the current user's profile
-          eq(profiles.userId, session.user.id).not()
+            and(
+              eq(sql`${matches.user1Id}::text`, session.user.id),
+              eq(sql`${profiles.userId}::text`, sql`${matches.user2Id}::text`)
+            ),
+            and(
+              eq(sql`${matches.user2Id}::text`, session.user.id),
+              eq(sql`${profiles.userId}::text`, sql`${matches.user1Id}::text`)
+            )
+          )
         )
       )
       .where(
-        or(
-          eq(matches.user1Id, session.user.id),
-          eq(matches.user2Id, session.user.id)
+        and(
+          or(
+            eq(sql`${matches.user1Id}::text`, session.user.id),
+            eq(sql`${matches.user2Id}::text`, session.user.id)
+          ),
+          sql`EXISTS (
+            SELECT 1 
+            FROM "message" 
+            WHERE match_id::text = matches.id::text
+          )`
         )
       )
-      .orderBy(desc(messages.createdAt));
+      .orderBy(desc(matches.createdAt));
 
-    // Group by match and count unread messages
-    const groupedChats = activeChats.reduce((acc, chat) => {
-      if (!acc[chat.matchId]) {
-        acc[chat.matchId] = {
-          ...chat,
-          unreadCount: 0,
-        };
-      }
-      return acc;
-    }, {} as Record<string, typeof activeChats[0]>);
+    // Ensure we always return an array
+    const formattedChats = Array.isArray(userChats) ? userChats : [];
 
-    return NextResponse.json(Object.values(groupedChats));
+    return NextResponse.json({
+      chats: formattedChats.map(chat => ({
+        ...chat,
+        lastMessage: chat.lastMessage || null,
+        lastMessageTime: chat.lastMessageTime || null,
+        unreadCount: Number(chat.unreadCount) || 0,
+      })),
+    });
+    
   } catch (error) {
     console.error("Error fetching chats:", error);
     return NextResponse.json(
