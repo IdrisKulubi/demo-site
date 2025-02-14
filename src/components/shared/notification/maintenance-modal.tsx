@@ -183,7 +183,7 @@ export function FeedbackModal({ autoShow = false }: FeedbackModalProps) {
                         📸 Insta-Worthy Zones • 🎁 Crazy Giveaways<br/>
                         💘 Speed Dating Sessions • 💑 Match Meetups<br/>
                         💼 Student Business Showcase (Free Booths!)<br/>
-                        🎮 Karaoke • 🎨 Art Exhibitions<br/>
+                          Karaoke • 🎨 Art Exhibitions<br/>
                         🎭 Talent Shows • 🍔 Food Festival • 💃 Dance Battles
                         <span className="text-sm opacity-75 text-yellow-400"> And more others,Also  you can suggest in the feedback</span>
                       </div>
@@ -222,13 +222,36 @@ export function FeedbackModal({ autoShow = false }: FeedbackModalProps) {
                 <div className="bg-gradient-to-r from-rose-500/30 to-pink-500/30 rounded-lg p-4 text-center">
                   <button 
                     className="w-full bg-gradient-to-r from-rose-500 to-pink-500 text-white py-2 rounded-lg hover:shadow-[0_0_20px_rgba(255,65,106,0.5)] transition-shadow"
-                  
                   >
-                    🚨 Watch out for  Event Updates 🚨
+                    🚨 Watch out for Event Updates 🚨
                   </button>
                   <p className="text-xs mt-2 opacity-75">
                     (We&pos;ll slide into your DMs with deets)
                   </p>
+                </div>
+
+                {/* Homepage Rebranding Contest */}
+                <div className="flex items-start gap-3 bg-emerald-50/30 dark:bg-emerald-900/20 rounded-lg p-4">
+                  <span className="text-xl flex-shrink-0">💰</span>
+                  <div className="space-y-2">
+                    <strong className="text-emerald-300">Win 10K Cash 🏆</strong>
+                    <div className="text-sm space-y-1">
+                      <p>Help us rebrand our homepage We&apos;re looking for:</p>
+                      <ul className="list-disc list-inside text-xs space-y-1 ml-2">
+                        <li>Fresh design ideas</li>
+                        <li>Catchy slogans</li>
+                        <li>New feature suggestions</li>
+                        <li>Vibe improvements</li>
+                      </ul>
+                      <p className="text-xs mt-2 text-yellow-300">
+                        Drop your ideas in the feedback box below 👇
+                        <br/>
+                        <span className="opacity-75">
+                          (Best suggestion wins the bag 💸)
+                        </span>
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Feedback Section */}
