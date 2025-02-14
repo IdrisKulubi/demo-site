@@ -185,14 +185,17 @@ export function FeedbackModal({ autoShow = false }: FeedbackModalProps) {
                         💼 Student Business Showcase (Free Booths!)<br/>
                         🎮 Karaoke • 🎨 Art Exhibitions<br/>
                         🎭 Talent Shows • 🍔 Food Festival • 💃 Dance Battles
+                        <span className="text-sm opacity-75 text-yellow-400"> And more others,Also  you can suggest in the feedback</span>
                       </div>
                       <div className="text-xs mt-2 text-emerald-300">
-                        FREE Business Showcase for Student Entrepreneurs!
+                        FREE Business Showcase for Student Entrepreneurs
                       </div>
                       <div className="text-xs mt-2">
                         Partners: <span className="text-red-500">REDBULL</span> • 
-                        <span className="text-blue-400"> NTV</span> • 
-                        <span className="text-yellow-400"> [Your Fave Brands and influencers]</span>
+                        <span className="text-blue-400"> NIVEA</span>  •
+                        <span className="text-yellow-400"> 
+                          <span className="text-yellow-400">Tropical Heat</span>•
+                          [Gosh I can&apos;t name them all 😫]</span>
                       </div>
                       <div className="text-xs opacity-75 mt-1">
                         🎟️ No Tickets Needed - Your StrathSpaceProfile IS Your Entry!
