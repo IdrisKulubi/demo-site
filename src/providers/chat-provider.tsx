@@ -6,9 +6,9 @@ import { pusherClient } from "@/lib/pusher/client";
 import type { Message } from "@/db/schema";
 
 interface ChatContextType {
+  messages: Message[];
   sendMessage: (matchId: string, content: string) => Promise<void>;
   setTyping: (matchId: string, isTyping: boolean) => void;
-  messages: Message[];
   onlineStatus: Record<string, boolean>;
   loadMessages: (matchId: string) => Promise<void>;
 }
@@ -47,9 +47,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch(`/api/chat/${matchId}/messages`);
       const data = await response.json();
-      if (response.ok) {
-        setMessages(data.messages);
-      }
+      if (response.ok) setMessages(data.messages);
     } catch (error) {
       console.error("Error loading messages:", error);
     }
@@ -63,10 +61,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ matchId, content }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to send message");
-      }
-
+      if (!response.ok) throw new Error("Failed to send message");
       const newMessage = await response.json();
       setMessages((prev) => [...prev, newMessage]);
     } catch (error) {
