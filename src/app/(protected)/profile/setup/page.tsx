@@ -140,19 +140,18 @@ function SetupForm() {
         const phoneDigits = currentStepData.phoneNumber?.replace(/[^0-9]/g, "");
         if (!currentStepData.phoneNumber?.trim()) {
           missingFields.push("Phone Number");
-        } else if (!/^[0-9+\-\s()]+$/.test(currentStepData.phoneNumber)) {
+        } else if (!/^\+?[1-9]\d{1,14}$/.test(currentStepData.phoneNumber)) {
           toast({
             variant: "destructive",
             title: "Invalid Phone Number",
-            description:
-              "Phone number can only contain numbers, spaces, and these symbols: + - ( )",
+            description: "Please enter a valid phone number",
           });
           return;
-        } else if (phoneDigits?.length !== 10) {
+        } else if (phoneDigits?.length < 10 || phoneDigits?.length > 15) {
           toast({
             variant: "destructive",
             title: "Invalid Phone Number",
-            description: "Phone number must be exactly 10 digits",
+            description: "Phone number must be between 10 and 15 digits",
           });
           return;
         }

@@ -1,11 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Profile } from "@/db/schema";
 import { Card } from "@/components/ui/card";
 import ImageSlider from "../controls/ImageSlider";
-
 
 interface SwipeableCardProps {
   profile: Profile & {
@@ -19,16 +19,12 @@ interface SwipeableCardProps {
 export function SwipeableCard({
   profile,
   onSwipe,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onRevert,
   active,
 }: SwipeableCardProps) {
   const [exitX, setExitX] = useState(0);
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-25, 25]);
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
-
-  // Transform values for PASS/LIKE text
   const leftTextOpacity = useTransform(x, [-200, -100, 0], [1, 0.5, 0]);
   const rightTextOpacity = useTransform(x, [0, 100, 200], [0, 0.5, 1]);
   const textScale = useTransform(
@@ -36,6 +32,35 @@ export function SwipeableCard({
     [-200, -100, 0, 100, 200],
     [1.5, 1.2, 1, 1.2, 1.5]
   );
+
+  // New function to handle button-triggered swipes
+  const handleButtonSwipe = useCallback((direction: "left" | "right") => {
+    const targetX = direction === "left" ? -400 : 400;
+    animate(x, targetX, {
+      type: "spring",
+      damping: 80,
+      stiffness: 250,
+      duration: 0.6,
+      ease: "easeOut",
+      onComplete: () => {
+        setExitX(targetX);
+        onSwipe(direction);
+      },
+    });
+  }, [x, onSwipe]);
+
+  // Expose the handleButtonSwipe function to parent
+  useEffect(() => {
+    if (!active) return;
+    
+    // Add the function to window for communication between components
+    const key = `handleSwipe_${profile.userId}`;
+    (window as any)[key] = handleButtonSwipe;
+    
+    return () => {
+      delete (window as any)[key];
+    };
+  }, [active, handleButtonSwipe, profile.userId]);
 
   useEffect(() => {
     if (!active) return;
@@ -62,16 +87,29 @@ export function SwipeableCard({
     info: { offset: { x: number } }
   ) => {
     if (info.offset.x < -200) {
-      animate(x, -400);
+      animate(x, -400, {
+        type: "spring",
+        damping: 80,
+        stiffness: 250,
+        duration: 0.6,
+        ease: "easeOut",
+      });
       onSwipe("left");
     } else if (info.offset.x > 200) {
-      animate(x, 400);
+      animate(x, 400, {
+        type: "spring",
+        damping: 80,
+        stiffness: 250,
+        duration: 0.6,
+        ease: "easeOut",
+      });
       onSwipe("right");
     } else {
       animate(x, 0, {
         type: "spring",
-        stiffness: 300,
-        damping: 20,
+        stiffness: 250,
+        damping: 80,
+        duration: 0.5,
       });
     }
   };
@@ -104,12 +142,12 @@ export function SwipeableCard({
           />
         </div>
 
-        {/* PASS Text */}
+        {/* NOPE Text */}
         <motion.div
           style={{ opacity: leftTextOpacity, scale: textScale }}
-          className="absolute top-8 left-8 rotate-[-12deg] pointer-events-none z-10"
+          className="absolute top-12 left-8 rotate-[-15deg] pointer-events-none z-10"
         >
-          <span className="font-graffiti text-4xl text-red-500 drop-shadow-lg">
+          <span className="font-graffiti text-6xl font-black text-red-500 tracking-wider uppercase border-[4px] border-red-500 px-4 py-1 rounded-lg bg-white/10 backdrop-blur-sm drop-shadow-[0_4px_12px_rgba(239,68,68,0.4)]">
             PASS
           </span>
         </motion.div>
@@ -117,9 +155,9 @@ export function SwipeableCard({
         {/* LIKE Text */}
         <motion.div
           style={{ opacity: rightTextOpacity, scale: textScale }}
-          className="absolute top-8 right-8 rotate-[12deg] pointer-events-none z-10"
+          className="absolute top-12 right-8 rotate-[15deg] pointer-events-none z-10"
         >
-          <span className="font-graffiti text-4xl text-green-500 drop-shadow-lg">
+          <span className="font-graffiti text-6xl font-black text-emerald-500 tracking-wider uppercase border-[4px] border-emerald-500 px-4 py-1 rounded-lg bg-white/10 backdrop-blur-sm drop-shadow-[0_4px_12px_rgba(16,185,129,0.4)]">
             LIKE
           </span>
         </motion.div>

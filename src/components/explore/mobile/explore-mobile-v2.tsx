@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeableCard } from "../cards/swipeable-card";
 import { AnimatePresence } from "framer-motion";
-import { Heart, User2, Star } from "lucide-react";
+import { Heart, User2, Star, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   recordSwipe,
@@ -13,7 +13,6 @@ import {
   getLikedByProfiles,
 } from "@/lib/actions/explore.actions";
 import { useToast } from "@/hooks/use-toast";
-import { MatchModal } from "../modals/match-modal";
 import { EmptyMobileView } from "../cards/empty-mobile";
 import { LikesModal } from "../modals/likes-modal";
 import { ProfilePreviewModal } from "../modals/profile-preview-modal";
@@ -34,6 +33,9 @@ import { LogOut } from "lucide-react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import { SwipeControls } from "../controls/swipe-controls";
+import { ChatWindow } from "@/components/chat/chat-window";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ChatsList } from "@/components/chat/chats-list";
 
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];
@@ -45,7 +47,6 @@ interface ExploreMobileV2Props {
 
 export function ExploreMobileV2({
   initialProfiles,
-  currentUserProfile,
   currentUser,
   likedProfiles: initialLikedProfiles,
   likedByProfiles: initialLikedByProfiles,
@@ -57,10 +58,13 @@ export function ExploreMobileV2({
     null
   );
   const [isAnimating, setIsAnimating] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
   const [swipedProfiles, setSwipedProfiles] = useState<Profile[]>([]);
   const [showMatches, setShowMatches] = useState(false);
   const [showLikes, setShowLikes] = useState(false);
+  const [showChats, setShowChats] = useState(false);
+  const [selectedChatMatch, setSelectedChatMatch] = useState<Profile | null>(null);
 
   // Initialize matches from likedProfiles where isMatch is true
   const [matches, setMatches] = useState<Profile[]>(
@@ -289,6 +293,7 @@ export function ExploreMobileV2({
               }}
               disabled={isAnimating || currentIndex < 0}
               className="mx-auto max-w-lg"
+              currentProfileId={profiles[currentIndex]?.userId}
             />
           </div>
 
@@ -307,6 +312,17 @@ export function ExploreMobileV2({
                     {matches.length}
                   </span>
                 )}
+              </Button>
+
+              {/* Add Chat Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowChats(true)}
+                className="relative"
+              >
+                <MessageCircle className="h-6 w-6 text-purple-500" />
+                {/* Add unread messages count badge here if needed */}
               </Button>
 
               <DropdownMenu>
@@ -378,14 +394,40 @@ export function ExploreMobileV2({
         />
       )}
 
-      {/* Modals */}
-      <MatchModal
-        isOpen={!!matchedProfile}
-        onClose={() => setMatchedProfile(null)}
-        matchedProfile={matchedProfile!}
-        currentUserProfile={currentUserProfile}
-        currentUser={currentUser}
+      {/* Chat Sheet */}
+      <Sheet open={showChats} onOpenChange={setShowChats}>
+        <SheetContent side="right" className="w-full sm:w-[400px] p-0">
+          <SheetHeader className="p-4 border-b">
+            <SheetTitle className="text-xl font-bold bg-gradient-to-r from-purple-500 to-purple-700 bg-clip-text text-transparent">
+              Messages
+            </SheetTitle>
+          </SheetHeader>
+          <div className="h-[calc(100vh-4rem)] overflow-hidden">
+            <ChatsList
+              onSelectChat={(chat) => {
+                setSelectedChatMatch({
+                  userId: chat.userId,
+                  firstName: chat.firstName,
+                  lastName: chat.lastName,
+                  profilePhoto: chat.profilePhoto,
+                } as Profile);
+                setShowChats(false);
+              }}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Chat Window */}
+      <ChatWindow
+        isOpen={!!selectedChatMatch}
+        onClose={() => setSelectedChatMatch(null)}
+        matchId={selectedChatMatch?.userId || ""}
+        recipient={selectedChatMatch}
       />
+
+      {/* Modals */}
+    
 
       <MatchesModal
         isOpen={showMatches}

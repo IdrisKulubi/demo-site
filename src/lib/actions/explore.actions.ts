@@ -399,13 +399,13 @@ export async function getMatches() {
   }
 
   try {
-    // Simplified matches query without messages
-    const results = await db
-      .select({
-        id: matches.id,
-        matchedAt: matches.createdAt,
-        // Profile fields
+    // First get distinct profiles that have matched with the user
+    const distinctProfiles = await db
+      .selectDistinct({
         userId: profiles.userId,
+        // Get the most recent match for each profile
+        matchId: sql<string>`MAX(${matches.id})`,
+        matchedAt: sql<Date>`MAX(${matches.createdAt})`,
         firstName: profiles.firstName,
         lastName: profiles.lastName,
         profilePhoto: profiles.profilePhoto,
@@ -437,12 +437,13 @@ export async function getMatches() {
           eq(profiles.isVisible, true)
         )
       )
-      .orderBy(desc(matches.createdAt));
+      .groupBy(profiles.userId, profiles.firstName, profiles.lastName, profiles.profilePhoto, 
+               profiles.bio, profiles.course, profiles.yearOfStudy, profiles.phoneNumber)
+      .orderBy(desc(sql`MAX(${matches.createdAt})`));
 
-    const formattedMatches = results.map((match) => ({
-      matchId: match.id,
+    const formattedMatches = distinctProfiles.map((match) => ({
+      matchId: match.matchId,
       matchedAt: match.matchedAt,
-      // Profile data
       userId: match.userId,
       firstName: match.firstName,
       lastName: match.lastName,

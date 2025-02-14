@@ -196,6 +196,10 @@ export const messages = pgTable("message", {
 });
 
 export const messagesRelations = relations(messages, ({ one }) => ({
+  match: one(matches, {
+    fields: [messages.matchId],
+    references: [matches.id],
+  }),
   sender: one(users, {
     fields: [messages.senderId],
     references: [users.id],
@@ -241,8 +245,18 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
 }));
 
-export const matchesRelations = relations(matches, ({ many }) => ({
-  messages: many(messages, { relationName: "matchMessages" }),
+export const matchesRelations = relations(matches, ({ one, many }) => ({
+  user1: one(users, {
+    fields: [matches.user1Id],
+    references: [users.id],
+  }),
+  user2: one(users, {
+    fields: [matches.user2Id],
+    references: [users.id],
+  }),
+  messages: many(messages, {
+    relationName: "matchMessages",
+  }),
 }));
 
 // Then create type references at the end
@@ -255,3 +269,18 @@ export type Profile = typeof profiles.$inferSelect & {
 
 // Export the Message type if needed
 export type Message = typeof messages.$inferSelect;
+
+// Add proper types for the chat feature
+export type ChatPreview = {
+  matchId: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  profilePhoto: string | null;
+  course: string;
+  yearOfStudy: number;
+  lastMessage: string | null;
+  lastMessageTime: Date | null;
+  unreadCount: number;
+};
+

@@ -94,3 +94,25 @@ export type Profile = {
   phoneNumber: string;
   isMatch?: boolean;
 };
+export type Message = {
+  id: string;
+  content: string;
+  createdAt: Date;
+  senderId: string;
+  receiverId: string;
+};
+
+export type Match = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  matchId: string;
+};
+export type messages = {
+  id: string;
+  content: string;
+  createdAt: Date;
+  senderId: string;
+  receiverId: string;
+};

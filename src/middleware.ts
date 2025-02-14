@@ -2,7 +2,8 @@ import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import { checkProfileCompletion } from "@/lib/checks";
 
-const publicRoutes = ["/login", "/no-access"];
+// Add home page to public routes
+const publicRoutes = ["/", "/login", "/no-access"];
 
 export async function middleware(request: Request & { nextUrl: URL }) {
   const session = await auth();
@@ -10,14 +11,19 @@ export async function middleware(request: Request & { nextUrl: URL }) {
   const pathname = request.nextUrl.pathname;
 
   // Allow public routes
-  if (publicRoutes.some((route) => pathname.startsWith(route))) {
+  if (publicRoutes.some((route) => pathname === route)) {
     return NextResponse.next();
   }
+
   if (request.nextUrl.pathname === "/sw.js") {
     return NextResponse.rewrite(new URL("/sw", request.url));
   }
-  // Handle non-authenticated users
+
   if (!isAuth) {
+    // Don't redirect if it's the home page
+    if (pathname === "/") {
+      return NextResponse.next();
+    }
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
@@ -38,14 +44,12 @@ export async function middleware(request: Request & { nextUrl: URL }) {
   }
 
   // Block access to protected routes without profile
-  if (!hasProfile) {
+  if (!hasProfile && !pathname.startsWith("/profile/setup")) {
     return NextResponse.redirect(new URL("/profile/setup", request.url));
   }
 
   return NextResponse.next();
 }
-
-
 
 export const config = {
   matcher: [

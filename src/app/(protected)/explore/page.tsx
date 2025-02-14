@@ -11,7 +11,6 @@ import { type Profile } from "@/db/schema";
 import { getProfile } from "@/lib/actions/profile.actions";
 import { ExploreMobileV2 } from "@/components/explore/mobile/explore-mobile-v2";
 import { checkProfileCompletion } from "@/lib/checks";
-import { FeedbackModal } from "@/components/shared/notification/maintenance-modal";
 
 export default async function ExplorePage() {
   const session = await auth();
@@ -35,7 +34,6 @@ export default async function ExplorePage() {
   return (
     <div className="h-full">
 
-      <FeedbackModal />
 
       <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white dark:from-pink-950/30 dark:to-background">
         {/* Desktop Header - Hidden on Mobile */}

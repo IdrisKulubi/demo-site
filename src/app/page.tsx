@@ -7,12 +7,17 @@ import { AnimatedSection } from "@/components/shared/sections/animated-section";
 import { Footer } from "@/components/shared/layout/footer";
 import { checkProfileCompletion } from "@/lib/checks";
 import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 
 export default async function Home() {
-  const { hasProfile } = await checkProfileCompletion();
+  const session = await auth();
   
-  if (!hasProfile) {
-    redirect("/profile/setup");
+  // Only check profile completion if user is logged in
+  if (session?.user) {
+    const { hasProfile } = await checkProfileCompletion();
+    if (!hasProfile) {
+      redirect("/profile/setup");
+    }
   }
 
   return (
@@ -22,7 +27,7 @@ export default async function Home() {
       <FloatingHearts />
       {/* Content sections */}
       <section id="hero" className="relative">
-        <LandingContent />
+        <LandingContent isLoggedIn={!!session?.user} />
       </section>
 
       <div className="h-32" />

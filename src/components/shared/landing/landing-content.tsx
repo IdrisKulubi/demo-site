@@ -27,7 +27,12 @@ const features = [
   },
 ];
 
-export function LandingContent() {
+export function LandingContent({ 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  isLoggedIn
+}: {
+  isLoggedIn: boolean
+}) {
   const { data: session } = useSession();
 
   return (
