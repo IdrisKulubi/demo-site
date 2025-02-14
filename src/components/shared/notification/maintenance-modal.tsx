@@ -4,31 +4,60 @@ import { useState, useEffect } from "react";
 import { HeartCrack } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { submitFeedback } from "@/lib/actions/feedback.actions";
+import { motion } from "framer-motion";
+import { getAppStats, type StatsData } from "@/lib/actions/stats.actions";
 
-export function FeedbackModal() {
+// Helper component for animated numbers
+function AnimatedNumber({ value }: { value: number }) {
+  return (
+    <motion.span
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      {value.toLocaleString()}
+    </motion.span>
+  );
+}
+
+interface FeedbackModalProps {
+  autoShow?: boolean;
+}
+
+export function FeedbackModal({ autoShow = false }: FeedbackModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasSeenModal, setHasSeenModal] = useState(true); // Start true to prevent flash
   const { toast } = useToast();
+  const [stats, setStats] = useState<StatsData>({
+    matches: 0,
+    swipes: 0,
+    users: 0
+  });
+
+  // Auto-show modal when component mounts if autoShow is true
+  useEffect(() => {
+    if (autoShow) {
+      setIsOpen(true);
+    }
+  }, [autoShow]);
 
   useEffect(() => {
-    // Check if user has seen the modal before
-    const hasSeenBefore = localStorage.getItem("hasSeenMaintenanceModal");
-    if (!hasSeenBefore) {
-      setHasSeenModal(false);
-      setIsOpen(true);
-      // Mark as seen
-      localStorage.setItem("hasSeenMaintenanceModal", "true");
-    }
-  }, []);
+    const fetchStats = async () => {
+      const data = await getAppStats();
+      setStats(data);
+    };
 
-  // Don't render anything if user has already seen the modal
-  if (hasSeenModal) {
-    return null;
-  }
+    // Initial fetch
+    fetchStats();
+
+    // Refresh stats every 30 seconds
+    const interval = setInterval(fetchStats, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +79,7 @@ export function FeedbackModal() {
         description: "Skip the greetings fam - just drop the issue!",
         variant: "destructive",
       });
-      setIsSubmitting(false);
+      setIsSubmitting(true);
       return;
     }
 
@@ -84,12 +113,15 @@ export function FeedbackModal() {
 
   return (
     <>
-      <button onClick={() => setIsOpen(true)} className="relative group">
-        <div className="transform transition-transform hover:scale-110">
-          <HeartCrack className="h-5 w-5 sm:h-6 sm:w-6 text-rose-500/90 hover:text-rose-400 transition-colors" />
-        </div>
-        <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 sm:h-3 sm:w-3 bg-purple-500 rounded-full ring-2 ring-background transform scale-0 group-hover:scale-100 transition-transform" />
-      </button>
+      {/* Show button only if not autoShow */}
+      {!autoShow && (
+        <button onClick={() => setIsOpen(true)} className="relative group">
+          <div className="transform transition-transform hover:scale-110">
+            <HeartCrack className="h-5 w-5 sm:h-6 sm:w-6 text-rose-500/90 hover:text-rose-400 transition-colors" />
+          </div>
+          <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 sm:h-3 sm:w-3 bg-purple-500 rounded-full ring-2 ring-background transform scale-0 group-hover:scale-100 transition-transform" />
+        </button>
+      )}
 
       {isOpen && (
         <div className="fixed inset-0 flex items-start justify-center z-50 pointer-events-none p-2 sm:p-4 overflow-hidden">
@@ -100,17 +132,17 @@ export function FeedbackModal() {
             <div className="bg-gradient-to-br from-rose-500/20 to-pink-500/20 backdrop-blur-xl p-4 rounded-t-xl border-b border-white/10">
               <div className="flex justify-between items-start">
                 <div className="flex items-start gap-3">
-                  <div className="text-3xl sm:text-4xl animate-bounce">🚀</div>
+                  <div className="text-3xl sm:text-4xl animate-bounce">🎉</div>
                   <div>
                     <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-                      Glow Up Alert! Our Servers Got Rizz Now ,they are now
-                      behaving better
+                      Y&pos;all Went Crazy This Season 🔥
                     </h2>
-
+                    <span className="text-sm sm:text-base text-fuchsia-200/90">In that short time, we had </span>
                     <p className="text-sm sm:text-base text-fuchsia-200/90">
-                      Fixed the laggy vibes - we&apos;re faster than my ex
-                      moving on 😮💨
-                    </p>
+                      <AnimatedNumber value={stats.matches} /> matches •{' '}
+                      <AnimatedNumber value={stats.swipes} /> swipes •{' '}
+                      <AnimatedNumber value={stats.users} /> glowups
+                    </p> 
                   </div>
                 </div>
                 <button
@@ -135,77 +167,65 @@ export function FeedbackModal() {
             {/* Content - Remove ScrollArea component and its wrapper */}
             <div className="px-4">
               <div className="space-y-4 py-4">
-                {/* Image Migration Notice */}
-                <div className="flex items-start gap-3 bg-pink-50/30 dark:bg-pink-900/20 rounded-lg p-4">
-                  <span className="text-xl flex-shrink-0">📸</span>
-                  <div className="space-y-1">
-                    <strong>Image Migration Notice</strong>
-                    <div className="text-sm">
-                      If your pics are not visible ,I&apos;m sorry ,might be
-                      because of the migration, just delete & re-upload from
-                      your profile section, I have migrated to a new storage to
-                      manage all your profiles, you people are incredible and
-                      you deserve the best,Continue sharing we get more people
-                      to join the community
-                      <div className="text-xs text-yellow-300 mt-1">
-                        (Pro tip: Use the 🔄 button)
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* TikTok Challenge with Valentine's Story */}
+                {/* Event Announcement */}
                 <div className="bg-purple-50/30 dark:bg-purple-900/20 rounded-lg p-4">
                   <div className="text-center space-y-2">
                     <div className="text-lg font-medium">
-                      💔 Plot Twist & Cash Drop Alert 🤑
+                      🚨 STRATHSPACE FUN DAY 🎪
                     </div>
                     <div className="text-sm space-y-2">
                       <div>
-                        Fun fact: Was saving for V-day plans but she dipped
-                        while I was fixing these servers for y&apos;all 😂
+                        <span className="text-pink-300">FIRST STOP:</span> Strathmore Edition 
+                        → Then All Unis will join in the fun day edition 
                       </div>
-                      <div className="text-pink-300">
-                        So now that money is going to the best StrathSpace
-                        TikTok/IG with the most likes by Feb 14
+                      <div className="space-y-1">
+                        🔥 RedBull Fueled • 🎤 Live Sets • 🕺 TikTok Battles<br/>
+                        📸 Insta-Worthy Zones • 🎁 Crazy Giveaways<br/>
+                        💘 Speed Dating Sessions • 💑 Match Meetups<br/>
+                        💼 Student Business Showcase (Free Booths!)<br/>
+                        🎮 Karaoke • 🎨 Art Exhibitions<br/>
+                        🎭 Talent Shows • 🍔 Food Festival • 💃 Dance Battles
                       </div>
-                      <div className="text-sm opacity-75">
-                        Create content about StrathSpace - most likes wins 🎥
+                      <div className="text-xs mt-2 text-emerald-300">
+                        FREE Business Showcase for Student Entrepreneurs!
                       </div>
-                      <div className="text-xs mt-2 text-fuchsia-300">
-                        Her loss = Your gain 💅 (At least the app works better
-                        now lol)
+                      <div className="text-xs mt-2">
+                        Partners: <span className="text-red-500">REDBULL</span> • 
+                        <span className="text-blue-400"> NTV</span> • 
+                        <span className="text-yellow-400"> [Your Fave Brands and influencers]</span>
                       </div>
-                      <div className="text-xs mt-1">
-                        Prize: That Valentine&apos;s Budget 💸 or Mystery Gift({" "}
-                        <span className="text-xs text-red-600 ">
-                          It&apos;s good money😉{" "}
-                        </span>
-                        ) 🎁
+                      <div className="text-xs opacity-75 mt-1">
+                        🎟️ No Tickets Needed - Your StrathSpaceProfile IS Your Entry!
                       </div>
-                      <div className="text-xs mt-1">Maybe It&apos;s you😉 </div>
                     </div>
                   </div>
                 </div>
 
-                {/* New Features */}
+                {/* Mobile App Update */}
                 <div className="flex items-start gap-3 bg-pink-50/30 dark:bg-pink-900/20 rounded-lg p-4">
-                  <span className="text-xl flex-shrink-0">💌</span>
+                  <span className="text-xl flex-shrink-0">📱</span>
                   <div className="space-y-1">
-                    <strong>Coming Soon</strong>
-                    <div className="text-sm space-y-2">
-                      <div>- Chat Feature 🌟</div>
-                      <div>
-                        - Profile Filters 🔍 (Filter by preferences & location)
-                        You will be able to filter by location and preferences
-                      </div>
-                      <div>
-                        -Mobile App 📱 (will come soon to Google Play & App
-                        Store)
-                      </div>
-                      <div>- Any other feature you demand below</div>
+                    <strong>App Drop Countdown ⏳ will launch that day</strong>
+                    <div className="text-sm">
+                      iOS/Android version cooking 🧑💻<br/>
+                      <span className="text-xs opacity-75">
+                        (Low-key gonna make Tinder sweat 😅)
+                      </span>
                     </div>
                   </div>
+                </div>
+
+                {/* Registration CTA */}
+                <div className="bg-gradient-to-r from-rose-500/30 to-pink-500/30 rounded-lg p-4 text-center">
+                  <button 
+                    className="w-full bg-gradient-to-r from-rose-500 to-pink-500 text-white py-2 rounded-lg hover:shadow-[0_0_20px_rgba(255,65,106,0.5)] transition-shadow"
+                  
+                  >
+                    🚨 Watch out for  Event Updates 🚨
+                  </button>
+                  <p className="text-xs mt-2 opacity-75">
+                    (We&pos;ll slide into your DMs with deets)
+                  </p>
                 </div>
 
                 {/* Feedback Section */}
@@ -214,7 +234,7 @@ export function FeedbackModal() {
                   <div className="space-y-1">
                     <strong>Y&apos;all Rule</strong>
                     <div className="text-sm">
-                      This app&apos;s yours Demand features below or just say hi
+                      This app&apos;s yours Demand features below or if you have any suggestions
                       👇
                       <div className="text-xs opacity-75 mt-1">
                         (I&apos;m just your tech bestie 🛠️)
