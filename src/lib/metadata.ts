@@ -13,7 +13,7 @@ const twitterSite = TWITTER_SITE
 export function constructMetadata({
   title = "Strathspace - Find Your Perfect Match at Strathspace",
   description = "Connect with fellow students and find meaningful relationships",
-  image = "https://res.cloudinary.com/db0i0umxn/image/upload/v1738012417/Screenshot_2025-01-28_001115_kbxwsw.png",
+  image = "https://res.cloudinary.com/db0i0umxn/image/upload/v1739634861/Screenshot_2025-02-15_184329_vwfank.png",
   icons = "/favicon.ico",
   noIndex = false,
 }: {
