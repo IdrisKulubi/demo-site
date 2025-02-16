@@ -6,14 +6,16 @@ import { redirect } from "next/navigation";
 export default async function ChatPage({
   params,
 }: {
-  params: { matchId: string };
+  params: Promise<{ matchId: string }>;
 }) {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  const { matchId } = await params;
+
   try {
     const { match, partner } = await getMatchDetails(
-      params.matchId,
+      matchId,
       session.user.id
     );
     

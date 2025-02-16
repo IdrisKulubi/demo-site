@@ -2,6 +2,7 @@
 
 import  db  from "@/db/drizzle";
 import { messages } from "@/db/schema";
+import { v4 as uuidv4 } from "uuid";
 
 export async function getChatMessages(matchId: string) {
   const response = await fetch(`/api/chat/${matchId}`);
@@ -15,6 +16,7 @@ export async function getChatMessages(matchId: string) {
 export async function sendMessage(matchId: string, content: string, senderId: string) {
   const message = await db.insert(messages)
     .values({
+      id: uuidv4(),
       matchId,
       content,
       senderId,
