@@ -393,65 +393,79 @@ export async function getTotalSwipes() {
 
 export async function getMatches() {
   const session = await auth();
-  if (!session?.user) return { error: "Unauthorized" };
+  if (!session?.user?.id) return { matches: [], error: "Unauthorized" };
 
-  const matches = await db.query.matches.findMany({
-    where: (matches, { or, eq }) => or(
-      eq(matches.user1Id, session.user.id),
-      eq(matches.user2Id, session.user.id)
-    ),
-    with: {
-      user1: {
-        columns: {
-          id: true,
+  try {
+    // Combine the best of both approaches with proper distinct selection
+    const matches = await db.query.matches.findMany({
+      where: (matches, { or, eq }) => or(
+        eq(matches.user1Id, session.user.id),
+        eq(matches.user2Id, session.user.id)
+      ),
+      with: {
+        user1: {
+          columns: { id: true },
+          with: {
+            profile: {
+              columns: {
+                userId: true,
+                firstName: true,
+                lastName: true,
+                course: true,
+                yearOfStudy: true,
+                bio: true,
+                interests: true,
+                profilePhoto: true
+              }
+            }
+          }
         },
-        with: {
-          profile: {
-            columns: {
-              firstName: true,
-              lastName: true,
-              course: true,
-              yearOfStudy: true,
-              bio: true,
-              interests: true,
-              profilePhoto: true
+        user2: {
+          columns: { id: true },
+          with: {
+            profile: {
+              columns: {
+                userId: true,
+                firstName: true,
+                lastName: true,
+                course: true,
+                yearOfStudy: true,
+                bio: true,
+                interests: true,
+                profilePhoto: true
+              }
             }
           }
         }
       },
-      user2: {
-        columns: {
-          id: true,
-        },
-        with: {
-          profile: {
-            columns: {
-              firstName: true,
-              lastName: true,
-              course: true,
-              yearOfStudy: true,
-              bio: true,
-              interests: true,
-              profilePhoto: true
-            }
-          }
-        }
+      orderBy: (matches, { desc }) => [desc(matches.createdAt)]
+    });
+
+    // Deduplicate logic using Map
+    const uniqueMatches = new Map<string, typeof matches[number]>();
+    for (const match of matches) {
+      const partnerId = match.user1.id === session.user.id ? match.user2.profile.userId : match.user1.profile.userId;
+      if (!uniqueMatches.has(partnerId)) {
+        uniqueMatches.set(partnerId, match);
       }
-    },
-    orderBy: (matches, { desc }) => [desc(matches.createdAt)]
-  });
-console.log(matches)
-  return {
-    matches: matches.map(match => {
-      const partner = match.user1.id === session.user.id ? match.user2 : match.user1;
-      return {
-        ...partner.profile,
-        userId: partner.id,
-        matchId: match.id,
-        matchedAt: match.createdAt
-      };
-    })
-  };
+    }
+
+    return {
+      matches: Array.from(uniqueMatches.values()).map(match => {
+        const partner = match.user1.id === session.user.id ? match.user2 : match.user1;
+        return {
+          ...partner.profile,
+          userId: partner.id,
+          matchId: match.id,
+          matchedAt: match.createdAt
+        };
+      }),
+      error: null
+    };
+  } catch (error) {
+    console.error("Error fetching matches:", error);
+    return { matches: [], error: "Failed to fetch matches" };
+  }
 }
 
 export async function getLikesForProfile(profileName: string) {
