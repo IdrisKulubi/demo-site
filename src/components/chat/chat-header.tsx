@@ -3,6 +3,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Profile } from "@/db/schema";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 
 export function ChatHeader({ partner }: { partner?: Profile | null }) {
 
@@ -10,6 +12,12 @@ export function ChatHeader({ partner }: { partner?: Profile | null }) {
 
   return (
     <div className="flex items-center p-4 border-b">
+      <Link
+        href="/explore"
+        className="mr-2 p-1 hover:bg-accent rounded-full transition-colors"
+      >
+        <ChevronLeft className="h-8 w-8" />
+      </Link>
       <Avatar className="h-10 w-10">
         {partner?.profilePhoto ? (
           <AvatarImage src={partner.profilePhoto} />

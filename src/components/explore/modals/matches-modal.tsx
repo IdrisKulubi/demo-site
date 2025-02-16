@@ -1,6 +1,6 @@
 "use client";
 
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent ,DialogHeader,DialogTitle} from "@/components/ui/dialog";
 import { Profile } from "@/db/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { useState, useMemo } from "react";
 import { ProfilePreviewModal } from "./profile-preview-modal";
+import Link from "next/link";
 
 interface MatchesModalProps {
   isOpen: boolean;
@@ -53,6 +54,11 @@ export function MatchesModal({
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-md p-4">
+          <DialogHeader>
+            <DialogTitle>
+              Your Matches
+            </DialogTitle>
+          </DialogHeader>
           <div className="flex items-center justify-between mb-6">
             <div className="relative">
               <span className="text-xl font-bold bg-gradient-to-r from-purple-500 to-purple-700 bg-clip-text text-transparent">
@@ -93,24 +99,24 @@ export function MatchesModal({
                         <div className="flex justify-between items-start">
                           <div>
                             <h3 className="font-semibold text-lg">
-                              {profile.firstName} {profile.lastName}
+                              {profile.firstName} 
                             </h3>
                             <p className="text-sm text-muted-foreground">
-                              {profile.course} • Year {profile.yearOfStudy}
+                              {profile.course?.slice(0,6) || "N/A"} • Year {profile.yearOfStudy}
                             </p>
                           </div>
                           <Button
                             asChild
                             className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white shadow-md hover:shadow-lg transition-all duration-300 gap-2 px-4 rounded-xl border border-pink-200 dark:border-purple-800"
                           >
-                            <a
+                            <Link
                               href={`/chat/${profile.matchId}`}
                               className="flex items-center whitespace-nowrap"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <MessageCircle className="h-4 w-4 mr-1" />
                               Chat
-                            </a>
+                            </Link>
                           </Button>
                         </div>
                         

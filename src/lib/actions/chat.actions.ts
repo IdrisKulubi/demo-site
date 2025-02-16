@@ -2,29 +2,67 @@
 
 import  db  from "@/db/drizzle";
 import { messages } from "@/db/schema";
-import { v4 as uuidv4 } from "uuid";
+import { auth } from "@/auth";
+import { eq, } from "drizzle-orm";
 
 export async function getChatMessages(matchId: string) {
-  const response = await fetch(`/api/chat/${matchId}`);
-  const data = await response.json();
-  return {
-    messages: data.messages,
-    partner: data.partner
-  };
+  const session = await auth();
+  if (!session?.user?.id) return { messages: [], error: "Unauthorized" };
+
+  try {
+    const messageResults = await db.query.messages.findMany({
+      where: eq(messages.matchId, matchId),
+      orderBy: (msg, { desc }) => [desc(msg.createdAt)],
+      with: {
+        sender: {
+          columns: {
+            id: true,
+            name: true,
+            image: true
+          }
+        }
+      }
+    });
+
+    return { 
+      messages: messageResults.reverse(),
+      error: null 
+    };
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    return { messages: [], error: "Failed to load messages" };
+  }
 }
 
-export async function sendMessage(matchId: string, content: string, senderId: string) {
-  const message = await db.insert(messages)
-    .values({
-      id: uuidv4(),
-      matchId,
-      content,
-      senderId,
-      status: "sent",
-    })
-    .returning();
-    
-  return { message: message[0] };
+export async function sendMessage(
+  matchId: string,
+  content: string,
+  senderId: string
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { message: null, error: "Unauthorized" };
+  }
+
+  try {
+    const [message] = await db
+      .insert(messages)
+      .values({
+        id: crypto.randomUUID(),
+        matchId,
+        senderId,
+        content,
+        status: "delivered",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+
+    return { message, error: null };
+  } catch (error) {
+    console.error("Error sending message:", error);
+    return { message: null, error: "Failed to send message" };
+  }
 }
 
 export async function getMatchDetails(matchId: string, currentUserId: string) {

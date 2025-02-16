@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   timestamp,
   pgTable,
@@ -178,28 +178,37 @@ export const feedbacks = pgTable("feedbacks", {
 });
 
 // Messages
-export const messages = pgTable("messages", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  matchId: uuid("match_id")
-    .notNull()
-    .references(() => matches.id, { onDelete: "cascade" }),
-  senderId: text("sender_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  content: text("content").notNull(),
-  status: text("status")
-    .$type<"sent" | "delivered" | "read">()
-    .default("sent")
-    .notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const messages = pgTable(
+  "messages",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    content: text("content").notNull(),
+    matchId: uuid("match_id")
+      .references(() => matches.id)
+      .notNull(),
+    senderId: text("sender_id")
+      .references(() => users.id)
+      .notNull(),
+    status: text("status", { enum: ["sent", "delivered", "read"] })
+      .default("sent")
+      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull()
+  },
+  (table) => ({
+    matchIdIdx: index("match_id_idx").on(table.matchId),
+    senderIdIdx: index("sender_id_idx").on(table.senderId),
+    createdAtIdx: index("created_at_idx").on(table.createdAt)
+  })
+);
 
 export const messagesRelations = relations(messages, ({ one }) => ({
   sender: one(users, {
     fields: [messages.senderId],
     references: [users.id],
-  }),
+  })
 }));
 
 // Blocks
