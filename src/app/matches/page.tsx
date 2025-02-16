@@ -2,15 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { getMatches } from "@/lib/actions/explore.actions";
-import { Profile } from "@/db/schema";
 import { useInterval } from "@/hooks/use-interval";
 import { EmptyState } from "@/components/ui/empty-state";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { MessageCircle } from "lucide-react";
 
-interface Match extends Profile {
+interface Match {
+  id: string;
   matchId: string;
   matchedAt: Date;
+  user1Id: string;
+  user2Id: string;
+  firstName: string;
+  lastName: string;
+  profilePhoto: string | null;
+  course: string;
+  yearOfStudy: number;
 }
 
 export default function MatchesPage() {
@@ -24,7 +33,7 @@ export default function MatchesPage() {
       if (result.error) {
         setError(result.error);
       } else {
-        setMatches(result.matches as Match[]);
+        setMatches(result.matches as unknown as Match[]);
       }
     } catch (err) {
       console.error("Error fetching matches:", err);
@@ -123,6 +132,19 @@ export default function MatchesPage() {
                   })}
                 </p>
               </div>
+            </div>
+            <div className="mt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                asChild
+              >
+                <a href={`/chat/${match.matchId}`}>
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Open Chat
+                </a>
+              </Button>
             </div>
           </div>
         ))}

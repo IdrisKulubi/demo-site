@@ -193,7 +193,6 @@ function TeddyBear({
 
   const getRandomMessage = () => {
     const messages = [
-      "Happy Valentine's! 💝",
       "Looking for love? 💕",
       "Click to find your match! 💘",
       "You're amazing! ✨",

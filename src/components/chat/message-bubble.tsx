@@ -1,58 +1,42 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import type { messages, users } from "@/db/schema";
+import { format } from "date-fns";
+import type { Message } from "@/db/schema";
 
-export function MessageBubble({
-  message,
-  isOwn,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  showStatus,
-}: {
-  message: typeof messages.$inferSelect & {
-    sender?: typeof users.$inferSelect | string;
-  };
-  isOwn: boolean;
-  showStatus: boolean;
-}) {
-  const senderPhoto =
-    typeof message.sender === "object" && message.sender
-      ? (message.sender as typeof users.$inferSelect).profilePhoto
-      : null;
+import { useSession } from "next-auth/react";
+
+export const MessageBubble = ({ message }: { message: Message }) => {
+  const { data: session } = useSession();
+  const isSent = message.status === "sent";
+  const isDelivered = message.status === "delivered";
+  const isRead = message.status === "read";
 
   return (
-    <div className={cn("flex gap-2", isOwn && "flex-row-reverse")}>
-      {!isOwn && (
-        <Avatar className="h-8 w-8">
-          <AvatarImage src={senderPhoto ?? ""} />
-        </Avatar>
-      )}
-
-      <div
-        className={cn(
-          "p-3 rounded-2xl max-w-[70%]",
-          isOwn
-            ? "bg-pink-500 text-white rounded-br-none"
-            : "bg-gray-100 dark:bg-gray-800 rounded-bl-none"
-        )}
-      >
+    <div className={cn(
+      "flex flex-col gap-1 max-w-[80%]",
+      message.senderId === session?.user.id ? "ml-auto" : "mr-auto"
+    )}>
+      <div className={cn(
+        "p-3 rounded-2xl",
+        message.senderId === session?.user.id 
+          ? "bg-primary text-primary-foreground rounded-br-none"
+          : "bg-muted rounded-bl-none"
+      )}>
         <p>{message.content}</p>
-        <div className="flex items-center gap-1.5 mt-1.5 justify-end">
-          <span className="text-xs opacity-70">
-            {new Date(message.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-
+        <div className="flex items-center gap-2 mt-1.5">
+          <span className="text-xs opacity-75">
+            {format(new Date(message.createdAt), "HH:mm")}
           </span>
-          {isOwn && (
-            <span className="text-xs">
-              {message.isRead ? "👁️✔️" : message.id? "✔️" : "🕒"}
-            </span>
+          {message.senderId === session?.user.id && (
+            <div className="flex items-center gap-1">
+              {isSent && <span>✓</span>}
+              {isDelivered && <span>✓✓</span>}
+              {isRead && <span className="text-primary">✓✓</span>}
+            </div>
           )}
         </div>
       </div>
     </div>
   );
-}
+};

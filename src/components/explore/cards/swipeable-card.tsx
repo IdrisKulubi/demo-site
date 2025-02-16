@@ -6,6 +6,8 @@ import { useEffect, useState, useCallback } from "react";
 import { Profile } from "@/db/schema";
 import { Card } from "@/components/ui/card";
 import ImageSlider from "../controls/ImageSlider";
+import { Button } from "@/components/ui/button";
+import { MessageCircle } from "lucide-react";
 
 interface SwipeableCardProps {
   profile: Profile & {
@@ -171,7 +173,18 @@ export function SwipeableCard({
           <p className="mt-2 text-sm opacity-80 line-clamp-2">{profile.bio}</p>
         </div>
 
-       
+        {/* Chat Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-pink-500 hover:bg-pink-50 hover:text-pink-600 absolute top-4 right-4"
+          asChild
+        >
+          <a href={`/chat/${profile.matchId}`}>
+            <MessageCircle className="mr-2 h-4 w-4" />
+            Chat Now
+          </a>
+        </Button>
       </Card>
     </motion.div>
   );

@@ -156,19 +156,15 @@ export const matches = pgTable(
     user2Id: text("user2_id")
       .notNull()
       .references(() => users.id),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    lastMessageAt: timestamp("last_message_at"),
     user1Typing: boolean("user1_typing").default(false),
     user2Typing: boolean("user2_typing").default(false),
+    lastMessageAt: timestamp("last_message_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => ({
-    user1Idx: index("match_user1_idx").on(table.user1Id),
-    user2Idx: index("match_user2_idx").on(table.user2Id),
-    createdAtIdx: index("match_created_at_idx").on(table.createdAt),
-    lastMessageIdx: index("match_last_message_idx").on(table.lastMessageAt),
-    // Compound index for faster match lookups
-    matchComboIdx: index("match_combo_idx").on(table.user1Id, table.user2Id),
+    userIdx: index("match_users_idx").on(table.user1Id, table.user2Id),
+    lastMessageIdx: index("last_message_idx").on(table.lastMessageAt),
   })
 );
 
@@ -182,7 +178,7 @@ export const feedbacks = pgTable("feedbacks", {
 });
 
 // Messages
-export const messages = pgTable("message", {
+export const messages = pgTable("messages", {
   id: uuid("id").defaultRandom().primaryKey(),
   matchId: uuid("match_id")
     .notNull()
@@ -191,8 +187,12 @@ export const messages = pgTable("message", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
+  status: text("status")
+    .$type<"sent" | "delivered" | "read">()
+    .default("sent")
+    .notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  isRead: boolean("is_read").default(false).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const messagesRelations = relations(messages, ({ one }) => ({
@@ -241,8 +241,16 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
 }));
 
-export const matchesRelations = relations(matches, ({ many }) => ({
+export const matchesRelations = relations(matches, ({ one, many }) => ({
   messages: many(messages, { relationName: "matchMessages" }),
+  user1: one(users, {
+    fields: [matches.user1Id],
+    references: [users.id],
+  }),
+  user2: one(users, {
+    fields: [matches.user2Id],
+    references: [users.id],
+  }),
 }));
 
 // Then create type references at the end

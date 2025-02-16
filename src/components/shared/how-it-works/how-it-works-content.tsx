@@ -13,7 +13,7 @@ export function HowItWorksContent() {
           className="text-center space-y-4"
         >
           <h1 className="text-4xl font-bold">
-            Find Your Valentine in 4 Easy Steps ✨
+            Find Your Match in 4 Easy Steps ✨
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400">
             It&apos;s giving love at first swipe Here&apos;s how to get started 💖
@@ -91,10 +91,10 @@ const steps = [
     icon: MessageCircle,
   },
   {
-    title: "Plan That Valentine's Date",
+    title: "Plan That  Date",
     description:
-      "Found someone special? Take it to the next level! Plan a cute Valentine's date on campus or explore Glasgow together 🌹",
-    tip: "Check out our Valentine's special events for date ideas",
+      "Found someone special? Take it to the next level! Plan a cute  date on campus or explore Glasgow together 🌹",
+    tip: "Check out our  special events for date ideas",
     icon: Calendar,
   },
 ];

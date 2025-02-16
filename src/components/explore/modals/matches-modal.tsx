@@ -6,7 +6,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { WhatsAppButton } from "@/components/shared/whatsapp-button";
+import { Button } from "@/components/ui/button";
+import { MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { ProfilePreviewModal } from "./profile-preview-modal";
 
@@ -70,10 +71,18 @@ export function MatchesModal({
                         </p>
                       </div>
                     </div>
-                    <WhatsAppButton
-                      phoneNumber={profile.phoneNumber || ""}
-                      size="sm"
-                    />
+                    <Button
+                      asChild
+                      className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                    >
+                      <a
+                        href={`/chat/${profile.matchId}`}
+                        className="flex items-center"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        Start Chatting
+                      </a>
+                    </Button>
                   </motion.div>
                 ))}
               </AnimatePresence>

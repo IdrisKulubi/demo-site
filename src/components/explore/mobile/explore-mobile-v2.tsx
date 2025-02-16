@@ -81,7 +81,7 @@ export function ExploreMobileV2({
       ]);
 
       if (matchesResult.matches) {
-        setMatches(matchesResult.matches as Profile[]);
+        setMatches(matchesResult.matches as unknown as Profile[]);
       }
 
       if (likesResult.profiles) {
@@ -89,7 +89,7 @@ export function ExploreMobileV2({
         const newLikes = likesResult.profiles.filter(
           (profile: Profile) =>
             !matchesResult.matches?.some(
-              (match) => match.userId === profile.userId
+              (match) => match.id === profile.id
             )
         );
         setLikes(newLikes);
@@ -168,8 +168,8 @@ export function ExploreMobileV2({
     setCurrentIndex((prev) => prev + 1);
 
     toast({
-      title: "Time Machine Activated! ⏰",
-      description: "Brought back the last profile for another chance!",
+      title: "Time Machine Activated ⏰",
+      description: "Brought back the last profile for another chance",
       variant: "default",
       className:
         "bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-none",

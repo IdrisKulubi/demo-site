@@ -133,8 +133,8 @@ export function NoMoreProfiles({
                   <div className="space-y-4">
                     <p className="text-center text-sm text-muted-foreground">
                       Know someone who&apos;d be perfect for StrathSpace? <br />
-                      Share the love and help them find their Valentine and
-                      stand a chance to win our valentines Day exclusive gift 💝
+                      Share the love and help them find their matches and
+                      stand a chance to win ourexclusive gift 💝
                     </p>
                     <Button
                       onClick={handleShare}

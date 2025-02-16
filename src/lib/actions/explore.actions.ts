@@ -393,75 +393,27 @@ export async function getTotalSwipes() {
 
 export async function getMatches() {
   const session = await auth();
+  if (!session?.user) return { error: "Unauthorized" };
 
-  if (!session?.user?.id) {
-    return { matches: [], error: "Unauthorized" };
-  }
+  const matches = await db.query.matches.findMany({
+    where: (matches, { or, eq }) => or(
+      eq(matches.user1Id, session.user.id),
+      eq(matches.user2Id, session.user.id)
+    ),
+    with: {
+      user1: true,
+      user2: true,
+    },
+    orderBy: (matches, { desc }) => [desc(matches.createdAt)]
+  });
 
-  try {
-    // First get distinct profiles that have matched with the user
-    const distinctProfiles = await db
-      .selectDistinct({
-        userId: profiles.userId,
-        // Get the most recent match for each profile
-        matchId: sql<string>`MAX(${matches.id})`,
-        matchedAt: sql<Date>`MAX(${matches.createdAt})`,
-        firstName: profiles.firstName,
-        lastName: profiles.lastName,
-        profilePhoto: profiles.profilePhoto,
-        bio: profiles.bio,
-        course: profiles.course,
-        yearOfStudy: profiles.yearOfStudy,
-        phoneNumber: profiles.phoneNumber,
-      })
-      .from(matches)
-      .innerJoin(
-        profiles,
-        or(
-          and(
-            eq(matches.user1Id, session.user.id),
-            eq(profiles.userId, matches.user2Id)
-          ),
-          and(
-            eq(matches.user2Id, session.user.id),
-            eq(profiles.userId, matches.user1Id)
-          )
-        )
-      )
-      .where(
-        and(
-          or(
-            eq(matches.user1Id, session.user.id),
-            eq(matches.user2Id, session.user.id)
-          ),
-          eq(profiles.isVisible, true)
-        )
-      )
-      .groupBy(profiles.userId, profiles.firstName, profiles.lastName, profiles.profilePhoto, 
-               profiles.bio, profiles.course, profiles.yearOfStudy, profiles.phoneNumber)
-      .orderBy(desc(sql`MAX(${matches.createdAt})`));
-
-    const formattedMatches = distinctProfiles.map((match) => ({
-      matchId: match.matchId,
-      matchedAt: match.matchedAt,
-      userId: match.userId,
-      firstName: match.firstName,
-      lastName: match.lastName,
-      profilePhoto: match.profilePhoto,
-      bio: match.bio,
-      course: match.course,
-      yearOfStudy: match.yearOfStudy,
-      phoneNumber: match.phoneNumber,
-    }));
-
-    return {
-      matches: formattedMatches,
-      error: null,
-    };
-  } catch (error) {
-    console.error("Error fetching matches:", error);
-    return { matches: [], error: "Failed to fetch matches" };
-  }
+  return {
+    matches: matches.map(match => ({
+      ...(match.user1.id === session.user.id ? match.user2 : match.user1),
+      matchId: match.id,
+      matchedAt: match.createdAt
+    }))
+  };
 }
 
 export async function getLikesForProfile(profileName: string) {
