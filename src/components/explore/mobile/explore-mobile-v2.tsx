@@ -89,7 +89,7 @@ export function ExploreMobileV2({
         const newLikes = likesResult.profiles.filter(
           (profile: Profile) =>
             !matchesResult.matches?.some(
-              (match) => match.id === profile.id
+              (match) => match.userId === profile.userId
             )
         );
         setLikes(newLikes);

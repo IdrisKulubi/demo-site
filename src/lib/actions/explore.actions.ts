@@ -401,18 +401,56 @@ export async function getMatches() {
       eq(matches.user2Id, session.user.id)
     ),
     with: {
-      user1: true,
-      user2: true,
+      user1: {
+        columns: {
+          id: true,
+        },
+        with: {
+          profile: {
+            columns: {
+              firstName: true,
+              lastName: true,
+              course: true,
+              yearOfStudy: true,
+              bio: true,
+              interests: true,
+              profilePhoto: true
+            }
+          }
+        }
+      },
+      user2: {
+        columns: {
+          id: true,
+        },
+        with: {
+          profile: {
+            columns: {
+              firstName: true,
+              lastName: true,
+              course: true,
+              yearOfStudy: true,
+              bio: true,
+              interests: true,
+              profilePhoto: true
+            }
+          }
+        }
+      }
     },
     orderBy: (matches, { desc }) => [desc(matches.createdAt)]
   });
-
+console.log(matches)
   return {
-    matches: matches.map(match => ({
-      ...(match.user1.id === session.user.id ? match.user2 : match.user1),
-      matchId: match.id,
-      matchedAt: match.createdAt
-    }))
+    matches: matches.map(match => {
+      const partner = match.user1.id === session.user.id ? match.user2 : match.user1;
+      return {
+        ...partner.profile,
+        userId: partner.id,
+        matchId: match.id,
+        matchedAt: match.createdAt
+      };
+    })
   };
 }
 

@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ProfilePreviewModal } from "./profile-preview-modal";
 
 interface MatchesModalProps {
@@ -18,8 +18,6 @@ interface MatchesModalProps {
   currentUser: { id: string };
 }
 
-
-
 export function MatchesModal({
   isOpen,
   onClose,
@@ -27,11 +25,29 @@ export function MatchesModal({
 }: MatchesModalProps) {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
-  // Filter out incomplete profiles and duplicates
-  const validMatches = matches
-    .filter((profile, index, self) => 
-      index === self.findIndex((p) => p.matchId === profile.matchId)
-    );
+  // Enhanced validation and filtering logic
+  const validMatches = useMemo(() => 
+    matches
+      .filter(profile => 
+        profile.firstName?.trim() && 
+        profile.lastName?.trim() && 
+        profile.course?.trim() && 
+        profile.yearOfStudy
+      )
+      .filter((profile, index, self) =>
+        index === self.findIndex(p => 
+          p.matchId === profile.matchId
+        )
+      )
+      .sort((a, b) => {
+        // Sort by most recent matches first
+        if (a.createdAt && b.createdAt) {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+        return 0;
+      }),
+    [matches]
+  );
 
   return (
     <>
@@ -48,54 +64,66 @@ export function MatchesModal({
               {validMatches.length}
             </span>
           </div>
-          <ScrollArea className="h-[60vh]">
+
+          <ScrollArea className="h-[70vh]">
             <div className="space-y-4">
               <AnimatePresence>
                 {validMatches.map((profile) => (
                   <motion.div
-                    key={profile.userId}
+                    key={`${profile.userId}-${profile.matchId}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center justify-between bg-white/50 dark:bg-background/50 p-3 rounded-2xl border border-purple-100 dark:border-purple-900 cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                    exit={{ opacity: 0, y: -20 }}
+                    className="flex flex-col bg-white/50 dark:bg-background/50 p-4 rounded-2xl border border-purple-100 dark:border-purple-900 cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
                     onClick={() => setSelectedProfile(profile)}
                   >
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-14 w-14 border-2 border-purple-200 dark:border-purple-800 transition-transform hover:scale-105">
+                    <div className="flex items-start gap-4">
+                      <Avatar className="h-16 w-16 border-2 border-purple-200 dark:border-purple-800 transition-transform hover:scale-105">
                         <AvatarImage 
                           src={profile.profilePhoto || undefined} 
                           alt={`${profile.firstName}'s profile photo`}
                         />
-                        <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white">
+                        <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-lg">
                           {profile.firstName?.[0]}
                           {profile.lastName?.[0]}
                         </AvatarFallback>
                       </Avatar>
+                      
                       <div className="flex-1">
-                        <h3 className="font-medium">
-                          {profile.firstName} {profile.lastName}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {profile.course} • Year {profile.yearOfStudy}
-                        </p>
-                        {profile.bio && (
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                            {profile.bio}
-                          </p>
-                        )}
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-semibold text-lg">
+                              {profile.firstName} {profile.lastName}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {profile.course} • Year {profile.yearOfStudy}
+                            </p>
+                          </div>
+                          <Button
+                            asChild
+                            className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white shadow-md hover:shadow-lg transition-all duration-300 gap-2 px-4 rounded-xl border border-pink-200 dark:border-purple-800"
+                          >
+                            <a
+                              href={`/chat/${profile.matchId}`}
+                              className="flex items-center whitespace-nowrap"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MessageCircle className="h-4 w-4 mr-1" />
+                              Chat
+                            </a>
+                          </Button>
+                        </div>
+                        
+                        {/* Additional Profile Details */}
+                        <div className="mt-3 space-y-2">
+                       
+                          
+                         
+                          
+                        
+                        </div>
                       </div>
                     </div>
-                    <Button
-                      asChild
-                      className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white shadow-md hover:shadow-lg transition-all duration-300 gap-2 px-4 rounded-xl border border-pink-200 dark:border-purple-800"
-                    >
-                      <a
-                        href={`/chat/${profile.matchId}`}
-                        className="flex items-center whitespace-nowrap"
-                      >
-                        <MessageCircle className="h-4 w-4 mr-1" />
-                        Chat
-                      </a>
-                    </Button>
                   </motion.div>
                 ))}
               </AnimatePresence>
