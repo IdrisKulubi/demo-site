@@ -54,21 +54,20 @@ export function LandingContent({
             </motion.div>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-gray-100">
-            Find Your Valentine at{" "}
+            Find Your Campus Crush at{" "}
             <span className="text-pink-600 dark:text-pink-400">
-              Strathspace
-            </span>{" "}
-            <span className="inline-block animate-bounce">💘</span>
+              Strathspace{" "}
+              <span className="inline-block animate-bounce">🚀</span>
+            </span>
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400">
-            Don&apos;t let this Valentine&apos;s be another Netflix and chill
-            alone! Join StrathSpace and find someone who matches your vibe
-            before February 14th 🌹✨
+            Skip the lecture limbo 😴 Find your vibe tribe - whether it&apos;s study buddies, 
+            party partners, or that cutie from the coffee queue ☕👀
           </p>
           <div className="flex justify-center gap-2 text-pink-600 dark:text-pink-400">
-            <span className="animate-pulse">❤️</span>
-            <span className="animate-pulse delay-100">💖</span>
-            <span className="animate-pulse delay-200">💝</span>
+            <span className="animate-pulse">🫶</span>
+            <span className="animate-pulse delay-100">💅</span>
+            <span className="animate-pulse delay-200">💫</span>
           </div>
         </motion.div>
 
