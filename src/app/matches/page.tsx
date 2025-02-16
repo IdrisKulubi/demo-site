@@ -7,7 +7,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
+import {  MessageSquareHeart } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Match {
   id: string;
@@ -21,6 +22,17 @@ interface Match {
   course: string;
   yearOfStudy: number;
 }
+
+// Add validation helper
+const isProfileComplete = (match: Match) => {
+  return (
+    match.firstName?.trim() &&
+    match.lastName?.trim() &&
+    match.profilePhoto &&
+    match.course?.trim() &&
+    match.yearOfStudy
+  );
+};
 
 export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -53,6 +65,14 @@ export default function MatchesPage() {
     fetchMatches();
   }, 30000);
 
+  // Add deduplication and validation
+  const validMatches = matches
+    .filter(isProfileComplete)
+    // Remove duplicates based on matchId
+    .filter((match, index, self) => 
+      index === self.findIndex((m) => m.matchId === match.matchId)
+    );
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -76,7 +96,7 @@ export default function MatchesPage() {
     );
   }
 
-  if (matches.length === 0) {
+  if (validMatches.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <EmptyState
@@ -89,19 +109,19 @@ export default function MatchesPage() {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
+    <div className="container max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">
         Your Matches
         <span className="text-base font-normal text-muted-foreground ml-2">
-          ✨ {matches.length} connections
+          ✨ {validMatches.length} connections
         </span>
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {matches.map((match) => (
+        {validMatches.map((match) => (
           <div
             key={match.matchId}
-            className="bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow p-4"
+            className="bg-card rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-4 border border-pink-100 dark:border-pink-900/50"
           >
             <div className="flex items-center gap-4">
               <div className="h-16 w-16 rounded-full bg-muted/50 relative overflow-hidden">
@@ -133,21 +153,40 @@ export default function MatchesPage() {
                 </p>
               </div>
             </div>
-            <div className="mt-2">
+
+            <div className="mt-4">
               <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
+                variant="default"
+                size="lg"
+                className={cn(
+                  "w-full bg-gradient-to-r from-pink-500 to-rose-400",
+                  "hover:from-pink-600 hover:to-rose-500",
+                  "text-white font-medium",
+                  "transition-all duration-200",
+                  "shadow-sm hover:shadow-md",
+                  "border border-pink-200 dark:border-pink-800",
+                  "flex items-center justify-center gap-2"
+                )}
                 asChild
               >
                 <a href={`/chat/${match.matchId}`}>
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Open Chat
+                  <MessageSquareHeart className="h-5 w-5 animate-pulse" />
+                  <span>Start Chatting</span>
                 </a>
               </Button>
             </div>
           </div>
         ))}
+
+        {validMatches.length === 0 && !isLoading && (
+          <div className="col-span-full">
+            <EmptyState
+              icon="💝"
+              title="No Matches Yet"
+              description="Keep swiping to find your perfect match!"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

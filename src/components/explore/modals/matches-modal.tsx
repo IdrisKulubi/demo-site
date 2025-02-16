@@ -18,12 +18,20 @@ interface MatchesModalProps {
   currentUser: { id: string };
 }
 
+
+
 export function MatchesModal({
   isOpen,
   onClose,
   matches,
 }: MatchesModalProps) {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+
+  // Filter out incomplete profiles and duplicates
+  const validMatches = matches
+    .filter((profile, index, self) => 
+      index === self.findIndex((p) => p.matchId === profile.matchId)
+    );
 
   return (
     <>
@@ -37,13 +45,13 @@ export function MatchesModal({
               <span className="absolute -right-7 -top-1 text-xl">💘</span>
             </div>
             <span className="text-purple-500 text-sm font-medium">
-              {matches.length}
+              {validMatches.length}
             </span>
           </div>
           <ScrollArea className="h-[60vh]">
             <div className="space-y-4">
               <AnimatePresence>
-                {matches.map((profile) => (
+                {validMatches.map((profile) => (
                   <motion.div
                     key={profile.userId}
                     initial={{ opacity: 0, y: 20 }}
@@ -67,27 +75,32 @@ export function MatchesModal({
                           {profile.firstName} {profile.lastName}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          {profile.course} • {profile.yearOfStudy}
+                          {profile.course} • Year {profile.yearOfStudy}
                         </p>
+                        {profile.bio && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {profile.bio}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <Button
                       asChild
-                      className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                      className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white shadow-md hover:shadow-lg transition-all duration-300 gap-2 px-4 rounded-xl border border-pink-200 dark:border-purple-800"
                     >
                       <a
                         href={`/chat/${profile.matchId}`}
-                        className="flex items-center"
+                        className="flex items-center whitespace-nowrap"
                       >
-                        <MessageCircle className="h-4 w-4" />
-                        Start Chatting
+                        <MessageCircle className="h-4 w-4 mr-1" />
+                        Chat
                       </a>
                     </Button>
                   </motion.div>
                 ))}
               </AnimatePresence>
 
-              {matches.length === 0 && (
+              {validMatches.length === 0 && (
                 <EmptyState
                   icon="💝"
                   title="No matches yet"
