@@ -7,9 +7,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatPreview } from "./chat-preview";
 import { EmptyChats } from "./empty-chats";
 import { useInterval } from "@/hooks/use-interval";
+import { cn } from "@/lib/utils";
 
 interface ChatSectionProps {
   currentUser: { id: string; image: string; name: string };
+  onSelectChat: (match: ChatPreview) => void;
 }
 
 interface ChatPreview {
@@ -67,30 +69,42 @@ export function ChatSection({ currentUser }: ChatSectionProps) {
 
   if (isInitialLoading) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <Spinner className="h-8 w-8 text-pink-500" />
+      <div className="flex h-full items-center justify-center p-8">
+        <Spinner className="h-8 w-8 animate-spin text-pink-500" />
       </div>
     );
   }
 
   if (!isInitialLoading && chats.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="flex h-full items-center justify-center p-8">
         <EmptyChats />
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full bg-background">
-      <ScrollArea className="h-full">
-        <div className="space-y-4 p-4">
-          {chats.map((chat) => (
-            <ChatPreview 
+    <div className="flex h-full w-full flex-col bg-background">
+      <div className="border-b border-border/10 bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      </div>
+      
+      <ScrollArea className="flex-1">
+        <div className="divide-y divide-border">
+          {chats.map((chat, index) => (
+            <div 
               key={chat.id} 
-              profile={chat as ChatPreview}
-              currentUser={currentUser}
-            />
+              className={cn(
+                "transition-colors hover:bg-muted/50",
+                // Add top border to first item to match design
+                index === 0 && "border-t border-border"
+              )}
+            >
+              <ChatPreview 
+                profile={chat as ChatPreview}
+                currentUser={currentUser}
+                onSelectChat={() => {}}
+              />
+            </div>
           ))}
         </div>
       </ScrollArea>

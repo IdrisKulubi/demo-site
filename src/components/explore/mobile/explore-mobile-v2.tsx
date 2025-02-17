@@ -5,7 +5,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeableCard } from "../cards/swipeable-card";
 import { AnimatePresence } from "framer-motion";
-import { Heart, User2, Star, MessageCircle, X } from "lucide-react";
+import { Heart, User2, Star, MessageCircle, X, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   recordSwipe,
@@ -36,6 +36,8 @@ import { SwipeControls } from "../controls/swipe-controls";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
 import { ChatSection } from "@/components/chat/chat-modal";
 import { getChats } from "@/lib/actions/chat.actions";
+import { motion } from "framer-motion";
+import { ChatWindow } from "@/components/chat/chat-window";
 
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];
@@ -75,6 +77,10 @@ export function ExploreMobileV2({
   const [previewProfile, setPreviewProfile] = useState<Profile | null>(null);
   const { toast } = useToast();
   const unreadMessages = useUnreadMessages(currentUser.id);
+
+  // Add these state variables
+  const [selectedChatMatch, setSelectedChatMatch] = useState<Profile | null>(null);
+  const [showChats, setShowChats] = useState(false);
 
   // Fetch and sync matches and likes
   const syncMatchesAndLikes = useCallback(async () => {
@@ -263,6 +269,19 @@ export function ExploreMobileV2({
     }
   }, [isChatLoaded]);
 
+  // Add event listener for chat section close
+  useEffect(() => {
+    const handleCloseChatSection = () => {
+      setShowChat(false);
+    };
+
+    window.addEventListener('closeChatSection', handleCloseChatSection);
+
+    return () => {
+      window.removeEventListener('closeChatSection', handleCloseChatSection);
+    };
+  }, []);
+
   return (
     <div className="relative h-[calc(100vh-4rem)] w-full overflow-hidden bg-background">
       {profiles.length > 0 ? (
@@ -405,25 +424,55 @@ export function ExploreMobileV2({
       )}
 
       {/* Chat Section with optimized loading */}
-      {showChat && (
-        <div className="fixed inset-0 bottom-16 z-50 bg-background">
-          <div className="relative h-full">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">Messages</h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowChat(false)}
-                className="ml-auto"
-              >
-                <X className="h-5 w-5" />
-              </Button>
+      {showChats && (
+        <AnimatePresence>
+          <motion.div
+            initial={{ x: 300 }}
+            animate={{ x: 0 }}
+            exit={{ x: 300 }}
+            className="fixed inset-0 z-50 bg-background"
+          >
+            <div className="relative h-full">
+              <div className="flex items-center justify-between p-4 border-b">
+                <Button variant="ghost" onClick={() => setShowChats(false)}>
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+                <h2 className="text-lg font-semibold">Messages</h2>
+                <div className="w-9" /> {/* Spacer for alignment */}
+              </div>
+              <ChatSection 
+                currentUser={currentUser}
+                onSelectChat={(match) => {
+                  setSelectedChatMatch(match as unknown as Profile);
+                  setShowChats(false);
+                }}
+              />
             </div>
-            <div className="h-[calc(100%-64px)] overflow-y-auto">
-              <ChatSection currentUser={currentUser} />
-            </div>
-          </div>
-        </div>
+          </motion.div>
+        </AnimatePresence>
+      )}
+
+      {selectedChatMatch && (
+        <AnimatePresence>
+          <motion.div
+            initial={{ x: 300 }}
+            animate={{ x: 0 }}
+            exit={{ x: 300 }}
+            className="fixed inset-0 z-[60] bg-background"
+          >
+            <ChatWindow
+              key={selectedChatMatch.id}
+              matchId={selectedChatMatch.id}
+              partner={selectedChatMatch}
+              recipient={selectedChatMatch}
+              onClose={() => setSelectedChatMatch(null)}
+              onBack={() => {
+                setSelectedChatMatch(null);
+                setShowChats(true);
+              }}
+            />
+          </motion.div>
+        </AnimatePresence>
       )}
 
       {/* Modals */}

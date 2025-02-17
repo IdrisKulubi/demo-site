@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 
 interface ChatPreviewProps {
   profile: {
@@ -23,9 +23,10 @@ interface ChatPreviewProps {
     };
   };
   currentUser: { id: string; image: string; name: string };
+  onSelectChat: (matchId: string) => void;
 }
 
-export function ChatPreview({ profile, currentUser }: ChatPreviewProps) {
+export function ChatPreview({ profile, currentUser, onSelectChat }: ChatPreviewProps) {
   const hasUnread = profile.lastMessage && 
     profile.lastMessage.senderId !== currentUser.id && 
     !profile.lastMessage.isRead;
@@ -55,13 +56,25 @@ export function ChatPreview({ profile, currentUser }: ChatPreviewProps) {
     return profile.userId?.[0]?.toUpperCase() || 'U';
   }, [profile.firstName, profile.userId]);
 
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    // Close any parent sections
+    window.dispatchEvent(new CustomEvent('closeAllSections'));
+    onSelectChat(profile.matchId);
+  }, [onSelectChat, profile.matchId]);
+
   return (
     <Button
       variant="ghost"
-      className="w-full h-auto p-4 justify-start hover:bg-accent/50"
-      asChild
+      className="w-full h-auto p-4 justify-start hover:bg-accent/50 rounded-none"
+      onClick={handleClick}
     >
-      <Link href={`/chat/${profile.matchId}`} className="flex items-center gap-4">
+      <Link 
+        href={`/chat/${profile.matchId}`}
+        className="flex items-center gap-4"
+        prefetch={true}
+        replace={true}
+      >
         <Avatar className="h-12 w-12">
           <AvatarImage 
             src={profile.profilePhoto || undefined}
@@ -91,7 +104,7 @@ export function ChatPreview({ profile, currentUser }: ChatPreviewProps) {
         </div>
 
         {hasUnread && (
-          <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0" />
         )}
       </Link>
     </Button>
