@@ -118,6 +118,7 @@ const TypingIndicator = () => (
         className="w-2 h-2 bg-primary rounded-full animate-bounce"
         style={{ animationDelay: `${i * 0.2}s` }}
       />
+      
     ))}
   </div>
 );
