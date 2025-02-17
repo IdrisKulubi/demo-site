@@ -60,7 +60,10 @@ export const ChatWindow = ({ matchId, onClose, partner }: ChatWindowProps) => {
                       message.senderId === session?.user.id ? "justify-end" : "justify-start"
                     )}
                   >
-                    <MessageBubble message={message} />
+                    <MessageBubble 
+                      message={message} 
+                      isUser={message.senderId === session?.user.id}
+                    />
                   </motion.div>
                 ))}
               </AnimatePresence>

@@ -5,7 +5,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeableCard } from "../cards/swipeable-card";
 import { AnimatePresence } from "framer-motion";
-import { Heart, User2, Star, MessageCircle, X } from "lucide-react";
+import { Heart, User2, Star, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   recordSwipe,
