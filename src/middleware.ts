@@ -19,7 +19,6 @@ export async function middleware(request: Request & { nextUrl: URL }) {
     return NextResponse.rewrite(new URL("/sw", request.url));
   }
 
-  // Handle non-authenticated users
   if (!isAuth) {
     // Don't redirect if it's the home page
     if (pathname === "/") {

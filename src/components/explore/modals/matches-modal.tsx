@@ -6,9 +6,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { useState } from "react";
 import { ProfilePreviewModal } from "./profile-preview-modal";
+import { MessageCircle } from "lucide-react";
+import { ChatWindow } from "@/components/chat/chat-window";
 
 interface MatchesModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export function MatchesModal({
   matches,
 }: MatchesModalProps) {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<Profile | null>(null);
 
   return (
     <>
@@ -70,10 +72,15 @@ export function MatchesModal({
                         </p>
                       </div>
                     </div>
-                    <WhatsAppButton
-                      phoneNumber={profile.phoneNumber || ""}
-                      size="sm"
-                    />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedMatch(profile);
+                      }}
+                      className="p-2 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-full transition-colors"
+                    >
+                      <MessageCircle className="h-5 w-5 text-purple-500" />
+                    </button>
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -94,6 +101,13 @@ export function MatchesModal({
         isOpen={!!selectedProfile}
         onClose={() => setSelectedProfile(null)}
         profile={selectedProfile}
+      />
+
+      <ChatWindow
+        isOpen={!!selectedMatch}
+        onClose={() => setSelectedMatch(null)}
+        matchId={selectedMatch?.userId || ""}
+        recipient={selectedMatch as Profile}
       />
     </>
   );

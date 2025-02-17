@@ -1,42 +1,40 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChat } from "@/providers/chat-provider";
-import { MessageBubble } from "./message-bubble";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { SendHorizonal, SmilePlus, ImageIcon } from "lucide-react";
 import type { Profile } from "@/db/schema";
-import { Skeleton } from "@/components/ui/skeleton";
 
-export function ChatWindow({
-  matchId,
-  recipient,
-}: {
+interface ChatWindowProps {
   matchId: string;
   recipient: Profile;
-}) {
+}
+
+export function ChatWindow({ matchId, recipient }: ChatWindowProps) {
+  const { messages, sendMessage, setTyping, onlineStatus, loadMessages } = useChat();
   const [draft, setDraft] = useState("");
-  const { sendMessage, setTyping, messages, onlineStatus } = useChat();
   const [isTypingLocal, setIsTypingLocal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const typingTimeout = useRef<NodeJS.Timeout>(null);
-  const [loaded, setLoaded] = useState(false);
+  const typingTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    loadMessages(matchId);
+    scrollToBottom();
+  }, [matchId, loadMessages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSend = () => {
+  const handleSend = async () => {
     if (draft.trim()) {
-      sendMessage(draft);
+      await sendMessage(matchId, draft.trim());
       setDraft("");
       setTyping(matchId, false);
     }
@@ -56,25 +54,23 @@ export function ChatWindow({
     }, 2000);
   };
 
+  if (!recipient) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p>Loading chat...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col h-[100dvh] bg-white dark:bg-background">
-      {/* Chat Header */}
-      <div className="flex items-center p-4 border-b border-pink-100 dark:border-pink-900">
+    <div className="flex flex-col h-full bg-white dark:bg-background">
+      {/* Header */}
+      <div className="flex items-center p-4 border-b border-gray-100 dark:border-gray-800">
         <Avatar className="h-10 w-10">
-          {!loaded && (
-            <Skeleton className="h-full w-full rounded-full bg-muted/50 animate-pulse" />
-          )}
-          <AvatarImage
-            src={recipient.profilePhoto || ""}
-            onLoad={() => setLoaded(true)}
-            className={loaded ? "visible" : "hidden"}
-          />
+          <AvatarImage src={recipient?.profilePhoto || ""} />
           <AvatarFallback>
-            {loaded ? (
-              `${recipient.firstName?.[0]}${recipient.lastName?.[0]}`
-            ) : (
-              <span className="text-muted-foreground/50">...</span>
-            )}
+            {recipient?.firstName?.[0]}
+            {recipient?.lastName?.[0]}
           </AvatarFallback>
         </Avatar>
         <div className="ml-3 flex-1">
@@ -98,14 +94,44 @@ export function ChatWindow({
       {/* Messages Area */}
       <ScrollArea className="flex-1 px-4 py-4">
         <div className="space-y-4">
-          {messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              isOwn={message.senderId === recipient.userId}
-              showStatus={true}
-            />
-          ))}
+          <AnimatePresence>
+            {messages.map((message) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className={cn(
+                  "flex",
+                  message.senderId === recipient.userId ? "justify-start" : "justify-end"
+                )}
+              >
+                <div
+                  className={cn(
+                    "max-w-[75%] rounded-2xl p-3",
+                    message.senderId === recipient.userId
+                      ? "bg-gray-100 dark:bg-gray-800"
+                      : "bg-gradient-to-r from-pink-500 to-purple-500 text-white"
+                  )}
+                >
+                  <p>{message.content}</p>
+                  <div className="flex items-center justify-end gap-1.5 mt-1">
+                    <span className="text-xs opacity-70">
+                      {new Date(message.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                    {message.senderId !== recipient.userId && (
+                      <span className="text-xs">
+                        {message.isRead ? "✓✓" : "✓"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
           <div ref={messagesEndRef} />
         </div>
 
@@ -132,21 +158,29 @@ export function ChatWindow({
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-pink-100 dark:border-pink-900">
+      <div className="p-4 border-t border-gray-100 dark:border-gray-800">
         <div className="flex gap-2">
+          <div className="flex gap-2 flex-1">
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <SmilePlus className="h-5 w-5 text-pink-500" />
+            </Button>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <ImageIcon className="h-5 w-5 text-pink-500" />
+            </Button>
+          </div>
           <Input
             value={draft}
             onChange={handleInputChange}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            placeholder="Type a message..."
-            className="flex-1 rounded-2xl bg-background"
+            placeholder="Say something nice..."
+            className="flex-1 rounded-full bg-background"
           />
           <Button
             onClick={handleSend}
             disabled={!draft.trim()}
-            className="rounded-2xl bg-pink-500 hover:bg-pink-600 text-white"
+            className="rounded-full bg-pink-500 hover:bg-pink-600 text-white"
           >
-            Send
+            <SendHorizonal className="h-5 w-5" />
           </Button>
         </div>
       </div>
