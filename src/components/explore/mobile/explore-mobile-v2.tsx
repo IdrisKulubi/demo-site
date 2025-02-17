@@ -50,11 +50,13 @@ interface ExploreMobileV2Props {
   currentUser: { id: string; image: string; name: string };
   likedProfiles: Profile[];
   likedByProfiles: Profile[];
+  markAsRead: (matchId: string) => void;  
 }
 
 export function ExploreMobileV2({
   initialProfiles,
   currentUser,
+  markAsRead,
   likedProfiles: initialLikedProfiles,
   likedByProfiles: initialLikedByProfiles,
 }: ExploreMobileV2Props) {
@@ -303,6 +305,7 @@ export function ExploreMobileV2({
             <ChatSection 
               currentUser={currentUser} 
               onSelectChat={handleSelectChat}
+              markAsRead={markAsRead}
             />
           </div>
         </SheetContent>
@@ -386,7 +389,7 @@ export function ExploreMobileV2({
                   className="relative"
                 >
                   <MessageCircle className="h-6 w-6 text-blue-500" />
-                  {unreadMessages > 0 && (
+                  {unreadMessages.unreadCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-blue-500 animate-pulse" />
                   )}
                 </Button>

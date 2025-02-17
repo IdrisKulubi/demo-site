@@ -24,12 +24,12 @@ interface ChatPreviewProps {
   };
   currentUser: { id: string; image: string; name: string };
   onSelect: (matchId: string) => void;
+  markAsRead: (matchId: string) => void;
 }
 
-export function ChatPreview({ profile, currentUser, onSelect }: ChatPreviewProps) {
-  const hasUnread = profile.lastMessage && 
-    profile.lastMessage.senderId !== currentUser.id && 
-    !profile.lastMessage.isRead;
+export function ChatPreview({ profile, currentUser, onSelect, markAsRead }: ChatPreviewProps) {
+  const hasUnread = !profile.lastMessage.isRead && 
+                   profile.lastMessage.senderId !== currentUser.id;
 
   // Memoize the formatted time to prevent unnecessary re-renders
   const formattedTime = useMemo(() => {
@@ -56,15 +56,18 @@ export function ChatPreview({ profile, currentUser, onSelect }: ChatPreviewProps
     return profile.userId?.[0]?.toUpperCase() || 'U';
   }, [profile.firstName, profile.userId]);
 
+  const handleClick = () => {
+    if (hasUnread) {
+      markAsRead(profile.matchId);
+    }
+    onSelect(profile.matchId);
+  };
+
   return (
     <Button
       variant="ghost"
       className="w-full h-auto p-4 hover:bg-accent/50 rounded-none border-b border-border transition-colors"
-      onClick={() => {
-        // Close chat list and open chat window
-        window.dispatchEvent(new CustomEvent('closeChatSection'));
-        onSelect(profile.matchId);
-      }}
+      onClick={handleClick}
     >
       <Link 
         href={`/chat/${profile.matchId}`}

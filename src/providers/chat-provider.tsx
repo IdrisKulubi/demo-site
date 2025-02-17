@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useSocket } from "@/lib/hooks/use-socket";
 import type { messages as MessagesTable } from "@/db/schema";
@@ -10,6 +10,7 @@ type ChatContextType = {
   setTyping: (matchId: string, isTyping: boolean) => void;
   messages: (typeof MessagesTable.$inferSelect)[];
   onlineStatus: Record<string, boolean>;
+  markAsRead: (matchId: string) => void;
 };
 
 const ChatContext = createContext<ChatContextType>(null!);
@@ -21,6 +22,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     (typeof MessagesTable.$inferSelect)[]
   >([]);
   const [onlineStatus, setOnlineStatus] = useState<Record<string, boolean>>({});
+  const [readMatches, setReadMatches] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!socket || !session) return;
@@ -61,6 +63,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     return () => socket.removeEventListener("message", handleMessage);
   }, [socket, session]);
 
+  const markAsRead = useCallback((matchId: string) => {
+    setReadMatches(prev => new Set(prev.add(matchId)));
+  }, []);
+
   const value = {
     sendMessage: (content: string) => {
       socket?.send(
@@ -82,6 +88,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     },
     messages,
     onlineStatus,
+    markAsRead,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

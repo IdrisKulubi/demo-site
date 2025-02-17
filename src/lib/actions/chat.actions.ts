@@ -3,7 +3,8 @@
 import  db  from "@/db/drizzle";
 import { messages } from "@/db/schema";
 import { auth } from "@/auth";
-import { eq, } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { pusher } from "@/lib/pusher/server";
 
 export async function getChatMessages(matchId: string) {
   const session = await auth();
@@ -106,14 +107,14 @@ export async function getMatchDetails(matchId: string, currentUserId: string) {
   return { match, partner };
 }
 
-export async function getUnreadCount() {
+export async function getUnreadCount(userId: string) {
   const session = await auth();
   if (!session?.user?.id) return 0;
 
   try {
     const result = await db.query.messages.findMany({
       where: (messages, { and, eq, not }) => and(
-        eq(messages.senderId, session.user.id),
+        eq(messages.matchId, userId),
         not(eq(messages.status, "read"))
       ),
     });
@@ -214,5 +215,26 @@ export async function getChats() {
   } catch (error) {
     console.error("Error getting chats:", error);
     return [];
+  }
+}
+
+export async function markMessagesAsRead(matchId: string, userId: string) {
+  try {
+    await db.update(messages)
+      .set({ status: 'read' })
+      .where(
+        and(
+          eq(messages.matchId, matchId),
+          eq(messages.senderId, userId),
+          eq(messages.status, 'delivered')
+        )
+      );
+
+    await pusher.trigger(`private-user-${userId}`, 'messages-read', { matchId });
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error marking messages as read:', error);
+    return { error: 'Failed to update read status' };
   }
 } 

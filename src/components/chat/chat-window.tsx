@@ -10,6 +10,9 @@ import { type Profile } from "@/db/schema";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
+import { useUnreadMessages } from "@/hooks/use-unread-messages";
+import { useEffect } from "react";
+import { markMessagesAsRead } from "@/lib/actions/chat.actions";
 
 
 interface ChatWindowProps {
@@ -28,6 +31,15 @@ export const ChatWindow = ({ matchId, onClose, partner }: ChatWindowProps) => {
   } = useChat(matchId, partner);
 
   const { data: session } = useSession();
+  const { markAsRead } = useUnreadMessages(session?.user.id ?? "");
+
+  useEffect(() => {
+    // Mark as read when chat opens
+    markAsRead(matchId);
+    // Update backend
+    markMessagesAsRead(matchId, session?.user.id ?? "");
+  }, [matchId, markAsRead, session?.user.id]);
+
   return (
     <div className="flex flex-col h-screen bg-background">
       <ChatHeader 

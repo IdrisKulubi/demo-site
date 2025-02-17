@@ -1,30 +1,27 @@
 import { useEffect, useState } from 'react';
-import PusherClient from 'pusher-js';
 import { getUnreadCount } from '@/lib/actions/chat.actions';
-
-const pusherClient = new PusherClient(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-  cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-  forceTLS: true,
-});
-
+import { pusherClient } from '@/lib/pusher/client';
 export function useUnreadMessages(userId: string) {
   const [unreadCount, setUnreadCount] = useState(0);
+  const [readMessages, setReadMessages] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const loadUnreadCount = async () => {
-      const count = await getUnreadCount();
+    const fetchInitialCount = async () => {
+      const count = await getUnreadCount(userId);
       setUnreadCount(count);
     };
-
-    loadUnreadCount();
+    fetchInitialCount();
 
     const channel = pusherClient.subscribe(`private-user-${userId}`);
     
-    channel.bind('new-message', () => {
-      setUnreadCount(prev => prev + 1);
+    channel.bind('new-message', (data: { matchId: string }) => {
+      if (!readMessages.has(data.matchId)) {
+        setUnreadCount(prev => prev + 1);
+      }
     });
-    
-    channel.bind('message-read', () => {
+
+    channel.bind('messages-read', (data: { matchId: string }) => {
+      setReadMessages(prev => new Set(prev.add(data.matchId)));
       setUnreadCount(prev => Math.max(0, prev - 1));
     });
 
@@ -32,7 +29,12 @@ export function useUnreadMessages(userId: string) {
       channel.unbind_all();
       pusherClient.unsubscribe(`private-user-${userId}`);
     };
-  }, [userId]);
+  }, [userId, readMessages]);
 
-  return unreadCount;
+  const markAsRead = (matchId: string) => {
+    setReadMessages(prev => new Set(prev.add(matchId)));
+    setUnreadCount(prev => Math.max(0, prev - 1));
+  };
+
+  return { unreadCount, markAsRead };
 } 
