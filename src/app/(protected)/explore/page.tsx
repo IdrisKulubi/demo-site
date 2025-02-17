@@ -12,6 +12,12 @@ import { getProfile } from "@/lib/actions/profile.actions";
 import { ExploreMobileV2 } from "@/components/explore/mobile/explore-mobile-v2";
 import { checkProfileCompletion } from "@/lib/checks";
 
+// Add this server action
+async function markAsRead() {
+  'use server';
+  // Implementation if needed
+}
+
 export default async function ExplorePage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
@@ -79,7 +85,7 @@ export default async function ExplorePage() {
             initialProfiles={profiles as Profile[]}
             likedByProfiles={likedByProfiles}
             likedProfiles={likedProfiles}
-            markAsRead={() => {}}
+            markAsRead={markAsRead}
           />
         </div>
         <div className="hidden md:block">
