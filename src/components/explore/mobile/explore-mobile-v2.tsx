@@ -5,7 +5,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeableCard } from "../cards/swipeable-card";
 import { AnimatePresence } from "framer-motion";
-import { Heart, User2, Star, MessageCircle, X, ChevronLeft } from "lucide-react";
+import { Heart, User2, Star, MessageCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   recordSwipe,
@@ -36,7 +36,12 @@ import { SwipeControls } from "../controls/swipe-controls";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
 import { ChatSection } from "@/components/chat/chat-modal";
 import { getChats } from "@/lib/actions/chat.actions";
-import { motion } from "framer-motion";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { ChatWindow } from "@/components/chat/chat-window";
 
 interface ExploreMobileV2Props {
@@ -65,6 +70,8 @@ export function ExploreMobileV2({
   const [showLikes, setShowLikes] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [isChatLoaded, setIsChatLoaded] = useState(false);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [showChatList, setShowChatList] = useState(false);
 
   // Initialize matches from likedProfiles where isMatch is true
   const [matches, setMatches] = useState<Profile[]>(
@@ -77,10 +84,6 @@ export function ExploreMobileV2({
   const [previewProfile, setPreviewProfile] = useState<Profile | null>(null);
   const { toast } = useToast();
   const unreadMessages = useUnreadMessages(currentUser.id);
-
-  // Add these state variables
-  const [selectedChatMatch, setSelectedChatMatch] = useState<Profile | null>(null);
-  const [showChats, setShowChats] = useState(false);
 
   // Fetch and sync matches and likes
   const syncMatchesAndLikes = useCallback(async () => {
@@ -282,222 +285,203 @@ export function ExploreMobileV2({
     };
   }, []);
 
-  return (
-    <div className="relative h-[calc(100vh-4rem)] w-full overflow-hidden bg-background">
-      {profiles.length > 0 ? (
-        <>
-          <div className="relative w-[calc(100%-32px)] mx-auto h-[calc(100vh-5rem)]">
-            <AnimatePresence>
-              {profiles[currentIndex] && (
-                <>
-                  <SwipeableCard
-                    key={profiles[currentIndex].userId}
-                    profile={
-                      profiles[currentIndex] as Profile & { photos?: string[] }
-                    }
-                    onSwipe={handleSwipe}
-                    active={true}
-                  />
-                </>
-              )}
-            </AnimatePresence>
-          </div>
+  // Handle chat selection
+  const handleSelectChat = (matchId: string) => {
+    setSelectedChatId(matchId);
+    setShowChatList(false);
+  };
 
-          {/* Swipe Controls - Fixed at bottom */}
-          <div className="fixed bottom-12 left-0 right-0 px-4 pb-4 z-50">
-            <SwipeControls
-              onSwipeLeft={() => handleSwipe("left")}
-              onSwipeRight={() => handleSwipe("right")}
-              onUndo={handleRevert}
-              onSuperLike={() => {
-                toast({
-                  title: "bestie wait ⭐️✨",
-                  description:
-                    "super likes coming soon & they're gonna be lit fr fr 🔥",
-                  className:
-                    "bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-none",
-                });
-              }}
-              disabled={isAnimating || currentIndex < 0}
-              className="mx-auto max-w-lg"
-              currentProfileId={profiles[currentIndex]?.userId}
+  return (
+    <div className="relative h-full">
+      {/* Chat List */}
+      <Sheet open={showChatList} onOpenChange={setShowChatList}>
+        <SheetContent side="right" className="w-full sm:w-[400px] p-0">
+          <SheetHeader className="p-4 border-b">
+            <SheetTitle>Messages</SheetTitle>
+          </SheetHeader>
+          <div className="h-[calc(100vh-4rem)] overflow-hidden">
+            <ChatSection 
+              currentUser={currentUser} 
+              onSelectChat={handleSelectChat}
             />
           </div>
+        </SheetContent>
+      </Sheet>
 
-          {/* Bottom Navigation */}
-          <div className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border/50">
-            <div className="flex justify-around items-center h-16 px-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowMatches(true)}
-                className="relative"
-              >
-                <Heart className="h-6 w-6 text-pink-500" />
-                {matches.length > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-pink-500 text-white text-xs flex items-center justify-center">
-                    {matches.length}
-                  </span>
-                )}
-              </Button>
+      {/* Chat Window Overlay */}
+      {selectedChatId && (
+        <div className="fixed inset-0 z-50 bg-background animate-slide-in">
+          <ChatWindow
+            matchId={selectedChatId}
+            onClose={() => setSelectedChatId(null)}
+            partner={matches.find((match) => match.matchId === selectedChatId) as Profile}
 
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowChat(true)}
-                onMouseEnter={handleChatHover}
-                className="relative"
-              >
-                <MessageCircle className="h-6 w-6 text-blue-500" />
-                {unreadMessages > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-blue-500 animate-pulse" />
-                )}
-              </Button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="relative hover:bg-accent/50 transition-colors duration-200"
-                  >
-                    <Avatar className="h-8 w-8 ring-2 ring-primary/20 hover:ring-primary/40 transition-all duration-200">
-                      <AvatarImage
-                        src={currentUser?.image || undefined}
-                        alt={currentUser?.name || "User"}
-                        className="object-cover"
-                      />
-                      <AvatarFallback className="bg-gradient-to-br from-pink-500 to-purple-500 text-white">
-                        {currentUser?.name?.[0]?.toUpperCase() || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-56 p-2 backdrop-blur-lg bg-white/90 dark:bg-gray-950/90 border border-border/50 shadow-lg shadow-primary/5"
-                >
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/profile"
-                      className="flex items-center px-3 py-2 rounded-md hover:bg-accent/80 transition-colors duration-200"
-                    >
-                      <User2 className="mr-2 h-4 w-4 text-primary" />
-                      <span>Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="flex items-center px-3 py-2 rounded-md text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors duration-200 mt-1"
-                    onClick={() => signOut()}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <FeedbackModal />
-
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowLikes(true)}
-                className="relative"
-              >
-                <Star className="h-6 w-6 text-yellow-500" />
-                {likes.length > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-yellow-500 text-white text-xs flex items-center justify-center">
-                    {likes.length}
-                  </span>
-                )}
-              </Button>
-            </div>
-          </div>
-        </>
-      ) : (
-        <EmptyMobileView
-          likedProfiles={matches}
-          onShare={() => {}}
-          onUnlike={async () => {}}
-          currentUser={currentUser}
-        />
+          />
+        </div>
       )}
 
-      {/* Chat Section with optimized loading */}
-      {showChats && (
-        <AnimatePresence>
-          <motion.div
-            initial={{ x: 300 }}
-            animate={{ x: 0 }}
-            exit={{ x: 300 }}
-            className="fixed inset-0 z-50 bg-background"
-          >
-            <div className="relative h-full">
-              <div className="flex items-center justify-between p-4 border-b">
-                <Button variant="ghost" onClick={() => setShowChats(false)}>
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-                <h2 className="text-lg font-semibold">Messages</h2>
-                <div className="w-9" /> {/* Spacer for alignment */}
-              </div>
-              <ChatSection 
-                currentUser={currentUser}
-                onSelectChat={(match) => {
-                  setSelectedChatMatch(match as unknown as Profile);
-                  setShowChats(false);
+      <div className="relative h-[calc(100vh-4rem)] w-full overflow-hidden bg-background">
+        {profiles.length > 0 ? (
+          <>
+            <div className="relative w-[calc(100%-32px)] mx-auto h-[calc(100vh-5rem)]">
+              <AnimatePresence>
+                {profiles[currentIndex] && (
+                  <>
+                    <SwipeableCard
+                      key={profiles[currentIndex].userId}
+                      profile={
+                        profiles[currentIndex] as Profile & { photos?: string[] }
+                      }
+                      onSwipe={handleSwipe}
+                      active={true}
+                    />
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Swipe Controls - Fixed at bottom */}
+            <div className="fixed bottom-12 left-0 right-0 px-4 pb-4 z-50">
+              <SwipeControls
+                onSwipeLeft={() => handleSwipe("left")}
+                onSwipeRight={() => handleSwipe("right")}
+                onUndo={handleRevert}
+                onSuperLike={() => {
+                  toast({
+                    title: "bestie wait ⭐️✨",
+                    description:
+                      "super likes coming soon & they're gonna be lit fr fr 🔥",
+                    className:
+                      "bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-none",
+                  });
                 }}
+                disabled={isAnimating || currentIndex < 0}
+                className="mx-auto max-w-lg"
+                currentProfileId={profiles[currentIndex]?.userId}
               />
             </div>
-          </motion.div>
-        </AnimatePresence>
-      )}
 
-      {selectedChatMatch && (
-        <AnimatePresence>
-          <motion.div
-            initial={{ x: 300 }}
-            animate={{ x: 0 }}
-            exit={{ x: 300 }}
-            className="fixed inset-0 z-[60] bg-background"
-          >
-            <ChatWindow
-              key={selectedChatMatch.id}
-              matchId={selectedChatMatch.id}
-              partner={selectedChatMatch}
-              recipient={selectedChatMatch}
-              onClose={() => setSelectedChatMatch(null)}
-              onBack={() => {
-                setSelectedChatMatch(null);
-                setShowChats(true);
-              }}
-            />
-          </motion.div>
-        </AnimatePresence>
-      )}
+            {/* Bottom Navigation */}
+            <div className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border/50">
+              <div className="flex justify-around items-center h-16 px-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowMatches(true)}
+                  className="relative"
+                >
+                  <Heart className="h-6 w-6 text-pink-500" />
+                  {matches.length > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-pink-500 text-white text-xs flex items-center justify-center">
+                      {matches.length}
+                    </span>
+                  )}
+                </Button>
 
-      {/* Modals */}
-    
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowChatList(true)}
+                  onMouseEnter={handleChatHover}
+                  className="relative"
+                >
+                  <MessageCircle className="h-6 w-6 text-blue-500" />
+                  {unreadMessages > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-blue-500 animate-pulse" />
+                  )}
+                </Button>
 
-      <MatchesModal
-        isOpen={showMatches}
-        onClose={() => setShowMatches(false)}
-        matches={matches}
-        currentUser={currentUser}
-      />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="relative hover:bg-accent/50 transition-colors duration-200"
+                    >
+                      <Avatar className="h-8 w-8 ring-2 ring-primary/20 hover:ring-primary/40 transition-all duration-200">
+                        <AvatarImage
+                          src={currentUser?.image || undefined}
+                          alt={currentUser?.name || "User"}
+                          className="object-cover"
+                        />
+                        <AvatarFallback className="bg-gradient-to-br from-pink-500 to-purple-500 text-white">
+                          {currentUser?.name?.[0]?.toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-56 p-2 backdrop-blur-lg bg-white/90 dark:bg-gray-950/90 border border-border/50 shadow-lg shadow-primary/5"
+                  >
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href="/profile"
+                        className="flex items-center px-3 py-2 rounded-md hover:bg-accent/80 transition-colors duration-200"
+                      >
+                        <User2 className="mr-2 h-4 w-4 text-primary" />
+                        <span>Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="flex items-center px-3 py-2 rounded-md text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors duration-200 mt-1"
+                      onClick={() => signOut()}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-      <LikesModal
-        isOpen={showLikes}
-        onClose={() => setShowLikes(false)}
-        likes={likes}
-        onUnlike={handleUnlike}
-        onUpdate={syncMatchesAndLikes}
-      />
+                <FeedbackModal />
 
-      <ProfilePreviewModal
-        isOpen={!!previewProfile}
-        onClose={() => setPreviewProfile(null)}
-        profile={previewProfile}
-      />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowLikes(true)}
+                  className="relative"
+                >
+                  <Star className="h-6 w-6 text-yellow-500" />
+                  {likes.length > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-yellow-500 text-white text-xs flex items-center justify-center">
+                      {likes.length}
+                    </span>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <EmptyMobileView
+            likedProfiles={matches}
+            onShare={() => {}}
+            onUnlike={async () => {}}
+            currentUser={currentUser}
+          />
+        )}
+
+        {/* Modals */}
+        <MatchesModal
+          isOpen={showMatches}
+          onClose={() => setShowMatches(false)}
+          matches={matches}
+          currentUser={currentUser}
+        />
+
+        <LikesModal
+          isOpen={showLikes}
+          onClose={() => setShowLikes(false)}
+          likes={likes}
+          onUnlike={handleUnlike}
+          onUpdate={syncMatchesAndLikes}
+        />
+
+        <ProfilePreviewModal
+          isOpen={!!previewProfile}
+          onClose={() => setPreviewProfile(null)}
+          profile={previewProfile}
+        />
+      </div>
     </div>
   );
 }

@@ -10,55 +10,37 @@ import { type Profile } from "@/db/schema";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, X } from "lucide-react";
+
 
 interface ChatWindowProps {
   matchId: string;
-  partner: Profile;
-  recipient: Profile;
   onClose: () => void;
-  onBack?: () => void;
+  partner: Profile;
 }
 
-export function ChatWindow({ onClose, onBack, matchId, partner, recipient }: ChatWindowProps) {
+export const ChatWindow = ({ matchId, onClose, partner }: ChatWindowProps) => {
   const {
     messages,
     isTyping,
     handleSend,
     handleTyping,
     isLoading,
-  } = useChat(matchId, recipient);
+  } = useChat(matchId, partner);
 
   const { data: session } = useSession();
   return (
     <div className="flex flex-col h-screen bg-background">
-      <div className="flex items-center justify-between p-4 border-b">
-        {onBack ? (
-          <Button variant="ghost" onClick={onBack}>
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-        ) : (
-          <div className="w-9" />
-        )}
-        <Avatar className="h-8 w-8">
-          <AvatarImage src={recipient.profilePhoto || undefined} />
-          <AvatarFallback>
-            {recipient.firstName?.[0] || 'U'}
-          </AvatarFallback>
-        </Avatar>
-        <Button variant="ghost" onClick={onClose}>
-          <X className="h-5 w-5" />
-        </Button>
-      </div>
+      <ChatHeader 
+        partner={partner}
+        onClose={onClose}
+      />
+
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
           <Spinner className="h-8 w-8 text-pink-500" />
         </div>
       ) : (
         <>
-          <ChatHeader partner={partner} />
           <div className="px-4 py-2 text-sm text-muted-foreground text-center border-b">
             You matched with {partner.firstName} on {new Date(partner.createdAt).toLocaleDateString()}
           </div>
@@ -100,7 +82,7 @@ export function ChatWindow({ onClose, onBack, matchId, partner, recipient }: Cha
       )}
     </div>
   );
-}
+};
 
 const TypingIndicator = () => (
   <div className="flex space-x-1">

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import Link from "next/link";
-import { useMemo, useCallback } from "react";
+import { useMemo } from "react";
 
 interface ChatPreviewProps {
   profile: {
@@ -23,10 +23,10 @@ interface ChatPreviewProps {
     };
   };
   currentUser: { id: string; image: string; name: string };
-  onSelectChat: (matchId: string) => void;
+  onSelect: (matchId: string) => void;
 }
 
-export function ChatPreview({ profile, currentUser, onSelectChat }: ChatPreviewProps) {
+export function ChatPreview({ profile, currentUser, onSelect }: ChatPreviewProps) {
   const hasUnread = profile.lastMessage && 
     profile.lastMessage.senderId !== currentUser.id && 
     !profile.lastMessage.isRead;
@@ -56,26 +56,23 @@ export function ChatPreview({ profile, currentUser, onSelectChat }: ChatPreviewP
     return profile.userId?.[0]?.toUpperCase() || 'U';
   }, [profile.firstName, profile.userId]);
 
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    // Close any parent sections
-    window.dispatchEvent(new CustomEvent('closeAllSections'));
-    onSelectChat(profile.matchId);
-  }, [onSelectChat, profile.matchId]);
-
   return (
     <Button
       variant="ghost"
-      className="w-full h-auto p-4 justify-start hover:bg-accent/50 rounded-none"
-      onClick={handleClick}
+      className="w-full h-auto p-4 hover:bg-accent/50 rounded-none border-b border-border transition-colors"
+      onClick={() => {
+        // Close chat list and open chat window
+        window.dispatchEvent(new CustomEvent('closeChatSection'));
+        onSelect(profile.matchId);
+      }}
     >
       <Link 
         href={`/chat/${profile.matchId}`}
-        className="flex items-center gap-4"
+        className="flex items-center gap-4 w-full"
         prefetch={true}
         replace={true}
       >
-        <Avatar className="h-12 w-12">
+        <Avatar className="h-12 w-12 shrink-0">
           <AvatarImage 
             src={profile.profilePhoto || undefined}
             alt={displayName}
@@ -83,13 +80,13 @@ export function ChatPreview({ profile, currentUser, onSelectChat }: ChatPreviewP
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-center mb-1">
-            <p className="font-medium truncate">
+        <div className="flex-1 min-w-0 text-left">
+          <div className="flex justify-between items-center mb-1.5">
+            <p className="font-semibold truncate text-foreground">
               {displayName}
             </p>
             {profile.lastMessage && (
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
+              <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
                 {formattedTime}
               </span>
             )}
@@ -97,14 +94,16 @@ export function ChatPreview({ profile, currentUser, onSelectChat }: ChatPreviewP
 
           <p className={cn(
             "text-sm truncate",
-            hasUnread ? "text-foreground font-medium" : "text-muted-foreground"
+            hasUnread 
+              ? "text-foreground font-medium" 
+              : "text-muted-foreground/80"
           )}>
             {profile.lastMessage?.content || 'No messages yet'}
           </p>
         </div>
 
         {hasUnread && (
-          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-pink-500 dark:bg-pink-400 shrink-0 animate-pulse" />
         )}
       </Link>
     </Button>

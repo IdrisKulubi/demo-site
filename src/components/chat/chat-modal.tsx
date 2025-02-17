@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 interface ChatSectionProps {
   currentUser: { id: string; image: string; name: string };
-  onSelectChat: (match: ChatPreview) => void;
+  onSelectChat: (matchId: string) => void;
 }
 
 interface ChatPreview {
@@ -28,7 +28,7 @@ interface ChatPreview {
   };
 }
 
-export function ChatSection({ currentUser }: ChatSectionProps) {
+export function ChatSection({ currentUser, onSelectChat }: ChatSectionProps) {
   const [chats, setChats] = useState<ChatPreview[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
@@ -102,7 +102,7 @@ export function ChatSection({ currentUser }: ChatSectionProps) {
               <ChatPreview 
                 profile={chat as ChatPreview}
                 currentUser={currentUser}
-                onSelectChat={() => {}}
+                onSelect={onSelectChat}
               />
             </div>
           ))}
