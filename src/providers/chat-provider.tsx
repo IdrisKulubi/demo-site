@@ -1,90 +1,98 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { pusherClient } from "@/lib/pusher/client";
-import type { Message } from "@/db/schema";
+import { useSocket } from "@/lib/hooks/use-socket";
+import type { messages as MessagesTable } from "@/db/schema";
 
-interface ChatContextType {
-  messages: Message[];
-  sendMessage: (matchId: string, content: string) => Promise<void>;
+type ChatContextType = {
+  sendMessage: (message: string) => void;
   setTyping: (matchId: string, isTyping: boolean) => void;
+  messages: (typeof MessagesTable.$inferSelect)[];
   onlineStatus: Record<string, boolean>;
-  loadMessages: (matchId: string) => Promise<void>;
-}
+  markAsRead: (matchId: string) => void;
+};
 
 const ChatContext = createContext<ChatContextType>(null!);
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const socket = useSocket("ws://localhost:3001");
+  const [messages, setMessages] = useState<
+    (typeof MessagesTable.$inferSelect)[]
+  >([]);
   const [onlineStatus, setOnlineStatus] = useState<Record<string, boolean>>({});
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [readMatches, setReadMatches] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!session?.user?.id) return;
+    if (!socket || !session) return;
 
-    const channel = pusherClient.subscribe(`private-user-${session.user.id}`);
-
-    channel.bind("new-message", (message: Message) => {
-      setMessages((prev) => [...prev, message]);
-    });
-
-    channel.bind("user-online", (userId: string) => {
-      setOnlineStatus((prev) => ({ ...prev, [userId]: true }));
-    });
-
-    channel.bind("user-offline", (userId: string) => {
-      setOnlineStatus((prev) => ({ ...prev, [userId]: false }));
-    });
-
-    return () => {
-      channel.unbind_all();
-      pusherClient.unsubscribe(`private-user-${session.user.id}`);
+    const handleMessage = (event: MessageEvent) => {
+      const message = JSON.parse(event.data);
+      switch (message.type) {
+        case "message":
+          setMessages((prev) => [
+            ...prev,
+            {
+              ...message,
+              sender: {
+                id: message.senderId,
+                name: message.sender,
+                email: "",
+                emailVerified: null,
+                image: null,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                lastActive: new Date(),
+                isOnline: false,
+                profilePhoto: null,
+              },
+            },
+          ]);
+          break;
+        case "presence":
+          setOnlineStatus((prev) => ({
+            ...prev,
+            [message.userId]: message.isOnline,
+          }));
+          break;
+      }
     };
-  }, [session?.user?.id]);
 
-  const loadMessages = async (matchId: string) => {
-    try {
-      const response = await fetch(`/api/chat/${matchId}/messages`);
-      const data = await response.json();
-      if (response.ok) setMessages(data.messages);
-    } catch (error) {
-      console.error("Error loading messages:", error);
-    }
+    socket.addEventListener("message", handleMessage);
+    return () => socket.removeEventListener("message", handleMessage);
+  }, [socket, session]);
+
+  const markAsRead = useCallback((matchId: string) => {
+    setReadMatches(prev => new Set(prev.add(matchId)));
+  }, []);
+
+  const value = {
+    sendMessage: (content: string) => {
+      socket?.send(
+        JSON.stringify({
+          type: "message",
+          content,
+          senderId: session?.user.id,
+        })
+      );
+    },
+    setTyping: (matchId: string, isTyping: boolean) => {
+      socket?.send(
+        JSON.stringify({
+          type: "typing",
+          matchId,
+          isTyping,
+        })
+      );
+    },
+    messages,
+    onlineStatus,
+    markAsRead,
   };
 
-  const sendMessage = async (matchId: string, content: string) => {
-    try {
-      const response = await fetch("/api/chat/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matchId, content }),
-      });
-
-      if (!response.ok) throw new Error("Failed to send message");
-      const newMessage = await response.json();
-      setMessages((prev) => [...prev, newMessage]);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      throw error;
-    }
-  };
-
-  const setTyping = async (matchId: string, isTyping: boolean) => {
-    await pusherClient.trigger(
-      `private-match-${matchId}`,
-      isTyping ? "typing-start" : "typing-stop",
-      { userId: session?.user?.id }
-    );
-  };
-
-  return (
-    <ChatContext.Provider
-      value={{ messages, sendMessage, setTyping, onlineStatus, loadMessages }}
-    >
-      {children}
-    </ChatContext.Provider>
-  );
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }
 
 export const useChat = () => useContext(ChatContext);

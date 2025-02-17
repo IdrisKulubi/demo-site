@@ -8,9 +8,9 @@ import { useSession } from "next-auth/react";
 
 const features = [
   {
-    title: "Valentine's Ready",
+    title: "Ready to Find Your Match?",
     description:
-      "Find your perfect match before the big day Special Valentine's events and ice-breakers included 💝",
+      "Find your perfect match at Strathspace! Join our vibrant community of students looking for meaningful connections 💝",
     icon: Shield,
   },
   {

@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   timestamp,
   pgTable,
@@ -156,19 +156,15 @@ export const matches = pgTable(
     user2Id: text("user2_id")
       .notNull()
       .references(() => users.id),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    lastMessageAt: timestamp("last_message_at"),
     user1Typing: boolean("user1_typing").default(false),
     user2Typing: boolean("user2_typing").default(false),
+    lastMessageAt: timestamp("last_message_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => ({
-    user1Idx: index("match_user1_idx").on(table.user1Id),
-    user2Idx: index("match_user2_idx").on(table.user2Id),
-    createdAtIdx: index("match_created_at_idx").on(table.createdAt),
-    lastMessageIdx: index("match_last_message_idx").on(table.lastMessageAt),
-    // Compound index for faster match lookups
-    matchComboIdx: index("match_combo_idx").on(table.user1Id, table.user2Id),
+    userIdx: index("match_users_idx").on(table.user1Id, table.user2Id),
+    lastMessageIdx: index("last_message_idx").on(table.lastMessageAt),
   })
 );
 
@@ -182,28 +178,37 @@ export const feedbacks = pgTable("feedbacks", {
 });
 
 // Messages
-export const messages = pgTable("message", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  matchId: uuid("match_id")
-    .notNull()
-    .references(() => matches.id, { onDelete: "cascade" }),
-  senderId: text("sender_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  content: text("content").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  isRead: boolean("is_read").default(false).notNull(),
-});
+export const messages = pgTable(
+  "messages",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    content: text("content").notNull(),
+    matchId: uuid("match_id")
+      .references(() => matches.id)
+      .notNull(),
+    senderId: text("sender_id")
+      .references(() => users.id)
+      .notNull(),
+    status: text("status", { enum: ["sent", "delivered", "read"] })
+      .default("sent")
+      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull()
+  },
+  (table) => ({
+    matchIdIdx: index("match_id_idx").on(table.matchId),
+    senderIdIdx: index("sender_id_idx").on(table.senderId),
+    createdAtIdx: index("created_at_idx").on(table.createdAt)
+  })
+);
 
 export const messagesRelations = relations(messages, ({ one }) => ({
-  match: one(matches, {
-    fields: [messages.matchId],
-    references: [matches.id],
-  }),
   sender: one(users, {
     fields: [messages.senderId],
     references: [users.id],
-  }),
+  })
 }));
 
 // Blocks
@@ -246,6 +251,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 }));
 
 export const matchesRelations = relations(matches, ({ one, many }) => ({
+  messages: many(messages, { relationName: "matchMessages" }),
   user1: one(users, {
     fields: [matches.user1Id],
     references: [users.id],
@@ -253,9 +259,6 @@ export const matchesRelations = relations(matches, ({ one, many }) => ({
   user2: one(users, {
     fields: [matches.user2Id],
     references: [users.id],
-  }),
-  messages: many(messages, {
-    relationName: "matchMessages",
   }),
 }));
 
@@ -269,18 +272,3 @@ export type Profile = typeof profiles.$inferSelect & {
 
 // Export the Message type if needed
 export type Message = typeof messages.$inferSelect;
-
-// Add proper types for the chat feature
-export type ChatPreview = {
-  matchId: string;
-  userId: string;
-  firstName: string;
-  lastName: string;
-  profilePhoto: string | null;
-  course: string;
-  yearOfStudy: number;
-  lastMessage: string | null;
-  lastMessageTime: Date | null;
-  unreadCount: number;
-};
-

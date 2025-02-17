@@ -10,7 +10,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { ChatButton } from "@/components/chat/chat-button";
 
 interface MobileMatchesModalProps {
@@ -72,10 +71,7 @@ export function MobileMatchesModal({
                       </p>
                     </div>
                   </div>
-                  <WhatsAppButton
-                    phoneNumber={profile.phoneNumber || ""}
-                    size="sm"
-                  />
+                 
                   <ChatButton
                     matchId={profile.matchId || ""}
                     currentUserId={currentUser.id}

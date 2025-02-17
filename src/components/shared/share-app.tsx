@@ -21,7 +21,7 @@ It's giving main character energy fr fr! Find your perfect match at Strathspace 
 
 Join the vibe: strathspace.com
 
-#StrathSpace #UniFriends #FindYourMatch #ValentinesDay`;
+#StrathSpace #UniFriends #FindYourMatch`;
 
 const SHARE_OPTIONS = [
   {

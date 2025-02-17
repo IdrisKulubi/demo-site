@@ -1,58 +1,66 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import type { messages, users } from "@/db/schema";
+import { format } from "date-fns";
+import type { Message } from "@/db/schema";
 
-export function MessageBubble({
-  message,
-  isOwn,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  showStatus,
-}: {
-  message: typeof messages.$inferSelect & {
-    sender?: typeof users.$inferSelect | string;
-  };
-  isOwn: boolean;
-  showStatus: boolean;
-}) {
-  const senderPhoto =
-    typeof message.sender === "object" && message.sender
-      ? (message.sender as typeof users.$inferSelect).profilePhoto
-      : null;
+
+interface MessageBubbleProps {
+  message: Message;
+  isUser: boolean;
+}
+
+export const MessageBubble = ({ message, isUser }: MessageBubbleProps) => {
+  const isSent = message.status === "sent";
+  const isDelivered = message.status === "delivered";
+  const isRead = message.status === "read";
+
+  const contentLength = message.content.length;
+  const isShortMessage = contentLength < 20;
+  const isLongMessage = contentLength > 100;
 
   return (
-    <div className={cn("flex gap-2", isOwn && "flex-row-reverse")}>
-      {!isOwn && (
-        <Avatar className="h-8 w-8">
-          <AvatarImage src={senderPhoto ?? ""} />
-        </Avatar>
-      )}
-
-      <div
-        className={cn(
-          "p-3 rounded-2xl max-w-[70%]",
-          isOwn
-            ? "bg-pink-500 text-white rounded-br-none"
-            : "bg-gray-100 dark:bg-gray-800 rounded-bl-none"
-        )}
-      >
-        <p>{message.content}</p>
-        <div className="flex items-center gap-1.5 mt-1.5 justify-end">
-          <span className="text-xs opacity-70">
-            {new Date(message.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-
+    <div className={cn(
+      "flex flex-col gap-1",
+      "max-w-[85%] sm:max-w-[75%] md:max-w-[65%]", 
+      isUser ? "ml-auto" : "mr-auto"
+    )}>
+      <div className={cn(
+        "rounded-2xl transition-colors",
+        isShortMessage 
+          ? "px-2 py-1.5" 
+          : isLongMessage 
+            ? "p-2.5 sm:p-3" 
+            : "px-2.5 py-2 sm:p-2.5",
+        isShortMessage ? "text-sm" : isLongMessage ? "text-[0.925rem]" : "text-base",
+        isShortMessage ? "w-fit" : "w-full",
+        isUser
+          ? "bg-gradient-to-r from-pink-500 to-rose-400 text-white"
+          : "bg-secondary border border-border/50 text-foreground",
+        isUser ? "rounded-br-sm" : "rounded-bl-sm"
+      )}>
+        <p className="break-words whitespace-pre-wrap">{message.content}</p>
+        
+        <div className={cn(
+          "flex items-center gap-2",
+          isShortMessage ? "mt-0" : "mt-1"
+        )}>
+          <span className={cn(
+            "text-xs opacity-75",
+            isUser ? "text-white/90" : "text-muted-foreground"
+          )}>
+            {format(new Date(message.createdAt), "HH:mm")}
           </span>
-          {isOwn && (
-            <span className="text-xs">
-              {message.isRead ? "👁️✔️" : message.id? "✔️" : "🕒"}
-            </span>
+          
+          {isUser && (
+            <div className="flex items-center gap-0.5 text-[0.7rem]">
+              {isSent && <span className="text-blue-300/80">✓</span>}
+              {isDelivered && <span className="text-blue-300/80">✓✓</span>}
+              {isRead && <span className="text-blue-600">✓✓</span>}
+            </div>
           )}
         </div>
       </div>
     </div>
   );
-}
+};

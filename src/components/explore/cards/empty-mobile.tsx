@@ -107,7 +107,7 @@ export function EmptyMobileView({
           </h2>
           <p className="text-sm text-muted-foreground">
             No more profiles to show right now... Share StrathSpace to find more
-            people to crush on and stand a chance to win our valentines Day
+            people to crush on and stand a chance to win our
             exclusive gift 💝
           </p>
         </div>

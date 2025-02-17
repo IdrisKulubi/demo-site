@@ -12,6 +12,12 @@ import { getProfile } from "@/lib/actions/profile.actions";
 import { ExploreMobileV2 } from "@/components/explore/mobile/explore-mobile-v2";
 import { checkProfileCompletion } from "@/lib/checks";
 
+// Add this server action
+async function markAsRead() {
+  'use server';
+  // Implementation if needed
+}
+
 export default async function ExplorePage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
@@ -54,7 +60,7 @@ export default async function ExplorePage() {
 
             <div className="relative mx-auto max-w-2xl text-center space-y-6">
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight flex items-center justify-center gap-3 text-gradient bg-gradient-to-r from-pink-500 to-pink-700 dark:from-pink-400 dark:to-pink-600 bg-clip-text text-transparent">
-                Find Your Valentine 💘
+                Find Your Match 💘
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto">
                 Swipe right on profiles that spark joy ✨ Left if it&apos;s not
@@ -79,7 +85,7 @@ export default async function ExplorePage() {
             initialProfiles={profiles as Profile[]}
             likedByProfiles={likedByProfiles}
             likedProfiles={likedProfiles}
-
+            markAsRead={markAsRead}
           />
         </div>
         <div className="hidden md:block">

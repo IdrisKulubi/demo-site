@@ -393,70 +393,74 @@ export async function getTotalSwipes() {
 
 export async function getMatches() {
   const session = await auth();
-
-  if (!session?.user?.id) {
-    return { matches: [], error: "Unauthorized" };
-  }
+  if (!session?.user?.id) return { matches: [], error: "Unauthorized" };
 
   try {
-    // First get distinct profiles that have matched with the user
-    const distinctProfiles = await db
-      .selectDistinct({
-        userId: profiles.userId,
-        // Get the most recent match for each profile
-        matchId: sql<string>`MAX(${matches.id})`,
-        matchedAt: sql<Date>`MAX(${matches.createdAt})`,
-        firstName: profiles.firstName,
-        lastName: profiles.lastName,
-        profilePhoto: profiles.profilePhoto,
-        bio: profiles.bio,
-        course: profiles.course,
-        yearOfStudy: profiles.yearOfStudy,
-        phoneNumber: profiles.phoneNumber,
-      })
-      .from(matches)
-      .innerJoin(
-        profiles,
-        or(
-          and(
-            eq(matches.user1Id, session.user.id),
-            eq(profiles.userId, matches.user2Id)
-          ),
-          and(
-            eq(matches.user2Id, session.user.id),
-            eq(profiles.userId, matches.user1Id)
-          )
-        )
-      )
-      .where(
-        and(
-          or(
-            eq(matches.user1Id, session.user.id),
-            eq(matches.user2Id, session.user.id)
-          ),
-          eq(profiles.isVisible, true)
-        )
-      )
-      .groupBy(profiles.userId, profiles.firstName, profiles.lastName, profiles.profilePhoto, 
-               profiles.bio, profiles.course, profiles.yearOfStudy, profiles.phoneNumber)
-      .orderBy(desc(sql`MAX(${matches.createdAt})`));
+    // Combine the best of both approaches with proper distinct selection
+    const matches = await db.query.matches.findMany({
+      where: (matches, { or, eq }) => or(
+        eq(matches.user1Id, session.user.id),
+        eq(matches.user2Id, session.user.id)
+      ),
+      with: {
+        user1: {
+          columns: { id: true },
+          with: {
+            profile: {
+              columns: {
+                userId: true,
+                firstName: true,
+                lastName: true,
+                course: true,
+                yearOfStudy: true,
+                bio: true,
+                interests: true,
+                profilePhoto: true
+              }
+            }
+          }
+        },
+        user2: {
+          columns: { id: true },
+          with: {
+            profile: {
+              columns: {
+                userId: true,
+                firstName: true,
+                lastName: true,
+                course: true,
+                yearOfStudy: true,
+                bio: true,
+                interests: true,
+                profilePhoto: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: (matches, { desc }) => [desc(matches.createdAt)]
+    });
 
-    const formattedMatches = distinctProfiles.map((match) => ({
-      matchId: match.matchId,
-      matchedAt: match.matchedAt,
-      userId: match.userId,
-      firstName: match.firstName,
-      lastName: match.lastName,
-      profilePhoto: match.profilePhoto,
-      bio: match.bio,
-      course: match.course,
-      yearOfStudy: match.yearOfStudy,
-      phoneNumber: match.phoneNumber,
-    }));
+    // Deduplicate logic using Map
+    const uniqueMatches = new Map<string, typeof matches[number]>();
+    for (const match of matches) {
+      const partnerId = match.user1.id === session.user.id ? match.user2.profile.userId : match.user1.profile.userId;
+      if (!uniqueMatches.has(partnerId)) {
+        uniqueMatches.set(partnerId, match);
+      }
+    }
 
     return {
-      matches: formattedMatches,
-      error: null,
+      matches: Array.from(uniqueMatches.values()).map(match => {
+        const partner = match.user1.id === session.user.id ? match.user2 : match.user1;
+        return {
+          ...partner.profile,
+          userId: partner.id,
+          matchId: match.id,
+          matchedAt: match.createdAt
+        };
+      }),
+      error: null
     };
   } catch (error) {
     console.error("Error fetching matches:", error);

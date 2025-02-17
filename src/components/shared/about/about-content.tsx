@@ -21,8 +21,7 @@ export function AboutContent() {
           </motion.div>
           <h1 className="text-4xl font-bold">Not Your Average  App 💝</h1>
           <p className="text-xl text-gray-600 dark:text-gray-400">
-            We&apos;re bringing the butterflies back to strathspace this
-            Valentine&apos;s 🦋
+            We&apos;re bringing the butterflies back to strathspace 🦋
           </p>
         </div>
 
@@ -53,12 +52,12 @@ export function AboutContent() {
         >
           <PartyPopper className="h-12 w-12 mx-auto text-pink-600 dark:text-pink-400" />
           <h2 className="text-2xl font-bold">
-            Ready to Find Your Valentine? 💘
+            Ready to Find Your Match? 💘
           </h2>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Join hundreds of Strathspace students  already making meaningful
             connections. Whether you&apos;re looking for your soulmate or just want
-            to meet new people, StrathSpace is your go-to spot this Valentine&apos;s!
+            to meet new people, StrathSpace is your go-to spot
             🌟
           </p>
         </motion.div>
@@ -81,9 +80,9 @@ const aboutSections = [
     icon: Sparkles,
   },
   {
-    title: "Valentine's Special",
+    title: "Special Events",
     description:
-      "With V-Day around the corner, we're making it extra special! Join now for exclusive Valentine's events, ice-breakers, and maybe find that special someone to share chocolates with 🍫",
+      "Join our exciting community events and mixers! From ice-breakers to fun activities, we create opportunities for meaningful connections and friendships to blossom naturally 🌟",
     icon: Heart,
   },
 ];

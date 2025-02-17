@@ -111,7 +111,7 @@ export function DetailsInput({
       setIsValid(false);
       setFormattedNumber("");
     }
-  }, [phoneInput, selectedCountry]);
+  }, [phoneInput, selectedCountry,onChange,values.phoneNumber]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^\d+\s()-]/g, "");

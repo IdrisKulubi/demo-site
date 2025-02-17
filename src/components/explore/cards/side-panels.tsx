@@ -3,7 +3,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, X, MessageCircle } from "lucide-react";
+import { Heart, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Profile } from "@/db/schema";
 import { useState, useEffect } from "react";
@@ -12,7 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ViewMoreProfile } from "./view-more-profile";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { getMatches } from "@/lib/actions/explore.actions";
-import Link from "next/link";
 
 interface SidePanelsProps {
   profiles: Profile[];
@@ -249,16 +248,6 @@ function ProfileCard({
           </p>
         </div>
         <div className="flex gap-1">
-          <Button
-            size="icon"
-            variant="ghost"
-            asChild
-            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-100/50 dark:hover:bg-blue-950/50 text-blue-500 dark:text-blue-400"
-          >
-            <Link href={`/chat/${profile.userId}`}>
-              <MessageCircle className="h-3 w-3" />
-            </Link>
-          </Button>
           <Button
             size="icon"
             variant="ghost"

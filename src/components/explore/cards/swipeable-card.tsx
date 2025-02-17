@@ -7,6 +7,7 @@ import { Profile } from "@/db/schema";
 import { Card } from "@/components/ui/card";
 import ImageSlider from "../controls/ImageSlider";
 
+
 interface SwipeableCardProps {
   profile: Profile & {
     photos?: string[];
