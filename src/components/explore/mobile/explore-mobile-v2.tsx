@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeableCard } from "../cards/swipeable-card";
 import { AnimatePresence } from "framer-motion";
-import { Heart, User2, Star } from "lucide-react";
+import { Heart, User2, Star, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   recordSwipe,
@@ -33,6 +33,8 @@ import { LogOut } from "lucide-react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import { SwipeControls } from "../controls/swipe-controls";
+import { useUnreadMessages } from "@/hooks/use-unread-messages";
+import { ChatModal } from "@/components/chat/chat-modal";
 
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];
@@ -60,6 +62,7 @@ export function ExploreMobileV2({
   const [swipedProfiles, setSwipedProfiles] = useState<Profile[]>([]);
   const [showMatches, setShowMatches] = useState(false);
   const [showLikes, setShowLikes] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
   // Initialize matches from likedProfiles where isMatch is true
   const [matches, setMatches] = useState<Profile[]>(
@@ -71,6 +74,7 @@ export function ExploreMobileV2({
 
   const [previewProfile, setPreviewProfile] = useState<Profile | null>(null);
   const { toast } = useToast();
+  const unreadMessages = useUnreadMessages(currentUser.id);
 
   // Fetch and sync matches and likes
   const syncMatchesAndLikes = useCallback(async () => {
@@ -309,6 +313,20 @@ export function ExploreMobileV2({
                 )}
               </Button>
 
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowChat(true)}
+                className="relative"
+              >
+                <MessageCircle className="h-6 w-6 text-blue-500" />
+                {unreadMessages > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center animate-bounce">
+                    {unreadMessages}
+                  </span>
+                )}
+              </Button>
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -374,6 +392,15 @@ export function ExploreMobileV2({
           likedProfiles={matches}
           onShare={() => {}}
           onUnlike={async () => {}}
+          currentUser={currentUser}
+        />
+      )}
+
+      {/* Chat Modal */}
+      {currentUser && (
+        <ChatModal 
+          open={showChat} 
+          onOpenChange={setShowChat}
           currentUser={currentUser}
         />
       )}
