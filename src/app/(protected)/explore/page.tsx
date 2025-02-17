@@ -79,7 +79,7 @@ export default async function ExplorePage() {
             initialProfiles={profiles as Profile[]}
             likedByProfiles={likedByProfiles}
             likedProfiles={likedProfiles}
-
+            markAsRead={() => {}}
           />
         </div>
         <div className="hidden md:block">

@@ -22,6 +22,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     (typeof MessagesTable.$inferSelect)[]
   >([]);
   const [onlineStatus, setOnlineStatus] = useState<Record<string, boolean>>({});
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [readMatches, setReadMatches] = useState<Set<string>>(new Set());
 
   useEffect(() => {

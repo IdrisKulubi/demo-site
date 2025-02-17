@@ -17,8 +17,8 @@ import { markMessagesAsRead } from "@/lib/actions/chat.actions";
 
 interface ChatWindowProps {
   matchId: string;
-  onClose: () => void;
   partner: Profile;
+  onClose?: () => void;
 }
 
 export const ChatWindow = ({ matchId, onClose, partner }: ChatWindowProps) => {
@@ -44,7 +44,7 @@ export const ChatWindow = ({ matchId, onClose, partner }: ChatWindowProps) => {
     <div className="flex flex-col h-screen bg-background">
       <ChatHeader 
         partner={partner}
-        onClose={onClose}
+        onClose={onClose ?? (() => {})}
       />
 
       {isLoading ? (

@@ -19,7 +19,7 @@ export default async function ChatPage({
       session.user.id
     );
     
-    return <ChatWindow matchId={match.id} partner={partner} recipient={partner} />;
+    return <ChatWindow matchId={match.id} partner={partner} />;
   } catch (error) {
     console.error("Chat Error:", error);
     redirect("/matches");
