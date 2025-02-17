@@ -1,6 +1,5 @@
 "use client";
 
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
 import { getChats } from "@/lib/actions/chat.actions";
 import { Spinner } from "@/components/ui/spinner";
@@ -8,9 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatPreview } from "./chat-preview";
 import { EmptyChats } from "./empty-chats";
 
-interface ChatModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+interface ChatSectionProps {
   currentUser: { id: string; image: string; name: string };
 }
 
@@ -27,53 +24,54 @@ interface ChatPreview {
   };
 }
 
-export function ChatModal({ open, onOpenChange, currentUser }: ChatModalProps) {
+export function ChatSection({ currentUser }: ChatSectionProps) {
   const [chats, setChats] = useState<ChatPreview[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadChats = async () => {
-      if (open) {
-        setLoading(true);
+      setLoading(true);
+      try {
         const result = await getChats();
         setChats(result);
+      } catch (error) {
+        console.error('Failed to load chats:', error);
+      } finally {
         setLoading(false);
       }
     };
 
     loadChats();
-  }, [open]);
+
+    // Set up polling for new messages
+    const interval = setInterval(loadChats, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTitle>Messages</DialogTitle>
-      <DialogDescription>Your active conversations</DialogDescription>
-      <DialogContent className="sm:max-w-[425px] p-0">
-        <div className="p-6 border-b">
-          <h2 className="text-2xl font-semibold">Messages</h2>
-          <p className="text-sm text-muted-foreground">Your active conversations</p>
+    <div className="w-full h-full bg-background">
+      {loading ? (
+        <div className="flex items-center justify-center h-full">
+          <Spinner className="h-8 w-8 text-pink-500" />
         </div>
-        
-        {loading ? (
-          <div className="flex items-center justify-center h-[400px]">
-            <Spinner className="h-8 w-8 text-pink-500" />
-          </div>
-        ) : chats.length === 0 ? (
+      ) : chats.length === 0 ? (
+        <div className="h-full flex items-center justify-center">
           <EmptyChats />
-        ) : (
-          <ScrollArea className="h-[400px] p-4">
-            <div className="space-y-4">
-              {chats.map((chat) => (
-                <ChatPreview 
-                  key={chat.id} 
-                  profile={chat as any}
-                  currentUser={currentUser}
-                />
-              ))}
-            </div>
-          </ScrollArea>
-        )}
-      </DialogContent>
-    </Dialog>
+        </div>
+      ) : (
+        <ScrollArea className="h-full">
+          <div className="space-y-4 p-4">
+            {chats.map((chat) => (
+              <ChatPreview 
+                key={chat.id} 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                profile={chat as any}
+                currentUser={currentUser}
+              />
+            ))}
+          </div>
+        </ScrollArea>
+      )}
+    </div>
   );
 } 

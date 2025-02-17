@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeableCard } from "../cards/swipeable-card";
 import { AnimatePresence } from "framer-motion";
-import { Heart, User2, Star, MessageCircle } from "lucide-react";
+import { Heart, User2, Star, MessageCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   recordSwipe,
@@ -17,7 +18,6 @@ import { EmptyMobileView } from "../cards/empty-mobile";
 import { LikesModal } from "../modals/likes-modal";
 import { ProfilePreviewModal } from "../modals/profile-preview-modal";
 import { useInterval } from "@/hooks/use-interval";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { handleLike, handleUnlike } from "@/lib/actions/like.actions";
 import { MatchesModal } from "../modals/matches-modal";
 import { FeedbackModal } from "@/components/shared/feedback-modal";
@@ -34,7 +34,7 @@ import Link from "next/link";
 import confetti from "canvas-confetti";
 import { SwipeControls } from "../controls/swipe-controls";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
-import { ChatModal } from "@/components/chat/chat-modal";
+import { ChatSection } from "@/components/chat/chat-modal";
 
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];
@@ -52,12 +52,10 @@ export function ExploreMobileV2({
 }: ExploreMobileV2Props) {
   const [profiles, setProfiles] = useState(initialProfiles);
   const [currentIndex, setCurrentIndex] = useState(initialProfiles.length - 1);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(
     null
   );
   const [isAnimating, setIsAnimating] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
   const [swipedProfiles, setSwipedProfiles] = useState<Profile[]>([]);
   const [showMatches, setShowMatches] = useState(false);
@@ -180,7 +178,6 @@ export function ExploreMobileV2({
     });
   }, [swipedProfiles, toast]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleLikeBack = async (userId: string) => {
     try {
       const result = await handleLike(userId);
@@ -396,13 +393,26 @@ export function ExploreMobileV2({
         />
       )}
 
-      {/* Chat Modal */}
-      {currentUser && (
-        <ChatModal 
-          open={showChat} 
-          onOpenChange={setShowChat}
-          currentUser={currentUser}
-        />
+      {/* Chat Section */}
+      {showChat && (
+        <div className="fixed inset-0 bottom-16 z-50 bg-background">
+          <div className="relative h-full">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold">Messages</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowChat(false)}
+                className="ml-auto"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="h-[calc(100%-64px)] overflow-y-auto">
+              <ChatSection currentUser={currentUser} />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Modals */}
