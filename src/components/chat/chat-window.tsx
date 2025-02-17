@@ -11,7 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { markMessagesAsRead } from "@/lib/actions/chat.actions";
 
 
@@ -32,13 +32,24 @@ export const ChatWindow = ({ matchId, onClose, partner }: ChatWindowProps) => {
 
   const { data: session } = useSession();
   const { markAsRead } = useUnreadMessages(session?.user.id ?? "");
+  const markAsReadRef = useRef(markAsRead);
 
   useEffect(() => {
-    // Mark as read when chat opens
-    markAsRead(matchId);
-    // Update backend
-    markMessagesAsRead(matchId, session?.user.id ?? "");
-  }, [matchId, markAsRead, session?.user.id]);
+    markAsReadRef.current = markAsRead;
+  }, [markAsRead]);
+
+  useEffect(() => {
+    const markRead = async () => {
+      try {
+        markAsReadRef.current(matchId);
+        await markMessagesAsRead(matchId, session?.user.id ?? "");
+      } catch (error) {
+        console.error('Error marking messages as read:', error);
+      }
+    };
+
+    markRead();
+  }, [matchId, session?.user.id]);
 
   return (
     <div className="flex flex-col h-screen bg-background">
