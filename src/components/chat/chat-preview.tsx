@@ -2,60 +2,92 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import type { Profile } from "@/db/schema";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import Link from "next/link";
+import { useMemo } from "react";
 
 interface ChatPreviewProps {
-  profile: Profile & { lastMessage?: { content: string; createdAt: Date; isRead: boolean }; matchId?: string };
+  profile: {
+    id: string;
+    userId: string;
+    firstName?: string;
+    lastName?: string;
+    profilePhoto: string | null;
+    matchId: string;
+    lastMessage: {
+      content: string;
+      createdAt: Date;
+      isRead: boolean;
+      senderId: string;
+    };
+  };
   currentUser: { id: string; image: string; name: string };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function ChatPreview({ profile, currentUser }: ChatPreviewProps) {
-  const hasUnread = profile.lastMessage && !profile.lastMessage.isRead;
-  
+  const hasUnread = profile.lastMessage && 
+    profile.lastMessage.senderId !== currentUser.id && 
+    !profile.lastMessage.isRead;
+
+  // Memoize the formatted time to prevent unnecessary re-renders
+  const formattedTime = useMemo(() => {
+    if (!profile.lastMessage?.createdAt) return '';
+    return format(new Date(profile.lastMessage.createdAt), "HH:mm");
+  }, [profile.lastMessage?.createdAt]);
+
+  // Safely handle name display with fallbacks
+  const displayName = useMemo(() => {
+    if (profile.firstName && profile.lastName) {
+      return `${profile.firstName} ${profile.lastName}`;
+    }
+    if (profile.firstName) {
+      return profile.firstName;
+    }
+    return profile.userId || 'User';
+  }, [profile.firstName, profile.lastName, profile.userId]);
+
+  // Get initials for avatar fallback
+  const initials = useMemo(() => {
+    if (profile.firstName) {
+      return profile.firstName[0]?.toUpperCase();
+    }
+    return profile.userId?.[0]?.toUpperCase() || 'U';
+  }, [profile.firstName, profile.userId]);
+
   return (
     <Button
-      asChild
       variant="ghost"
-      className={cn(
-        "w-full flex items-center gap-3 p-3 h-auto",
-        hasUnread && "bg-muted/50"
-      )}
+      className="w-full h-auto p-4 justify-start hover:bg-accent/50"
+      asChild
     >
-      <Link href={`/chat/${profile.matchId}`}>
-        <Avatar className="h-12 w-12 border-2 border-background">
+      <Link href={`/chat/${profile.matchId}`} className="flex items-center gap-4">
+        <Avatar className="h-12 w-12">
           <AvatarImage 
-            src={profile.profilePhoto ?? undefined} 
-            alt={profile.userId}
+            src={profile.profilePhoto || undefined}
+            alt={displayName}
           />
-          <AvatarFallback className="bg-primary/10">
-            {profile.userId[0]?.toUpperCase()}
-          </AvatarFallback>
+          <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
 
-        <div className="flex-1 min-w-0 text-left">
-          <div className="flex items-center justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-center mb-1">
             <p className="font-medium truncate">
-              {profile.userId}
+              {displayName}
             </p>
             {profile.lastMessage && (
               <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {format(new Date(profile.lastMessage.createdAt), "HH:mm")}
+                {formattedTime}
               </span>
             )}
           </div>
 
-          {profile.lastMessage && (
-            <p className={cn(
-              "text-sm truncate",
-              hasUnread ? "text-foreground font-medium" : "text-muted-foreground"
-            )}>
-              {profile.lastMessage.content}
-            </p>
-          )}
+          <p className={cn(
+            "text-sm truncate",
+            hasUnread ? "text-foreground font-medium" : "text-muted-foreground"
+          )}>
+            {profile.lastMessage?.content || 'No messages yet'}
+          </p>
         </div>
 
         {hasUnread && (

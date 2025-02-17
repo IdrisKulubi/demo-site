@@ -144,6 +144,8 @@ export async function getChats() {
                 id: true,
                 userId: true,
                 profilePhoto: true,
+                firstName: true,
+                lastName: true,
               }
             }
           }
@@ -155,6 +157,8 @@ export async function getChats() {
                 id: true,
                 userId: true,
                 profilePhoto: true,
+                firstName: true,
+                lastName: true,
               }
             }
           }
@@ -188,6 +192,8 @@ export async function getChats() {
         return {
           id: partner.id,
           userId: partner.userId,
+          firstName: partner.firstName,
+          lastName: partner.lastName,
           profilePhoto: partner.profilePhoto,
           matchId: match.id,
           lastMessage: {

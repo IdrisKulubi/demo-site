@@ -35,6 +35,7 @@ import confetti from "canvas-confetti";
 import { SwipeControls } from "../controls/swipe-controls";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
 import { ChatSection } from "@/components/chat/chat-modal";
+import { getChats } from "@/lib/actions/chat.actions";
 
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];
@@ -61,6 +62,7 @@ export function ExploreMobileV2({
   const [showMatches, setShowMatches] = useState(false);
   const [showLikes, setShowLikes] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [isChatLoaded, setIsChatLoaded] = useState(false);
 
   // Initialize matches from likedProfiles where isMatch is true
   const [matches, setMatches] = useState<Profile[]>(
@@ -251,6 +253,16 @@ export function ExploreMobileV2({
     }
   };
 
+  // Preload chat data when chat icon is hovered
+  const handleChatHover = useCallback(() => {
+    if (!isChatLoaded) {
+      // Preload chat data
+      getChats().then(() => {
+        setIsChatLoaded(true);
+      });
+    }
+  }, [isChatLoaded]);
+
   return (
     <div className="relative h-[calc(100vh-4rem)] w-full overflow-hidden bg-background">
       {profiles.length > 0 ? (
@@ -314,13 +326,12 @@ export function ExploreMobileV2({
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowChat(true)}
+                onMouseEnter={handleChatHover}
                 className="relative"
               >
                 <MessageCircle className="h-6 w-6 text-blue-500" />
                 {unreadMessages > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center animate-bounce">
-                    {unreadMessages}
-                  </span>
+                  <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-blue-500 animate-pulse" />
                 )}
               </Button>
 
@@ -393,7 +404,7 @@ export function ExploreMobileV2({
         />
       )}
 
-      {/* Chat Section */}
+      {/* Chat Section with optimized loading */}
       {showChat && (
         <div className="fixed inset-0 bottom-16 z-50 bg-background">
           <div className="relative h-full">
