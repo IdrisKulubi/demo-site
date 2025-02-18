@@ -113,7 +113,6 @@ export async function getSwipableProfiles() {
       .orderBy(sql`RANDOM()`)
       .limit(200);
 
-    console.log("Raw database results before formatting:", JSON.stringify(results, null, 2));
 
     // Format the profiles before caching
     const formattedProfiles = results.map((profile) => ({
