@@ -91,6 +91,7 @@ export async function getSwipableProfiles() {
         isVisible: profiles.isVisible,
         isComplete: profiles.isComplete,
         profileCompleted: profiles.profileCompleted,
+        lookingFor: profiles.lookingFor,
       })
       .from(profiles)
       .leftJoin(
@@ -111,6 +112,7 @@ export async function getSwipableProfiles() {
       .where(and(...whereConditions))
       .orderBy(sql`RANDOM()`)
       .limit(200);
+
 
     // Format the profiles before caching
     const formattedProfiles = results.map((profile) => ({
