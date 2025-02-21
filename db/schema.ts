@@ -16,9 +16,10 @@ import { type AdapterAccount } from "@auth/core/adapters";
 export const users = pgTable(
   "user",
   {
-    id: text("id").primaryKey(), // Maps to Auth.js user id
+    id: text("id").primaryKey(), 
     name: text("name").notNull(),
     email: text("email").notNull().unique(),
+    role: text("role").$type<"user" | "admin">().default("user"),
     emailVerified: timestamp("emailVerified"),
     image: text("image"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -235,6 +236,25 @@ export const starredProfiles = pgTable("starred_profiles", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Reports
+export const reports = pgTable("reports", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  reporterId: text("reporter_id")
+    .notNull()
+    .references(() => users.id),
+  reportedUserId: text("reported_user_id")
+    .notNull()
+    .references(() => users.id),
+  reason: text("reason").notNull(),
+  status: text("status").$type<"PENDING" | "RESOLVED">().default("PENDING"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  resolvedAt: timestamp("resolved_at"),
+  adminNotes: text("admin_notes"),
+}, (table) => ({
+  reportedIdx: index("reported_user_idx").on(table.reportedUserId),
+  statusIdx: index("report_status_idx").on(table.status),
+}));
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(profiles, {
@@ -248,6 +268,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   starredProfiles: many(starredProfiles, {
     relationName: "userStarredProfiles",
   }),
+  reports: many(reports, { relationName: "userReports" }),
 }));
 
 export const matchesRelations = relations(matches, ({ one, many }) => ({
@@ -258,6 +279,17 @@ export const matchesRelations = relations(matches, ({ one, many }) => ({
   }),
   user2: one(users, {
     fields: [matches.user2Id],
+    references: [users.id],
+  }),
+}));
+
+export const reportsRelations = relations(reports, ({ one }) => ({
+  reporter: one(users, {
+    fields: [reports.reporterId],
+    references: [users.id],
+  }),
+  reportedUser: one(users, {
+    fields: [reports.reportedUserId],
     references: [users.id],
   }),
 }));
