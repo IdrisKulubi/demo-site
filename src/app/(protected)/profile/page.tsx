@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { checkProfileCompletion } from "@/lib/checks";
 import { MobileNav } from "@/components/explore/mobile/mobile-nav";
+import { StalkersList } from "@/components/profile/stalkers-list";
 
 // This should remain a Server Component for optimal performance
 export default async function ProfilePage() {
@@ -61,7 +62,9 @@ export default async function ProfilePage() {
               <span>Profile Active</span>
             </div>
           </div>
-
+          <section className="space-y-6">
+            <StalkersList />
+          </section>
           {/* Card Container - Static structure */}
           <div className="relative">
             {/* Static background */}
@@ -77,6 +80,8 @@ export default async function ProfilePage() {
               </div>
             </div>
           </div>
+
+         
         </div>
       </div>
     </>
