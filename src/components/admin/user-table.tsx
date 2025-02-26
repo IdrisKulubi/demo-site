@@ -12,7 +12,8 @@ import { UserAvatar } from '@/components/user-avatar';
 
 type User = InferSelectModel<typeof users>;
 
-export function UserManagementTable() {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function UserManagementTable({ users }: { users: User[] }) {
   const { mutate } = useSWRConfig();
   const columns = useMemo<ColumnDef<User>[]>(() => [
     {
