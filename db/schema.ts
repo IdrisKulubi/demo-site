@@ -9,8 +9,10 @@ import {
   json,
   primaryKey,
   index,
+  uniqueIndex
 } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "@auth/core/adapters";
+import { User } from "next-auth";
 
 // First define all tables
 export const users = pgTable(
@@ -255,6 +257,21 @@ export const reports = pgTable("reports", {
   statusIdx: index("report_status_idx").on(table.status),
 }));
 
+// Profile Views
+export const profileViews = pgTable("profile_views", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  viewerId: text("viewer_id")
+    .notNull()
+    .references(() => users.id),
+  viewedId: text("viewed_id")
+    .notNull()
+    .references(() => users.id),
+  viewedAt: timestamp("viewed_at").defaultNow().notNull()
+}, (table) => ({
+  viewerIdx: index("profile_views_viewer_idx").on(table.viewerId),
+  viewedIdx: index("profile_views_viewed_idx").on(table.viewedId),
+}));
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(profiles, {
@@ -294,6 +311,19 @@ export const reportsRelations = relations(reports, ({ one }) => ({
   }),
 }));
 
+export const profileViewsRelations = relations(profileViews, ({ one }) => ({
+  viewer: one(users, {
+    fields: [profileViews.viewerId],
+    references: [users.id],
+    relationName: "profileViewer",
+  }),
+  viewed: one(users, {
+    fields: [profileViews.viewedId],
+    references: [users.id],
+    relationName: "profileViewed",
+  }),
+}));
+
 // Then create type references at the end
 export type Profile = typeof profiles.$inferSelect & {
   isMatch: boolean | null;
@@ -304,4 +334,102 @@ export type Profile = typeof profiles.$inferSelect & {
 
 // Export the Message type if needed
 export type Message = typeof messages.$inferSelect;
+
+// =====================
+// Contest Tables
+// =====================
+
+export const contests = pgTable("contests", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  type: text("type").$type<"photo" | "bio" | "both">().notNull(),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  activeIdx: index("contest_active_idx").on(table.isActive),
+  dateIdx: index("contest_date_idx").on(table.startDate, table.endDate),
+}));
+
+export const contestEntries = pgTable("contest_entries", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  contestId: uuid("contest_id")
+    .notNull()
+    .references(() => contests.id),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  entryType: text("entry_type").$type<"photo" | "bio">().notNull(),
+  photoUrl: text("photo_url"),
+  bioText: text("bio_text").default(''),
+  caption: text("caption").default(''),
+  voteCount: integer("vote_count").default(0).notNull(),
+  isWinner: boolean("is_winner").default(false),
+  isApproved: boolean("is_approved").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  contestIdx: index("entry_contest_idx").on(table.contestId),
+  userIdx: index("entry_user_idx").on(table.userId),
+  winnerIdx: index("entry_winner_idx").on(table.isWinner),
+}));
+
+export const contestVotes = pgTable("contest_votes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  entryId: uuid("entry_id")
+    .notNull()
+    .references(() => contestEntries.id),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  uniqueVote: uniqueIndex("unique_vote").on(table.entryId, table.userId),
+}));
+
+// =====================
+// Relations
+// =====================
+
+export const contestsRelations = relations(contests, ({ many }) => ({
+  entries: many(contestEntries),
+}));
+
+export const contestEntriesRelations = relations(contestEntries, ({ one, many }) => ({
+  contest: one(contests, {
+    fields: [contestEntries.contestId],
+    references: [contests.id],
+  }),
+  user: one(users, {
+    fields: [contestEntries.userId],
+    references: [users.id],
+  }),
+  votes: many(contestVotes),
+}));
+
+export const contestVotesRelations = relations(contestVotes, ({ one }) => ({
+  entry: one(contestEntries, {
+    fields: [contestVotes.entryId],
+    references: [contestEntries.id],
+  }),
+  user: one(users, {
+    fields: [contestVotes.userId],
+    references: [users.id],
+  }),
+}));
+
+// =====================
+// Type Exports
+// =====================
+
+export type Contest = typeof contests.$inferSelect;
+export type ContestEntry = typeof contestEntries.$inferSelect & {
+  votes?: number;
+  user?: User;
+};
+export type ContestVote = typeof contestVotes.$inferSelect;
+export type ProfileView = typeof profileViews.$inferSelect;
 

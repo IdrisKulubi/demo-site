@@ -132,7 +132,7 @@ export async function voteForEntry(entryId: string) {
   const existingVote = await db.query.contestVotes.findFirst({
     where: and(
       eq(contestVotes.entryId, entryId),
-      eq(contestVotes.voterId, session.user.id)
+      eq(contestVotes.userId, session.user.id)
     ),
   });
 
@@ -143,7 +143,7 @@ export async function voteForEntry(entryId: string) {
   // Create the vote
   await db.insert(contestVotes).values({
     entryId,
-    voterId: session.user.id,
+    userId: session.user.id,
   });
 
   // Update vote count
@@ -207,7 +207,7 @@ export async function getContestEntries(contestId: string, sortBy: "newest" | "p
         }
       },
       votes: {
-        where: eq(contestVotes.voterId, session.user.id),
+        where: eq(contestVotes.userId, session.user.id),
         limit: 1
       }
     },
@@ -269,7 +269,7 @@ export async function selectWinners(contestId: string) {
   // Mark them as winners
   if (topEntries.length > 0) {
     await db.update(contestEntries)
-      .set({ 
+      .set({
         isWinner: true,
         updatedAt: new Date()
       })

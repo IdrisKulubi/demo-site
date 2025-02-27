@@ -58,6 +58,5 @@ export default async function ContestsPage() {
 }
 
 // Client components need to be imported dynamically
-import { Suspense } from "react";
 import { HallOfFamePreview } from "@/components/contests/hall-of-fame-preview";
 import { MyContestEntries } from "@/components/contests/my-contest-entries"; 
