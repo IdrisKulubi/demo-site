@@ -2,7 +2,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Icons } from "@/components/shared/icons";
 
-export function AdminStats() {
+interface AdminStatsProps {
+  totalUsers: number;
+  totalMatches: number;
+
+}
+
+export function AdminStats({ totalUsers, totalMatches }: AdminStatsProps) {
   // Temporary loading state - replace with real data fetching
   const isLoading = false;
   
@@ -17,7 +23,7 @@ export function AdminStats() {
           {isLoading ? (
             <Skeleton className="h-8 w-[100px]" />
           ) : (
-            <div className="text-2xl font-bold">1,234</div>
+            <div className="text-2xl font-bold">{totalUsers}</div>
           )}
           <p className="text-xs text-muted-foreground mt-1">
             +12.3% from last month
@@ -51,7 +57,7 @@ export function AdminStats() {
           {isLoading ? (
             <Skeleton className="h-8 w-[100px]" />
           ) : (
-            <div className="text-2xl font-bold">89</div>
+            <div className="text-2xl font-bold">{totalMatches}</div>
           )}
           <p className="text-xs text-muted-foreground mt-1">
             23.1% match rate

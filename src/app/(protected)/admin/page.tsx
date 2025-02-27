@@ -15,7 +15,7 @@ export default async function AdminPage() {
       <h1 className="text-3xl font-bold">Admin Dashboard</h1>
       <AdminStats {...stats} />
       <ContestManager contests={contests} />
-      <UserManagementTable data={users} />
+      <UserManagementTable users={users} />
     </div>
   );
 } 
