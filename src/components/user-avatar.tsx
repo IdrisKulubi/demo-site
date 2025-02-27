@@ -1,8 +1,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { type User } from "@/db/schema";
+import { type users } from "@/db/schema";
 
 interface UserAvatarProps {
-  user: User;
+  user: typeof users.$inferSelect;
   className?: string;
 }
 

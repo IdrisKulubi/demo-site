@@ -1,7 +1,7 @@
-import { type Icon } from "lucide-react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export const Icons = {
-  logo: (props: Icon) => (
+  logo: (props: any) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -16,7 +16,7 @@ export const Icons = {
       <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
     </svg>
   ),
-  users: (props: Icon) => (
+  users: (props: any) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -35,7 +35,7 @@ export const Icons = {
       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   ),
-  activity: (props: Icon) => (
+  activity: (props: any) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -51,7 +51,7 @@ export const Icons = {
       <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
     </svg>
   ),
-  heart: (props: Icon) => (
+  heart: (props: any) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -67,7 +67,7 @@ export const Icons = {
       <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z" />
     </svg>
   ),
-  message: (props: Icon) => (
+  message: (props: any) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -83,7 +83,7 @@ export const Icons = {
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </svg>
   ),
-  logout: (props: Icon) => (
+  logout: (props: any) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"

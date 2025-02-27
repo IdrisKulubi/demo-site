@@ -17,3 +17,9 @@ export interface Profile {
   profilePhoto: string | null;
   
 }
+export interface ActionResult<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+

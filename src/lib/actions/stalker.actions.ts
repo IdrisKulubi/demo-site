@@ -4,18 +4,29 @@ import { auth } from "@/auth";
 import db from "@/db/drizzle";
 import { profileViews } from "@/db/schema";
 import { eq,  desc, sql } from "drizzle-orm";
+import { safeAction } from "@/lib/safe-action";
+import { z } from "zod";
 
-export async function trackProfileView(viewedUserId: string) {
-  const session = await auth();
-  if (!session?.user || session.user.id === viewedUserId) return;
+export const trackProfileView = safeAction(
+  z.string(),
+  async (viewedUserId: string) => {
+    try {
+      const session = await auth();
+      if (!session?.user || session.user.id === viewedUserId) return { success: true } as const;
 
-  await db.insert(profileViews)
-    .values({
-      viewerId: session.user.id,
-      viewedId: viewedUserId
-    })
-    .onConflictDoNothing();
-}
+      await db.insert(profileViews)
+        .values({
+          viewerId: session.user.id,
+          viewedId: viewedUserId
+        })
+        .onConflictDoNothing();
+      return { success: true } as const;
+    } catch (error) {
+      console.error("Error tracking profile view:", error);
+      return { success: false, error: "Failed to track profile view" } as const;
+    }
+  },
+);
 
 export async function getStalkers() {
   const session = await auth();
