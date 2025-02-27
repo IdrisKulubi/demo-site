@@ -1,8 +1,9 @@
 import { auth } from "@/auth";
 import db from "@/db/drizzle";
 import { eq, sql } from "drizzle-orm";
-import { users, matches, reports, messages } from "@/db/schema";
+import { users, matches, reports, messages, contests } from "@/db/schema";
 import { deleteUploadThingFile } from "./upload.actions";
+import { desc } from "drizzle-orm";
 
 export const getAdminStats = async () => {
   const session = await auth();
@@ -52,4 +53,13 @@ export const getUsers = async () => {
     with: { profile: true },
     orderBy: (users, { desc }) => [desc(users.createdAt)]
   });
-}; 
+};
+
+export async function getAdminContests() {
+  const session = await auth();
+  if (session?.user.role !== "admin") throw new Error("Unauthorized");
+
+  return db.query.contests.findMany({
+    orderBy: [desc(contests.createdAt)]
+  });
+} 

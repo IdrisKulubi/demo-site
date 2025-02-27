@@ -9,7 +9,6 @@ import {
   json,
   primaryKey,
   index,
-  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "@auth/core/adapters";
 
@@ -256,18 +255,6 @@ export const reports = pgTable("reports", {
   statusIdx: index("report_status_idx").on(table.status),
 }));
 
-// Profile Views
-export const profileViews = pgTable("profile_views", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  viewerId: text("viewer_id").references(() => users.id, { onDelete: "cascade" }),
-  viewedId: text("viewed_id").references(() => users.id, { onDelete: "cascade" }),
-  viewedAt: timestamp("viewed_at").defaultNow().notNull(),
-}, (table) => ({
-  viewedIdx: index("viewed_idx").on(table.viewedId),
-  viewerIdx: index("viewer_idx").on(table.viewerId),
-  uniqueView: uniqueIndex("unique_view").on(table.viewerId, table.viewedId),
-}));
-
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(profiles, {
@@ -282,7 +269,6 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     relationName: "userStarredProfiles",
   }),
   reports: many(reports, { relationName: "userReports" }),
-  stalkers: many(profileViews, { relationName: "profileViews" }),
 }));
 
 export const matchesRelations = relations(matches, ({ one, many }) => ({
@@ -308,19 +294,6 @@ export const reportsRelations = relations(reports, ({ one }) => ({
   }),
 }));
 
-export const profileViewsRelations = relations(profileViews, ({ one }) => ({
-  viewer: one(users, {
-    fields: [profileViews.viewerId],
-    references: [users.id],
-    relationName: "profileViewer",
-  }),
-  viewed: one(users, {
-    fields: [profileViews.viewedId],
-    references: [users.id],
-    relationName: "profileViewed",
-  }),
-}));
-
 // Then create type references at the end
 export type Profile = typeof profiles.$inferSelect & {
   isMatch: boolean | null;
@@ -331,3 +304,4 @@ export type Profile = typeof profiles.$inferSelect & {
 
 // Export the Message type if needed
 export type Message = typeof messages.$inferSelect;
+
