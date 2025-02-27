@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 export const Icons = {
   logo: (props: any) => (
     <svg
@@ -101,7 +100,7 @@ export const Icons = {
       <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   ),
-  image: (props: Icon) => (
+  image: (props: any) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -119,7 +118,7 @@ export const Icons = {
       <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
     </svg>
   ),
-  text: (props: Icon) => (
+  text: (props: any) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -137,7 +136,7 @@ export const Icons = {
       <path d="M15.1 18H3" />
     </svg>
   ),
-  expand: (props: Icon) => (
+  expand: (props: any) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -156,7 +155,7 @@ export const Icons = {
       <path d="M3 21h6v-6" />
     </svg>
   ),
-  trophy: (props: Icon) => (
+  trophy: (props: any) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -177,7 +176,7 @@ export const Icons = {
       <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
     </svg>
   ),
-  spinner: (props: Icon) => (
+  spinner: (props: any) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"

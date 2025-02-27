@@ -9,7 +9,7 @@ import { z } from "zod";
 
 export const trackProfileView = safeAction(
   z.string(),
-  async (viewedUserId: string) => {
+  async (viewedUserId) => {
     try {
       const session = await auth();
       if (!session?.user || session.user.id === viewedUserId) return { success: true } as const;
