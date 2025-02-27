@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { AdminNav } from "@/components/admin/nav";
+import { redirect } from "next/navigation";
 
 export default async function AdminLayout({
   children,
@@ -8,10 +9,10 @@ export default async function AdminLayout({
 }) {
   const session = await auth();
   
-  // // Ensure only admins can access
-  // if (session?.user.role !== "admin") {
-  //   redirect("/no-access");
-  // }
+  //  Ensure only admins can access
+   if (session?.user.role !== "admin") {
+     redirect("/no-access");
+   }
 
   return (
     <div className="min-h-screen bg-background">

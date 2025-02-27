@@ -8,7 +8,8 @@ import { Card } from "@/components/ui/card";
 import ImageSlider from "../controls/ImageSlider";
 import { Info } from 'lucide-react';
 import { ProfileDetailsModal } from '../profile-details-modal';
-
+import { trackProfileView } from "@/lib/actions/stalker.actions";
+import { useAction } from "next-safe-action/hooks";
 
 interface SwipeableCardProps {
   profile: Profile & {
@@ -36,6 +37,7 @@ export function SwipeableCard({
     [1.5, 1.2, 1, 1.2, 1.5]
   );
   const [showDetails, setShowDetails] = useState(false);
+  const { execute: trackView } = useAction(trackProfileView as any);
 
   // New function to handle button-triggered swipes
   const handleButtonSwipe = useCallback((direction: "left" | "right") => {
@@ -81,6 +83,17 @@ export function SwipeableCard({
 
     return () => unsubscribe();
   }, [active, onSwipe, x]);
+
+  const handleViewProfile = useCallback(() => {
+    trackView(profile.userId);
+    setShowDetails(true);
+  }, [profile.userId, trackView]);
+
+  useEffect(() => {
+    if (showDetails) {
+      trackView(profile.userId);
+    }
+  }, [showDetails, profile.userId, trackView]);
 
   if (!active) {
     return null;
@@ -178,7 +191,7 @@ export function SwipeableCard({
 
           {/* Info Button */}
           <button
-            onClick={() => setShowDetails(true)}
+            onClick={handleViewProfile}
             className="absolute bottom-28 right-4 p-2.5 rounded-full bg-background/80 backdrop-blur-md hover:bg-background transition-colors shadow-lg z-20"
             aria-label="View profile details"
           >

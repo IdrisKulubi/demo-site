@@ -9,7 +9,6 @@ import {
   json,
   primaryKey,
   index,
-  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "@auth/core/adapters";
 
@@ -256,58 +255,6 @@ export const reports = pgTable("reports", {
   statusIdx: index("report_status_idx").on(table.status),
 }));
 
-// Contest periods
-export const contests = pgTable("contests", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  type: text("type").$type<"photo" | "bio" | "both">().notNull(),
-  startDate: timestamp("start_date").notNull(),
-  endDate: timestamp("end_date").notNull(),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (table) => ({
-  activeIdx: index("contest_active_idx").on(table.isActive),
-  typeIdx: index("contest_type_idx").on(table.type),
-  dateIdx: index("contest_date_idx").on(table.endDate),
-}));
-
-// Contest entries
-export const contestEntries = pgTable("contest_entries", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  contestId: uuid("contest_id").references(() => contests.id, { onDelete: "cascade" }),
-  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
-  entryType: text("entry_type").$type<"photo" | "bio">().notNull(),
-  photoUrl: text("photo_url"),
-  bioText: text("bio_text"),
-  caption: text("caption"),
-  voteCount: integer("vote_count").default(0),
-  isApproved: boolean("is_approved").default(false),
-  isWinner: boolean("is_winner").default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (table) => ({
-  contestIdx: index("entry_contest_idx").on(table.contestId),
-  userIdx: index("entry_user_idx").on(table.userId),
-  typeIdx: index("entry_type_idx").on(table.entryType),
-  voteIdx: index("entry_vote_idx").on(table.voteCount),
-  winnerIdx: index("entry_winner_idx").on(table.isWinner),
-}));
-
-// Contest votes
-export const contestVotes = pgTable("contest_votes", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  entryId: uuid("entry_id").references(() => contestEntries.id, { onDelete: "cascade" }),
-  voterId: text("voter_id").references(() => users.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => ({
-  entryIdx: index("vote_entry_idx").on(table.entryId),
-  voterIdx: index("vote_voter_idx").on(table.voterId),
-  // Unique constraint to prevent duplicate votes
-  uniqueVote: uniqueIndex("unique_vote_idx").on(table.entryId, table.voterId),
-}));
-
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(profiles, {
@@ -322,8 +269,6 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     relationName: "userStarredProfiles",
   }),
   reports: many(reports, { relationName: "userReports" }),
-  contestEntries: many(contestEntries),
-  contestVotes: many(contestVotes),
 }));
 
 export const matchesRelations = relations(matches, ({ one, many }) => ({
@@ -349,33 +294,6 @@ export const reportsRelations = relations(reports, ({ one }) => ({
   }),
 }));
 
-export const contestsRelations = relations(contests, ({ many }) => ({
-  entries: many(contestEntries),
-}));
-
-export const contestEntriesRelations = relations(contestEntries, ({ one, many }) => ({
-  contest: one(contests, {
-    fields: [contestEntries.contestId],
-    references: [contests.id],
-  }),
-  user: one(users, {
-    fields: [contestEntries.userId],
-    references: [users.id],
-  }),
-  votes: many(contestVotes),
-}));
-
-export const contestVotesRelations = relations(contestVotes, ({ one }) => ({
-  entry: one(contestEntries, {
-    fields: [contestVotes.entryId],
-    references: [contestEntries.id],
-  }),
-  voter: one(users, {
-    fields: [contestVotes.voterId],
-    references: [users.id],
-  }),
-}));
-
 // Then create type references at the end
 export type Profile = typeof profiles.$inferSelect & {
   isMatch: boolean | null;
@@ -387,7 +305,3 @@ export type Profile = typeof profiles.$inferSelect & {
 // Export the Message type if needed
 export type Message = typeof messages.$inferSelect;
 
-// Export types
-export type Contest = typeof contests.$inferSelect;
-export type ContestEntry = typeof contestEntries.$inferSelect;
-export type ContestVote = typeof contestVotes.$inferSelect;

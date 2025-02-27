@@ -18,7 +18,7 @@ import { EmptyMobileView } from "../cards/empty-mobile";
 import { LikesModal } from "../modals/likes-modal";
 import { ProfilePreviewModal } from "../modals/profile-preview-modal";
 import { useInterval } from "@/hooks/use-interval";
-import { handleLike, handleUnlike } from "@/lib/actions/like.actions";
+import { handleLike } from "@/lib/actions/like.actions";
 import { MatchesModal } from "../modals/matches-modal";
 import { FeedbackModal } from "@/components/shared/feedback-modal";
 import {
@@ -43,6 +43,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ChatWindow } from "@/components/chat/chat-window";
+import { getStalkerCount } from "@/lib/actions/stalker.actions";
+import { Badge } from "@/components/ui/badge";
 
 interface ExploreMobileV2Props {
   initialProfiles: Profile[];
@@ -486,5 +488,30 @@ export function ExploreMobileV2({
         />
       </div>
     </div>
+  );
+}
+
+function StalkersCount() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const updateCount = async () => {
+      const newCount = await getStalkerCount();
+      setCount(newCount);
+    };
+    updateCount();
+    const interval = setInterval(updateCount, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (count === 0) return null;
+
+  return (
+    <Badge 
+      variant="destructive" 
+      className="absolute -top-2 -right-2 animate-pulse"
+    >
+      {count}
+    </Badge>
   );
 }
