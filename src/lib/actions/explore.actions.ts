@@ -120,12 +120,25 @@ export async function getSwipableProfiles() {
       isMatch: !!profile.isMatch,
     }));
 
-    // Cache with proper serialization
+    // Cache with proper serialization - increased TTL to 5 minutes for better performance
     await setCachedData(
       CACHE_KEYS.SWIPABLE_PROFILES(session.user.id),
       formattedProfiles,
-      60 // 1 minute TTL
+      300 // 5 minute TTL
     );
+
+    // Trigger prefetching of profile images for the first few profiles
+    try {
+      const { prefetchProfileBatch } = await import("@/lib/actions/image-prefetch");
+      // Prefetch the first 5 profiles
+      const batchToPreload = formattedProfiles.slice(0, 5);
+      prefetchProfileBatch(batchToPreload).catch(error => 
+        console.error("Failed to prefetch initial profile batch:", error)
+      );
+    } catch (error) {
+      // Non-critical error, just log it
+      console.error("Failed to import prefetch module:", error);
+    }
 
     return formattedProfiles;
   } catch (error) {

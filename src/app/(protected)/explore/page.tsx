@@ -11,11 +11,22 @@ import { type Profile } from "@/db/schema";
 import { getProfile } from "@/lib/actions/profile.actions";
 import { ExploreMobileV2 } from "@/components/explore/mobile/explore-mobile-v2";
 import { checkProfileCompletion } from "@/lib/checks";
+import { prefetchProfileBatch } from "@/lib/actions/image-prefetch";
+import { Suspense } from "react";
 
 // Add this server action
 async function markAsRead() {
   'use server';
-  // Implementation if needed
+}
+
+// Prefetch component to optimize loading
+async function ProfilePrefetcher({ profiles }: { profiles: Profile[] }) {
+  // Prefetch the first batch of profiles (up to 5)
+  if (profiles.length > 0) {
+    const batchToPreload = profiles.slice(0, 5);
+    await prefetchProfileBatch(batchToPreload);
+  }
+  return null;
 }
 
 export default async function ExplorePage() {
@@ -39,7 +50,10 @@ export default async function ExplorePage() {
 
   return (
     <div className="h-full">
-
+      {/* Prefetch the first batch of profiles */}
+      <Suspense fallback={null}>
+        <ProfilePrefetcher profiles={profiles as Profile[]      } />
+      </Suspense>
 
       <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white dark:from-pink-950/30 dark:to-background">
         {/* Desktop Header - Hidden on Mobile */}
@@ -70,8 +84,7 @@ export default async function ExplorePage() {
           </div>
         </div>
 
-        {/* Conditional Rendering based on screen size */}
-        <div className="md:hidden">
+      <div className="md:hidden">
           <ExploreMobileV2
             currentUser={
               session.user as {

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Profile } from "@/db/schema";
 import { SwipeableCard } from "./swipeable-card";
 import { AnimatePresence } from "framer-motion";
@@ -11,6 +11,9 @@ import { MatchModal } from "@/components/explore/modals/match-modal";
 import { useToast } from "@/hooks/use-toast";
 import { SidePanels } from "./side-panels";
 import { NoMoreProfiles } from "../empty-state";
+
+// Number of profiles to preload and keep ready
+const PRELOAD_BUFFER_SIZE = 3;
 
 interface SwipeStackProps {
   initialProfiles: Profile[];
@@ -54,6 +57,48 @@ export function SwipeStack({
   const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
   const [swipedProfiles, setSwipedProfiles] = useState<Profile[]>([]);
   const { toast } = useToast();
+  
+  // Create a buffer of profiles to display
+  const visibleProfiles = useMemo(() => {
+    if (currentIndex < 0) return [];
+    
+    // Get the current profile and the next few profiles for preloading
+    const buffer = [];
+    for (let i = 0; i < PRELOAD_BUFFER_SIZE; i++) {
+      const index = currentIndex - i;
+      if (index >= 0 && profiles[index]) {
+        buffer.push(profiles[index]);
+      }
+    }
+    return buffer;
+  }, [currentIndex, profiles]);
+
+  // Prefetch images for the next few profiles
+  useEffect(() => {
+    const prefetchNextProfiles = async () => {
+      try {
+        // Dynamically import the prefetch function
+        const { prefetchProfileImages } = await import("@/lib/actions/image-prefetch");
+        
+        // Get all photo URLs from the buffer profiles
+        const photoUrls = visibleProfiles.flatMap(profile => {
+          return [
+            profile.profilePhoto,
+            ...(profile.photos || [])
+          ].filter(Boolean) as string[];
+        });
+        
+        // Prefetch all images
+        if (photoUrls.length > 0) {
+          await prefetchProfileImages(photoUrls);
+        }
+      } catch (error) {
+        console.error("Failed to prefetch profile images:", error);
+      }
+    };
+    
+    prefetchNextProfiles();
+  }, [visibleProfiles]);
 
   const handleSwipe = useCallback(
     async (direction: "left" | "right") => {
@@ -130,14 +175,27 @@ export function SwipeStack({
           <div className="relative h-[650px] w-full flex items-center justify-center">
             <AnimatePresence>
               {profiles[currentIndex] ? (
-                <SwipeableCard
-                  key={profiles[currentIndex].userId}
-                  profile={profiles[currentIndex] as Profile & { photos: string[] }}
-                  onSwipe={handleSwipe}
-                  onRevert={handleRevert}
-                  active={true}
-
-                />
+                <>
+                  {/* Render the current profile */}
+                  <SwipeableCard
+                    key={profiles[currentIndex].userId}
+                    profile={profiles[currentIndex] as Profile & { photos: string[] }}
+                    onSwipe={handleSwipe}
+                    onRevert={handleRevert}
+                    active={true}
+                  />
+                  
+                  {/* Preload the next profiles (hidden but loaded in DOM) */}
+                  {visibleProfiles.slice(1).map((profile, index) => (
+                    <div key={`preload-${profile.userId}`} className="hidden">
+                      <SwipeableCard
+                        profile={profile as Profile & { photos: string[] }}
+                        onSwipe={() => {}}
+                        active={false}
+                      />
+                    </div>
+                  ))}
+                </>
               ) : (
                 <NoMoreProfiles
                   initialLikedProfiles={likedByProfiles}

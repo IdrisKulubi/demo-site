@@ -14,6 +14,7 @@ import {
   Undo,
   Heart,
   User,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import "swiper/css";
@@ -49,8 +50,11 @@ export function SwipeCard({
 }: SwipeCardProps) {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  // We need currentSlide for the Swiper component
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
@@ -73,32 +77,72 @@ export function SwipeCard({
     setTouchEnd(null);
   };
 
-  // Update the optimizedPhotos memo to use webp format
+  // Update the optimizedPhotos memo to use webp format and include width/quality params
   const optimizedPhotos = useMemo(() => {
     return [profile.profilePhoto, ...(profile.photos || [])]
       .filter(Boolean)
       .map((photo) => `${photo}?width=500&quality=70&format=webp`);
   }, [profile]);
 
-  // Replace the entire useEffect with:
+  // Enhanced image prefetching with loading progress
   useEffect(() => {
     const prefetchImages = async () => {
       try {
+        // Reset loading state
+        setImagesLoaded(false);
+        setLoadingProgress(0);
+        
+        // Import the prefetch function
         const { prefetchProfileImages } = await import(
           "@/lib/actions/image-prefetch"
         );
-        await prefetchProfileImages(
-          optimizedPhotos.filter(Boolean) as string[]
-        );
+        
+        // Create an array to track loaded images
+        const imagesToLoad = optimizedPhotos.filter(Boolean) as string[];
+        let loadedCount = 0;
+        
+        // Create image objects to track loading
+        const imagePromises = imagesToLoad.map((src) => {
+          return new Promise<void>((resolve) => {
+            const img = new Image();
+            img.src = src;
+            img.onload = () => {
+              loadedCount++;
+              setLoadingProgress(Math.round((loadedCount / imagesToLoad.length) * 100));
+              resolve();
+            };
+            img.onerror = () => {
+              loadedCount++;
+              setLoadingProgress(Math.round((loadedCount / imagesToLoad.length) * 100));
+              resolve();
+            };
+          });
+        });
+        
+        // Wait for all images to load
+        await Promise.all(imagePromises);
+        
+        // Also call the service worker prefetch for caching
+        await prefetchProfileImages(imagesToLoad);
+        
+        // Mark as loaded
+        setImagesLoaded(true);
       } catch (error) {
         console.error("Prefetch failed:", error);
+        // Even if prefetch fails, mark as loaded to show the profile
+        setImagesLoaded(true);
       }
     };
 
-    if (optimizedPhotos.length > 0) {
+    if (optimizedPhotos.length > 0 && active) {
       prefetchImages();
+    } else if (!active) {
+      // If not active, still prefetch in background but don't show loading state
+      import("@/lib/actions/image-prefetch").then(
+        module => module.prefetchProfileImages(optimizedPhotos.filter(Boolean) as string[])
+      ).catch(error => console.error("Background prefetch failed:", error));
     }
-  }, [optimizedPhotos]);
+  }, [optimizedPhotos, active]);
 
   return (
     <motion.div
@@ -124,6 +168,20 @@ export function SwipeCard({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Loading overlay */}
+      {active && !imagesLoaded && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+          <Loader2 className="h-10 w-10 text-primary animate-spin mb-4" />
+          <div className="w-48 h-2 bg-muted rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary transition-all duration-300 ease-out"
+              style={{ width: `${loadingProgress}%` }}
+            />
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">Loading profile...</p>
+        </div>
+      )}
+      
       <div className="relative w-full h-full">
         <Swiper
           modules={[Navigation, Pagination]}
@@ -143,7 +201,8 @@ export function SwipeCard({
                     width={500}
                     height={500}
                     className="w-full h-full object-cover"
-                    priority={index < 3}
+                    priority={index === 0 || index === 1} // Prioritize first two images
+                    loading={index < 2 ? "eager" : "lazy"} // Eager load first two images
                   />
                 )}
               </SwiperSlide>
@@ -210,50 +269,54 @@ export function SwipeCard({
           </div>
         </div>
 
-        {/* Controls overlay */}
-        <div className="fixed   bottom-16 left-0 right-0 flex justify-center items-center gap-6 z-20">
-          <Button
-            size="icon"
-            variant="outline"
-            className="h-12 w-12 rounded-full border-2 shadow-lg bg-blue-500/20 border-blue-500 transition-transform duration-200 hover:scale-110"
-            onClick={onRevert}
-            disabled={isAnimating}
-          >
-            <Undo className="h-5 w-5 text-blue-500" />
-          </Button>
+        {/* Controls overlay - Only show when active and images are loaded */}
+        {active && imagesLoaded && (
+          <div className="fixed bottom-16 left-0 right-0 flex justify-center items-center gap-6 z-20">
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-12 w-12 rounded-full border-2 shadow-lg bg-blue-500/20 border-blue-500 transition-transform duration-200 hover:scale-110"
+              onClick={onRevert}
+              disabled={isAnimating}
+            >
+              <Undo className="h-5 w-5 text-blue-500" />
+            </Button>
 
-          <Button
-            size="icon"
-            variant="outline"
-            className="h-14 w-14 rounded-full border-2 shadow-lg bg-red-500/20 border-red-500 transition-transform duration-200 hover:scale-110"
-            onClick={() => onSwipe("left")}
-            disabled={isAnimating}
-          >
-            <X className="h-6 w-6 text-red-500" />
-          </Button>
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-14 w-14 rounded-full border-2 shadow-lg bg-red-500/20 border-red-500 transition-transform duration-200 hover:scale-110"
+              onClick={() => onSwipe("left")}
+              disabled={isAnimating}
+            >
+              <X className="h-6 w-6 text-red-500" />
+            </Button>
 
-          <Button
-            size="icon"
-            variant="outline"
-            className="h-14 w-14 rounded-full border-2 shadow-lg bg-pink-500/20 border-pink-500 transition-transform duration-200 hover:scale-110"
-            onClick={() => onSwipe("right")}
-            disabled={isAnimating}
-          >
-            <Heart className="h-6 w-6 text-pink-500" />
-          </Button>
-        </div>
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-14 w-14 rounded-full border-2 shadow-lg bg-pink-500/20 border-pink-500 transition-transform duration-200 hover:scale-110"
+              onClick={() => onSwipe("right")}
+              disabled={isAnimating}
+            >
+              <Heart className="h-6 w-6 text-pink-500" />
+            </Button>
+          </div>
+        )}
 
         {/* View Profile Button */}
-        <div className="absolute top-4 right-4 z-20">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onViewProfile}
-            className="bg-white/90 hover:bg-white"
-          >
-            <User className="h-4 w-4 text-gray-700" />
-          </Button>
-        </div>
+        {active && imagesLoaded && (
+          <div className="absolute top-4 right-4 z-20">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm"
+              onClick={onViewProfile}
+            >
+              <User className="h-5 w-5 text-white" />
+            </Button>
+          </div>
+        )}
       </div>
     </motion.div>
   );
