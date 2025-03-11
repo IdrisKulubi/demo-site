@@ -11,8 +11,6 @@ import {
   MessageCircle, 
   Settings, 
   LogOut, 
-  Undo, 
-  X, 
   Info,
   Users,
   Search,
@@ -31,7 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LikesModal } from "../modals/likes-modal";
 import { ProfileDetailsModal } from "../profile-details-modal";
 import { useInterval } from "@/hooks/use-interval";
-import { handleLike } from "@/lib/actions/like.actions";
+import { handleLike, handleUnlike as unlikeAction } from "@/lib/actions/like.actions";
 import { MatchesModal } from "../modals/matches-modal";
 import { signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -48,6 +46,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { NoMoreProfiles } from "../empty-state";
 import Image from "next/image";
+import { SwipeControls } from "../controls/swipe-controls";
 
 interface ExploreDesktopProps {
   initialProfiles: Profile[];
@@ -319,7 +318,7 @@ export function ExploreDesktop({
   const handleUnlike = async (userId: string): Promise<{ success: boolean }> => {
     try {
       // Implement the unlike functionality
-      await handleUnlike(userId);
+      await unlikeAction(userId);
       
       // Update the local state
       setLikes((prev) => prev.filter((like) => like.userId !== userId));
@@ -531,7 +530,7 @@ export function ExploreDesktop({
               className="h-full flex flex-col items-center justify-center relative bg-gradient-to-b from-pink-100/20 to-transparent dark:from-pink-950/20 pt-4"
             >
               {profiles.length > 0 && currentIndex >= 0 ? (
-                <div className="relative w-full max-w-md mx-auto h-[calc(100vh-8rem)]">
+                <div className="relative w-full max-w-md mx-auto h-[calc(100vh-8rem)] mb-16">
                   <AnimatePresence>
                     {profiles[currentIndex] && (
                       <>
@@ -542,6 +541,16 @@ export function ExploreDesktop({
                           }
                           onSwipe={handleSwipe}
                           active={true}
+                          customStyles={{
+                            card: "aspect-[7/10] rounded-xl overflow-hidden shadow-xl border border-white/10 bg-gradient-to-br from-pink-50 to-white dark:from-gray-900 dark:to-gray-950",
+                            image: "h-full w-full object-cover",
+                            info: "absolute bottom-0 left-0 right-0 p-5 pb-20 bg-gradient-to-t from-black/80 via-black/50 to-transparent text-white",
+                            name: "text-2xl font-bold mb-1",
+                            details: "text-sm opacity-90 mb-3",
+                            bio: "text-sm opacity-80 line-clamp-3 mb-3",
+                            interests: "flex flex-wrap gap-2 mt-2",
+                            interest: "text-xs bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full"
+                          }}
                         />
                         
                         {/* Preload the next profiles (hidden but loaded in DOM) */}
@@ -551,6 +560,16 @@ export function ExploreDesktop({
                               profile={profile as Profile & { photos: string[] }}
                               onSwipe={() => {}}
                               active={false}
+                              customStyles={{
+                                card: "aspect-[7/10] rounded-xl overflow-hidden shadow-xl border border-white/10 bg-gradient-to-br from-pink-50 to-white dark:from-gray-900 dark:to-gray-950",
+                                image: "h-full w-full object-cover",
+                                info: "absolute bottom-0 left-0 right-0 p-5 pb-20 bg-gradient-to-t from-black/80 via-black/50 to-transparent text-white",
+                                name: "text-2xl font-bold mb-1",
+                                details: "text-sm opacity-90 mb-3",
+                                bio: "text-sm opacity-80 line-clamp-3 mb-3",
+                                interests: "flex flex-wrap gap-2 mt-2",
+                                interest: "text-xs bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full"
+                              }}
                             />
                           </div>
                         ))}
@@ -563,51 +582,17 @@ export function ExploreDesktop({
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3, duration: 0.4 }}
-                    className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-4"
+                    className="absolute -bottom-16 left-0 right-0 z-30"
                   >
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="h-12 w-12 rounded-full border-2 shadow-lg bg-blue-500/20 border-blue-500 transition-transform duration-200 hover:scale-110"
-                      onClick={handleRevert}
-                      disabled={isAnimating || swipedProfiles.length === 0}
-                    >
-                      <Undo className="h-5 w-5 text-blue-500" />
-                    </Button>
-                    
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="h-14 w-14 rounded-full border-2 shadow-lg bg-red-500/20 border-red-500 transition-transform duration-200 hover:scale-110"
-                      onClick={() => handleSwipe("left")}
+                    <SwipeControls
+                      onSwipeLeft={() => handleSwipe("left")}
+                      onSwipeRight={() => handleSwipe("right")}
+                      onUndo={handleRevert}
+                      onSuperLike={() => profiles[currentIndex] && handleViewProfile(profiles[currentIndex])}
                       disabled={isAnimating || currentIndex < 0}
-                    >
-                      <X className="h-6 w-6 text-red-500" />
-                    </Button>
-                    
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="h-16 w-16 rounded-full border-2 shadow-lg bg-pink-500/20 border-pink-500 transition-transform duration-200 hover:scale-110"
-                      onClick={() => handleSwipe("right")}
-                      disabled={isAnimating || currentIndex < 0}
-                    >
-                      <Heart className="h-8 w-8 text-pink-500" />
-                    </Button>
-                    
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="h-12 w-12 rounded-full border-2 shadow-lg bg-amber-500/20 border-amber-500 transition-transform duration-200 hover:scale-110"
-                      onClick={() => {
-                        if (profiles[currentIndex]) {
-                          handleViewProfile(profiles[currentIndex]);
-                        }
-                      }}
-                      disabled={isAnimating || currentIndex < 0}
-                    >
-                      <Info className="h-5 w-5 text-amber-500" />
-                    </Button>
+                      currentProfileId={profiles[currentIndex]?.userId}
+                      className="mx-auto max-w-md px-6 py-4"
+                    />
                   </motion.div>
                 </div>
               ) : (
