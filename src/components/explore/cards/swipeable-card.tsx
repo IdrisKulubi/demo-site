@@ -18,12 +18,23 @@ interface SwipeableCardProps {
   onSwipe: (direction: "left" | "right") => void;
   onRevert?: () => void;
   active: boolean;
+  customStyles?: {
+    card?: string;
+    image?: string;
+    info?: string;
+    name?: string;
+    details?: string;
+    bio?: string;
+    interests?: string;
+    interest?: string;
+  };
 }
 
 export function SwipeableCard({
   profile,
   onSwipe,
   active,
+  customStyles = {},
 }: SwipeableCardProps) {
   const [exitX, setExitX] = useState(0);
   const x = useMotionValue(0);
@@ -39,7 +50,7 @@ export function SwipeableCard({
   const [showDetails, setShowDetails] = useState(false);
   const { execute: trackView } = useAction(trackProfileView as any);
 
-  // New function to handle button-triggered swipes
+  // New function to handle button-triggered swipes  
   const handleButtonSwipe = useCallback((direction: "left" | "right") => {
     const targetX = direction === "left" ? -400 : 400;
     animate(x, targetX, {
@@ -56,10 +67,10 @@ export function SwipeableCard({
   }, [x, onSwipe]);
 
   // Expose the handleButtonSwipe function to parent
-  useEffect(() => {
+  useEffect(() => { 
     if (!active) return;
     
-    // Add the function to window for communication between components
+    // Add the  function to window for communication between components
     const key = `handleSwipe_${profile.userId}`;
     (window as any)[key] = handleButtonSwipe;
     
@@ -149,17 +160,17 @@ export function SwipeableCard({
         transition={{ type: "spring", damping: 40, stiffness: 400 }}
         className="touch-none"
       >
-        <Card className="relative w-full h-full overflow-hidden rounded-3xl aspect-[3/4]">
+        <Card className={`relative w-full h-full overflow-hidden rounded-xl ${customStyles.card || ''}`}>
           <div className="absolute inset-0 p-2">
-            <ImageSlider
+            <ImageSlider 
               slug={[
                 profile.profilePhoto || "",
                 ...(profile.photos || []),
               ].filter(Boolean)}
-              className="h-full"
+              className={customStyles.image || "h-full"}
             />
           </div>
-
+          
           {/* NOPE Text */}
           <motion.div
             style={{ opacity: leftTextOpacity, scale: textScale }}
@@ -169,7 +180,7 @@ export function SwipeableCard({
               PASS
             </span>
           </motion.div>
-
+          
           {/* LIKE Text */}
           <motion.div
             style={{ opacity: rightTextOpacity, scale: textScale }}
@@ -179,27 +190,27 @@ export function SwipeableCard({
               LIKE
             </span>
           </motion.div>
-
+          
           {/* Profile Info Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent text-white z-10">
-            <h3 className="text-2xl font-bold">
+          <div className={`absolute bottom-0 left-0 right-0 p-6 pb-14 bg-gradient-to-t from-black/80 to-transparent text-white z-10 ${customStyles.info || ''}`}>
+            <h3 className={`text-2xl font-bold ${customStyles.name || ''}`}>
               {profile.firstName}, {profile.yearOfStudy}
             </h3>
-            <p className="text-sm opacity-90">{profile.course}</p>
-            <p className="mt-2 text-sm opacity-80 line-clamp-2">{profile.bio}</p>
+            <p className={`text-sm opacity-90 ${customStyles.details || ''}`}>{profile.course}</p>
+            <p className={`mt-2 text-sm opacity-80 line-clamp-2 ${customStyles.bio || ''}`}>{profile.bio}</p>
           </div>
-
-          {/* Info Button */}
+          
+          {/* Info Button - Moved to a better position */}
           <button
             onClick={handleViewProfile}
-            className="absolute bottom-28 right-4 p-2.5 rounded-full bg-background/80 backdrop-blur-md hover:bg-background transition-colors shadow-lg z-20"
+            className="absolute bottom-24 right-4 p-2.5 rounded-full bg-background/80 backdrop-blur-md hover:bg-background transition-colors shadow-lg z-20"
             aria-label="View profile details"
           >
             <Info className="h-5 w-5 text-white" />
           </button>
         </Card>
       </motion.div>
-
+      
       <ProfileDetailsModal
         profile={profile as any}
         isOpen={showDetails}
