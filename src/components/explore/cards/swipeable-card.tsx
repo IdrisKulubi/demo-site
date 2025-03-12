@@ -50,14 +50,45 @@ export function SwipeableCard({
   const [showDetails, setShowDetails] = useState(false);
   const { execute: trackView } = useAction(trackProfileView as any);
 
-  // New function to handle button-triggered swipes  
+  const handleDragEnd = (
+    event: MouseEvent | TouchEvent,
+    info: { offset: { x: number } }
+  ) => {
+    if (info.offset.x < -200) {
+      animate(x, -400, {
+        type: "spring",
+        damping: 80,
+        stiffness: 250,
+        duration: 0.3,
+        ease: "easeOut",
+      });
+      onSwipe("left");
+    } else if (info.offset.x > 200) {
+      animate(x, 400, {
+        type: "spring",
+        damping: 80,
+        stiffness: 250,
+        duration: 0.3,
+        ease: "easeOut",
+      });
+      onSwipe("right");
+    } else {
+      animate(x, 0, {
+        type: "spring",
+        stiffness: 250,
+        damping: 80,
+        duration: 0.3,
+      });
+    }
+  };
+
   const handleButtonSwipe = useCallback((direction: "left" | "right") => {
     const targetX = direction === "left" ? -400 : 400;
     animate(x, targetX, {
       type: "spring",
       damping: 80,
       stiffness: 250,
-      duration: 0.6,
+      duration: 0.3,
       ease: "easeOut",
       onComplete: () => {
         setExitX(targetX);
@@ -66,11 +97,9 @@ export function SwipeableCard({
     });
   }, [x, onSwipe]);
 
-  // Expose the handleButtonSwipe function to parent
   useEffect(() => { 
     if (!active) return;
     
-    // Add the  function to window for communication between components
     const key = `handleSwipe_${profile.userId}`;
     (window as any)[key] = handleButtonSwipe;
     
@@ -81,6 +110,20 @@ export function SwipeableCard({
 
   useEffect(() => {
     if (!active) return;
+
+    if (profile.photos && profile.photos.length > 0) {
+      profile.photos.forEach(photo => {
+        if (photo) {
+          const img = new window.Image();
+          img.src = photo;
+        }
+      });
+    }
+    
+    if (profile.profilePhoto) {
+      const img = new window.Image();
+      img.src = profile.profilePhoto;
+    }
 
     const unsubscribe = x.on("change", (latest) => {
       if (latest <= -200) {
@@ -93,7 +136,7 @@ export function SwipeableCard({
     });
 
     return () => unsubscribe();
-  }, [active, onSwipe, x]);
+  }, [active, onSwipe, x, profile.photos, profile.profilePhoto]);
 
   const handleViewProfile = useCallback(() => {
     trackView(profile.userId);
@@ -110,38 +153,6 @@ export function SwipeableCard({
     return null;
   }
 
-  const handleDragEnd = (
-    event: MouseEvent | TouchEvent,
-    info: { offset: { x: number } }
-  ) => {
-    if (info.offset.x < -200) {
-      animate(x, -400, {
-        type: "spring",
-        damping: 80,
-        stiffness: 250,
-        duration: 0.6,
-        ease: "easeOut",
-      });
-      onSwipe("left");
-    } else if (info.offset.x > 200) {
-      animate(x, 400, {
-        type: "spring",
-        damping: 80,
-        stiffness: 250,
-        duration: 0.6,
-        ease: "easeOut",
-      });
-      onSwipe("right");
-    } else {
-      animate(x, 0, {
-        type: "spring",
-        stiffness: 250,
-        damping: 80,
-        duration: 0.5,
-      });
-    }
-  };
-
   return (
     <motion.div className="relative h-full w-full">
       <motion.div
@@ -157,8 +168,13 @@ export function SwipeableCard({
         dragConstraints={{ left: 0, right: 0 }}
         onDragEnd={handleDragEnd}
         animate={{ x: exitX }}
-        transition={{ type: "spring", damping: 40, stiffness: 400 }}
-        className="touch-none"
+        transition={{ 
+          type: "spring", 
+          damping: 40, 
+          stiffness: 400,
+          duration: 0.3
+        }}
+        className="touch-none will-change-transform"
       >
         <Card className={`relative w-full h-full overflow-hidden rounded-xl ${customStyles.card || ''}`}>
           <div className="absolute inset-0 p-2">
@@ -203,7 +219,7 @@ export function SwipeableCard({
           {/* Info Button - Moved to a better position */}
           <button
             onClick={handleViewProfile}
-            className="absolute bottom-24 right-4 p-2.5 rounded-full bg-background/80 backdrop-blur-md hover:bg-background transition-colors shadow-lg z-20"
+            className="absolute bottom-20 right-4 p-2.5 rounded-full bg-background/80 backdrop-blur-md hover:bg-background transition-colors shadow-lg z-20"
             aria-label="View profile details"
           >
             <Info className="h-5 w-5 text-white" />

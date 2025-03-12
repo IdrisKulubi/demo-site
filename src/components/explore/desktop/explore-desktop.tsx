@@ -111,13 +111,14 @@ export function ExploreDesktop({
   const { toast } = useToast();
   const unreadMessages = useUnreadMessages(currentUser.id);
 
-  // Preload buffer for profiles
+  // Preload buffer for profiles - Improved to load more profiles in advance
   const visibleProfiles = useMemo(() => {
     if (currentIndex < 0) return [];
     
     // Get the current profile and the next few profiles for preloading
+    // Increased from 3 to 5 profiles for better preloading
     const buffer = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       const index = currentIndex - i;
       if (index >= 0 && profiles[index]) {
         buffer.push(profiles[index]);
@@ -175,12 +176,25 @@ export function ExploreDesktop({
       setIsAnimating(true);
       setSwipeDirection(direction);
 
-      const result = await recordSwipe(
+      // Start recording the swipe immediately but don't await it
+      const swipePromise = recordSwipe(
         profiles[currentIndex].userId,
         direction === "right" ? "like" : "pass"
       );
 
+      // Reduce the animation time for faster transitions
+      setTimeout(() => {
+        setCurrentIndex((prev) => prev - 1);
+        setSwipeDirection(null);
+        setIsAnimating(false);
+      }, 150); // Reduced from 300ms to 150ms for faster transitions
+
+      // Process the result after the animation has started
+      const result = await swipePromise;
+
       if (direction === "right") {
+        setSwipedProfiles((prev) => [...prev, profiles[currentIndex]]);
+        
         if (result.isMatch) {
           const updatedProfile = {
             ...profiles[currentIndex],
@@ -211,15 +225,9 @@ export function ExploreDesktop({
               "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-none",
           });
         }
+      } else {
+        setSwipedProfiles((prev) => [...prev, profiles[currentIndex]]);
       }
-
-      setSwipedProfiles((prev) => [...prev, profiles[currentIndex]]);
-
-      setTimeout(() => {
-        setCurrentIndex((prev) => prev - 1);
-        setSwipeDirection(null);
-        setIsAnimating(false);
-      }, 300);
     },
     [currentIndex, isAnimating, profiles, toast]
   );
@@ -530,7 +538,7 @@ export function ExploreDesktop({
               className="h-full flex flex-col items-center justify-center relative bg-gradient-to-b from-pink-100/20 to-transparent dark:from-pink-950/20 pt-4"
             >
               {profiles.length > 0 && currentIndex >= 0 ? (
-                <div className="relative w-full max-w-md mx-auto h-[calc(100vh-8rem)] mb-16">
+                <div className="relative w-full max-w-sm mx-auto h-[calc(100vh-8rem)] mb-16">
                   <AnimatePresence>
                     {profiles[currentIndex] && (
                       <>
@@ -542,7 +550,7 @@ export function ExploreDesktop({
                           onSwipe={handleSwipe}
                           active={true}
                           customStyles={{
-                            card: "aspect-[7/10] rounded-xl overflow-hidden shadow-xl border border-white/10 bg-gradient-to-br from-pink-50 to-white dark:from-gray-900 dark:to-gray-950",
+                            card: "aspect-[5/9] rounded-xl overflow-hidden shadow-xl border border-white/10 bg-gradient-to-br from-pink-50 to-white dark:from-gray-900 dark:to-gray-950",
                             image: "h-full w-full object-cover",
                             info: "absolute bottom-0 left-0 right-0 p-5 pb-20 bg-gradient-to-t from-black/80 via-black/50 to-transparent text-white",
                             name: "text-2xl font-bold mb-1",
@@ -554,14 +562,17 @@ export function ExploreDesktop({
                         />
                         
                         {/* Preload the next profiles (hidden but loaded in DOM) */}
-                        {visibleProfiles.slice(1).map((profile) => (
-                          <div key={`preload-${profile.userId}`} className="hidden">
+                        {visibleProfiles.slice(1).map((profile, idx) => (
+                          <div 
+                            key={`preload-${profile.userId}`} 
+                            className={idx < 2 ? "absolute inset-0 opacity-0" : "hidden"}
+                          >
                             <SwipeableCard
                               profile={profile as Profile & { photos: string[] }}
                               onSwipe={() => {}}
                               active={false}
                               customStyles={{
-                                card: "aspect-[7/10] rounded-xl overflow-hidden shadow-xl border border-white/10 bg-gradient-to-br from-pink-50 to-white dark:from-gray-900 dark:to-gray-950",
+                                card: "aspect-[5/9] rounded-xl overflow-hidden shadow-xl border border-white/10 bg-gradient-to-br from-pink-50 to-white dark:from-gray-900 dark:to-gray-950",
                                 image: "h-full w-full object-cover",
                                 info: "absolute bottom-0 left-0 right-0 p-5 pb-20 bg-gradient-to-t from-black/80 via-black/50 to-transparent text-white",
                                 name: "text-2xl font-bold mb-1",
