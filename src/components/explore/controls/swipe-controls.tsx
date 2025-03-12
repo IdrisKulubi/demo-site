@@ -42,7 +42,7 @@ export function SwipeControls({
       if (type === "left" || type === "right") {
         if (swipeHandler) {
           swipeHandler(type);
-          setTimeout(handler, 600);
+          setTimeout(handler, 300);
         } else {
           handler();
         }
@@ -50,7 +50,7 @@ export function SwipeControls({
         handler();
       }
 
-      setTimeout(() => setActiveButton(null), 200);
+      setTimeout(() => setActiveButton(null), 100);
     },
     [disabled, currentProfileId]
   );
