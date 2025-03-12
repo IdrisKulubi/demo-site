@@ -11,6 +11,36 @@ import { ProfileDetailsModal } from '../profile-details-modal';
 import { trackProfileView } from "@/lib/actions/stalker.actions";
 import { useAction } from "next-safe-action/hooks";
 
+// Only include troubleshooter in development
+const initInteractionTroubleshooter = () => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[SwipeableCard] Initializing interaction troubleshooter');
+    
+    // Create a global troubleshooter object
+    window.__troubleshoot = {
+      toggleInfoButtons: () => {
+        // Find all info buttons and toggle their visibility and z-index
+        const infoButtons = document.querySelectorAll('[aria-label="View profile details"]');
+        infoButtons.forEach(btn => {
+          const parent = btn.parentElement;
+          if (parent) {
+            const currentZIndex = getComputedStyle(parent).zIndex;
+            const newZIndex = currentZIndex === "1000" ? "9999" : "1000";
+            parent.style.zIndex = newZIndex;
+            parent.style.backgroundColor = newZIndex === "9999" ? "red" : "";
+            console.log(`Info button z-index set to ${newZIndex}`);
+          }
+        });
+      }
+    };
+    
+    return () => {
+      delete window.__troubleshoot;
+    };
+  }
+  return () => {};
+};
+
 interface SwipeableCardProps {
   profile: Profile & {
     photos?: string[];
@@ -50,10 +80,27 @@ export function SwipeableCard({
   const [showDetails, setShowDetails] = useState(false);
   const { execute: trackView } = useAction(trackProfileView as any);
 
+  // Initialize the interaction troubleshooter
+  useEffect(() => {
+    if (active) {
+      const cleanup = initInteractionTroubleshooter();
+      return cleanup;
+    }
+  }, [active]);
+
+  // Log when the component mounts or becomes active
+  useEffect(() => {
+    if (active) {
+      console.log('[SwipeableCard] Card activated for profile:', profile.userId);
+    }
+  }, [active, profile.userId]);
+
   const handleDragEnd = (
     event: MouseEvent | TouchEvent,
     info: { offset: { x: number } }
   ) => {
+    console.log('[SwipeableCard] Drag ended with offset:', info.offset.x);
+    
     if (info.offset.x < -200) {
       animate(x, -400, {
         type: "spring",
@@ -83,6 +130,7 @@ export function SwipeableCard({
   };
 
   const handleButtonSwipe = useCallback((direction: "left" | "right") => {
+    console.log('[SwipeableCard] Button swipe triggered:', direction);
     const targetX = direction === "left" ? -400 : 400;
     animate(x, targetX, {
       type: "spring",
@@ -139,6 +187,7 @@ export function SwipeableCard({
   }, [active, onSwipe, x, profile.photos, profile.profilePhoto]);
 
   const handleViewProfile = useCallback(() => {
+    console.log('[SwipeableCard] Info button clicked - handleViewProfile triggered');
     trackView(profile.userId);
     setShowDetails(true);
   }, [profile.userId, trackView]);
@@ -177,7 +226,8 @@ export function SwipeableCard({
         className="touch-none will-change-transform"
       >
         <Card className={`relative w-full h-full overflow-hidden rounded-xl ${customStyles.card || ''}`}>
-          <div className="absolute inset-0 p-2">
+          {/* Image slider */}
+          <div className="absolute inset-0 z-0">
             <ImageSlider 
               slug={[
                 profile.profilePhoto || "",
@@ -190,7 +240,7 @@ export function SwipeableCard({
           {/* NOPE Text */}
           <motion.div
             style={{ opacity: leftTextOpacity, scale: textScale }}
-            className="absolute top-12 left-8 rotate-[-15deg] pointer-events-none z-10"
+            className="absolute top-12 left-8 rotate-[-15deg] pointer-events-none z-20"
           >
             <span className="font-graffiti text-6xl font-black text-red-500 tracking-wider uppercase border-[4px] border-red-500 px-4 py-1 rounded-lg bg-white/10 backdrop-blur-sm drop-shadow-[0_4px_12px_rgba(239,68,68,0.4)]">
               PASS
@@ -200,15 +250,15 @@ export function SwipeableCard({
           {/* LIKE Text */}
           <motion.div
             style={{ opacity: rightTextOpacity, scale: textScale }}
-            className="absolute top-12 right-8 rotate-[15deg] pointer-events-none z-10"
+            className="absolute top-12 right-8 rotate-[15deg] pointer-events-none z-20"
           >
             <span className="font-graffiti text-6xl font-black text-emerald-500 tracking-wider uppercase border-[4px] border-emerald-500 px-4 py-1 rounded-lg bg-white/10 backdrop-blur-sm drop-shadow-[0_4px_12px_rgba(16,185,129,0.4)]">
               LIKE
             </span>
           </motion.div>
           
-          {/* Profile Info Overlay */}
-          <div className={`absolute bottom-0 left-0 right-0 p-6 pb-14 bg-gradient-to-t from-black/80 to-transparent text-white z-10 ${customStyles.info || ''}`}>
+          {/* Profile Info Overlay - Made pointer-events-none to not block interactions */}
+          <div className={`absolute bottom-0 left-0 right-0 p-6 pb-14 bg-gradient-to-t from-black/80 to-transparent text-white z-20 pointer-events-none ${customStyles.info || ''}`}>
             <h3 className={`text-2xl font-bold ${customStyles.name || ''}`}>
               {profile.firstName}, {profile.yearOfStudy}
             </h3>
@@ -216,14 +266,24 @@ export function SwipeableCard({
             <p className={`mt-2 text-sm opacity-80 line-clamp-2 ${customStyles.bio || ''}`}>{profile.bio}</p>
           </div>
           
-          {/* Info Button - Moved to a better position */}
-          <button
-            onClick={handleViewProfile}
-            className="absolute bottom-20 right-4 p-2.5 rounded-full bg-background/80 backdrop-blur-md hover:bg-background transition-colors shadow-lg z-20"
-            aria-label="View profile details"
+          {/* Info Button with very high z-index */}
+          <div 
+            className="absolute bottom-20 right-4 z-[1000]"
+            style={{ pointerEvents: 'auto' }}
           >
-            <Info className="h-5 w-5 text-white" />
-          </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleViewProfile();
+              }}
+              className="p-2.5 rounded-full bg-background/80 backdrop-blur-md hover:bg-background transition-colors shadow-lg"
+              aria-label="View profile details"
+              type="button"
+            >
+              <Info className="h-5 w-5 text-white" />
+            </button>
+          </div>
         </Card>
       </motion.div>
       

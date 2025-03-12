@@ -99,6 +99,21 @@ export function ExploreDesktop({
   const [activeTab, setActiveTab] = useState<string>("discover");
   const [previewProfile, setPreviewProfile] = useState<Profile | null>(null);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  // Add a state for cached chat data with proper typing
+  const [cachedChats, setCachedChats] = useState<Array<{
+    id: string;
+    userId: string;
+    firstName?: string;
+    lastName?: string;
+    profilePhoto: string | null;
+    matchId: string;
+    lastMessage: {
+      content: string;
+      createdAt: Date;
+      isRead: boolean;
+      senderId: string;
+    };
+  }>>([]);
 
   // Initialize matches from likedProfiles where isMatch is true
   const [matches, setMatches] = useState<Profile[]>(
@@ -301,20 +316,56 @@ export function ExploreDesktop({
     }
   };
 
+  // Preload chat data on component mount
+  useEffect(() => {
+    if (!isChatLoaded) {
+      console.time('Initial chat data preloading');
+      getChats().then((result) => {
+        console.timeEnd('Initial chat data preloading');
+        console.log('Initial preloaded chat data size:', result.length);
+        setCachedChats(result);
+        setIsChatLoaded(true);
+      }).catch(error => {
+        console.error('Error preloading chat data:', error);
+        console.timeEnd('Initial chat data preloading');
+      });
+    }
+  }, [isChatLoaded]);
+
+  // Periodically refresh chat data in the background
+  useInterval(() => {
+    if (isChatLoaded) {
+      // Silent background refresh
+      getChats().then((result) => {
+        setCachedChats(result);
+      }).catch(error => {
+        console.error('Error refreshing chat data:', error);
+      });
+    }
+  }, 30000); // Refresh every 30 seconds
+
   // Preload chat data when chat icon is hovered
   const handleChatHover = useCallback(() => {
     if (!isChatLoaded) {
       // Preload chat data
-      getChats().then(() => {
+      console.time('Chat data preloading');
+      getChats().then((result) => {
+        console.timeEnd('Chat data preloading');
+        console.log('Preloaded chat data size:', JSON.stringify(result).length, 'bytes');
         setIsChatLoaded(true);
+      }).catch(error => {
+        console.error('Error preloading chat data:', error);
+        console.timeEnd('Chat data preloading');
       });
     }
   }, [isChatLoaded]);
 
   // Handle chat selection
   const handleSelectChat = (matchId: string) => {
+    console.time('Chat selection');
     setSelectedChatId(matchId);
     setActiveTab("messages");
+    console.timeEnd('Chat selection');
   };
 
   // Handle profile view
@@ -539,67 +590,102 @@ export function ExploreDesktop({
             >
               {profiles.length > 0 && currentIndex >= 0 ? (
                 <div className="relative w-full max-w-sm mx-auto h-[calc(100vh-8rem)] mb-16">
+                  {/* Remove debug element in production */}
+                  {process.env.NODE_ENV !== 'production' && (
+                    <div className="fixed top-0 left-0 bg-white p-2 text-xs z-[999]" style={{ pointerEvents: 'none' }}>
+                      Debug: {profiles[currentIndex]?.firstName} | Swipeable ({currentIndex + 1}/{profiles.length})
+                    </div>
+                  )}
+                  
                   <AnimatePresence>
                     {profiles[currentIndex] && (
-                      <>
-                        <SwipeableCard
-                          key={profiles[currentIndex].userId}
-                          profile={
-                            profiles[currentIndex] as Profile & { photos?: string[] }
-                          }
-                          onSwipe={handleSwipe}
-                          active={true}
-                          customStyles={{
-                            card: "aspect-[5/9] rounded-xl overflow-hidden shadow-xl border border-white/10 bg-gradient-to-br from-pink-50 to-white dark:from-gray-900 dark:to-gray-950",
-                            image: "h-full w-full object-cover",
-                            info: "absolute bottom-0 left-0 right-0 p-5 pb-20 bg-gradient-to-t from-black/80 via-black/50 to-transparent text-white",
-                            name: "text-2xl font-bold mb-1",
-                            details: "text-sm opacity-90 mb-3",
-                            bio: "text-sm opacity-80 line-clamp-3 mb-3",
-                            interests: "flex flex-wrap gap-2 mt-2",
-                            interest: "text-xs bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full"
-                          }}
-                        />
+                      (() => {
+                        // Call console.log outside of JSX
+                        console.log('[ExploreDesktop] Rendering card for:', profiles[currentIndex].firstName);
                         
-                        {/* Preload the next profiles (hidden but loaded in DOM) */}
-                        {visibleProfiles.slice(1).map((profile, idx) => (
-                          <div 
-                            key={`preload-${profile.userId}`} 
-                            className={idx < 2 ? "absolute inset-0 opacity-0" : "hidden"}
-                          >
-                            <SwipeableCard
-                              profile={profile as Profile & { photos: string[] }}
-                              onSwipe={() => {}}
-                              active={false}
-                              customStyles={{
-                                card: "aspect-[5/9] rounded-xl overflow-hidden shadow-xl border border-white/10 bg-gradient-to-br from-pink-50 to-white dark:from-gray-900 dark:to-gray-950",
-                                image: "h-full w-full object-cover",
-                                info: "absolute bottom-0 left-0 right-0 p-5 pb-20 bg-gradient-to-t from-black/80 via-black/50 to-transparent text-white",
-                                name: "text-2xl font-bold mb-1",
-                                details: "text-sm opacity-90 mb-3",
-                                bio: "text-sm opacity-80 line-clamp-3 mb-3",
-                                interests: "flex flex-wrap gap-2 mt-2",
-                                interest: "text-xs bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full"
-                              }}
-                            />
-                          </div>
-                        ))}
-                      </>
+                        return (
+                          <>
+                            <div className="w-full h-full relative" style={{ touchAction: 'manipulation' }}>
+                              <SwipeableCard
+                                key={profiles[currentIndex].userId}
+                                profile={
+                                  profiles[currentIndex] as Profile & { photos?: string[] }
+                                }
+                                onSwipe={(direction) => {
+                                  handleSwipe(direction);
+                                }}
+                                active={true}
+                                customStyles={{
+                                  card: "aspect-[3/5] rounded-xl overflow-hidden shadow-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900",
+                                  image: "h-full w-full object-cover",
+                                  info: "absolute bottom-0 left-0 right-0 p-5 pb-20 bg-gradient-to-t from-black/80 via-black/50 to-transparent text-white",
+                                  name: "text-2xl font-bold mb-1",
+                                  details: "text-sm opacity-90 mb-3",
+                                  bio: "text-sm opacity-80 line-clamp-3",
+                                }}
+                              />
+                            </div>
+                            
+                            {/* Preload the next profiles (hidden but loaded in DOM) */}
+                            {visibleProfiles.slice(1).map((profile, idx) => (
+                              <div 
+                                key={`preload-${profile.userId}`} 
+                                className={idx < 2 ? "absolute inset-0 opacity-0 pointer-events-none" : "hidden"}
+                              >
+                                <SwipeableCard
+                                  profile={profile as Profile & { photos: string[] }}
+                                  onSwipe={() => {}}
+                                  active={false}
+                                  customStyles={{
+                                    card: "aspect-[3/5] rounded-xl overflow-hidden shadow-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900",
+                                    image: "h-full w-full object-cover",
+                                    info: "absolute bottom-0 left-0 right-0 p-5 pb-20 bg-gradient-to-t from-black/80 via-black/50 to-transparent text-white",
+                                    name: "text-2xl font-bold mb-1",
+                                    details: "text-sm opacity-90 mb-3",
+                                    bio: "text-sm opacity-80 line-clamp-3 mb-3",
+                                  }}
+                                />
+                              </div>
+                            ))}
+                          </>
+                        );
+                      })()
                     )}
                   </AnimatePresence>
                   
-                  {/* Swipe Controls */}
+                  {/* Swipe Controls - positioned with proper distance from card bottom */}
                   <motion.div 
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3, duration: 0.4 }}
-                    className="absolute -bottom-16 left-0 right-0 z-30"
+                    className="absolute -bottom-24 left-0 right-0"
+                    onClick={(e) => {
+                      // Stop propagation to prevent clicks from bubbling to card
+                      e.stopPropagation();
+                    }}
                   >
                     <SwipeControls
-                      onSwipeLeft={() => handleSwipe("left")}
-                      onSwipeRight={() => handleSwipe("right")}
-                      onUndo={handleRevert}
-                      onSuperLike={() => profiles[currentIndex] && handleViewProfile(profiles[currentIndex])}
+                      onSwipeLeft={() => {
+                        handleSwipe("left");
+                      }}
+                      onSwipeRight={() => {
+                        handleSwipe("right");
+                      }}
+                      onUndo={() => {
+                        handleRevert();
+                      }}
+                      onSuperLike={() => {
+                        if (profiles[currentIndex]) {
+                          handleViewProfile(profiles[currentIndex]);
+                        }
+                        toast({
+                          title: "bestie wait ⭐️✨",
+                          description:
+                            "super likes coming soon & they're gonna be lit fr fr 🔥",
+                          className:
+                            "bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-none",
+                        });
+                      }}
                       disabled={isAnimating || currentIndex < 0}
                       currentProfileId={profiles[currentIndex]?.userId}
                       className="mx-auto max-w-md px-6 py-4"
@@ -651,7 +737,7 @@ export function ExploreDesktop({
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 opacity-80 group-hover:opacity-100 transition-opacity" />
                             
-                            <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div className="absolute top-2 right-2 z-10  opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                               <Button 
                                 size="icon" 
                                 variant="secondary"
@@ -819,6 +905,7 @@ export function ExploreDesktop({
                     currentUser={currentUser} 
                     onSelectChat={handleSelectChat}
                     markAsRead={markAsRead}
+                    initialChats={cachedChats}
                   />
                 </div>
               )}

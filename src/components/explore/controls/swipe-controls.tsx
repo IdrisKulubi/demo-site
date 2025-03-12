@@ -60,7 +60,11 @@ export function SwipeControls({
       {/* Rewind/Undo Button */}
       <Button
         variant="outline"
-        onClick={() => handleButtonClick("undo", onUndo)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleButtonClick("undo", onUndo);
+        }}
         disabled={disabled}
         className={cn(
           "rounded-full h-14 w-14 bg-white border-2 border-yellow-400 shadow-lg",
@@ -68,6 +72,7 @@ export function SwipeControls({
           activeButton === "undo" && "bg-yellow-50",
           disabled && "opacity-50 pointer-events-none"
         )}
+        type="button"
         aria-label="Undo last swipe"
       >
         <RotateCcw className="h-6 w-6 text-yellow-400" />
@@ -76,13 +81,18 @@ export function SwipeControls({
       {/* Dislike/Nope Button */}
       <Button
         variant="outline"
-        onClick={() => handleButtonClick("left", onSwipeLeft)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleButtonClick("left", onSwipeLeft);
+        }}
         disabled={disabled}
         className={cn(
           "rounded-full h-16 w-16 bg-white border-2 border-red-500 shadow-lg",
           "transition-all duration-200 hover:scale-110 hover:shadow-xl",
           activeButton === "left" && "bg-red-50"
         )}
+        type="button"
         aria-label="Swipe left"
       >
         <X className="h-8 w-8 text-red-500 stroke-[2.5px]" />
@@ -91,13 +101,18 @@ export function SwipeControls({
       {/* Super Like Button */}
       <Button
         variant="outline"
-        onClick={() => onSuperLike && handleButtonClick("superLike", onSuperLike)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onSuperLike && handleButtonClick("superLike", onSuperLike);
+        }}
         disabled={disabled}
         className={cn(
           "rounded-full h-14 w-14 bg-white border-2 border-blue-400 shadow-lg",
           "transition-all duration-200 hover:scale-110 hover:shadow-xl",
           activeButton === "superLike" && "bg-blue-50"
         )}
+        type="button"
         aria-label="Super like"
       >
         <Star className="h-6 w-6 text-blue-400 fill-blue-400" />
@@ -106,13 +121,18 @@ export function SwipeControls({
       {/* Like Button */}
       <Button
         variant="outline"
-        onClick={() => handleButtonClick("right", onSwipeRight)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleButtonClick("right", onSwipeRight);
+        }}
         disabled={disabled}
         className={cn(
           "rounded-full h-16 w-16 bg-white border-2 border-green-500 shadow-lg",
           "transition-all duration-200 hover:scale-110 hover:shadow-xl",
           activeButton === "right" && "bg-green-50"
         )}
+        type="button"
         aria-label="Swipe right"
       >
         <Heart className="h-8 w-8 text-green-500 fill-green-500" />
