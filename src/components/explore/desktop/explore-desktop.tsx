@@ -99,6 +99,9 @@ export function ExploreDesktop({
   const [activeTab, setActiveTab] = useState<string>("discover");
   const [previewProfile, setPreviewProfile] = useState<Profile | null>(null);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  // Add loading states for matches and likes
+  const [isMatchesLoading, setIsMatchesLoading] = useState(true);
+  const [isLikesLoading, setIsLikesLoading] = useState(true);
   // Add a state for cached chat data with proper typing
   const [cachedChats, setCachedChats] = useState<Array<{
     id: string;
@@ -145,6 +148,10 @@ export function ExploreDesktop({
   // Fetch and sync matches and likes
   const syncMatchesAndLikes = useCallback(async () => {
     try {
+      // Set loading states to true before fetching data
+      setIsMatchesLoading(true);
+      setIsLikesLoading(true);
+      
       const [matchesResult, likesResult] = await Promise.all([
         getMatches(),
         getLikedByProfiles(),
@@ -152,6 +159,7 @@ export function ExploreDesktop({
 
       if (matchesResult.matches) {
         setMatches(matchesResult.matches as unknown as Profile[]);
+        setIsMatchesLoading(false);
       }
 
       if (likesResult.profiles) {
@@ -163,9 +171,13 @@ export function ExploreDesktop({
             )
         );
         setLikes(newLikes);
+        setIsLikesLoading(false);
       }
     } catch (error) {
       console.error("Error syncing matches and likes:", error);
+      // Set loading states to false even if there's an error
+      setIsMatchesLoading(false);
+      setIsLikesLoading(false);
     }
   }, []);
 
@@ -456,10 +468,13 @@ export function ExploreDesktop({
             >
               <Heart className="mr-2 h-4 w-4 text-pink-500" />
               Matches
-              {matches.length > 0 && (
+              {!isMatchesLoading && matches.length > 0 && (
                 <Badge className="ml-auto bg-pink-500 hover:bg-pink-600" variant="default">
                   {matches.length}
                 </Badge>
+              )}
+              {isMatchesLoading && (
+                <div className="ml-auto h-5 w-5 rounded-full bg-pink-500/30 animate-pulse"></div>
               )}
             </Button>
             
@@ -471,10 +486,13 @@ export function ExploreDesktop({
             >
               <Star className="mr-2 h-4 w-4 text-amber-500" />
               Likes
-              {likes.length > 0 && (
+              {!isLikesLoading && likes.length > 0 && (
                 <Badge className="ml-auto bg-amber-500 hover:bg-amber-600" variant="default">
                   {likes.length}
                 </Badge>
+              )}
+              {isLikesLoading && (
+                <div className="ml-auto h-5 w-5 rounded-full bg-amber-500/30 animate-pulse"></div>
               )}
             </Button>
             

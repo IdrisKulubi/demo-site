@@ -24,11 +24,7 @@ const ImageSlider = ({ slug, className }: ImageSliderProps) => {
     isEnd: activeIndex === (slug?.length ?? 0) - 1,
   });
 
-  // Add logging on component mount
-  useEffect(() => {
-    console.log('[ImageSlider] Mounted with', slug?.length, 'images');
-    console.log('[ImageSlider] Initial slide config:', slideConfig);
-  }, []);
+  
 
   // Preload images for smoother transitions - this replaces the preloadImages prop
   useEffect(() => {
@@ -56,7 +52,6 @@ const ImageSlider = ({ slug, className }: ImageSliderProps) => {
         isBeginning: swiper.activeIndex === 0,
         isEnd: swiper.activeIndex === (slug?.length ?? 0) - 1,
       });
-      console.log('[ImageSlider] Slide changed to index:', swiper.activeIndex);
     };
 
     swiper.on("slideChange", handleSlideChange);
@@ -83,7 +78,6 @@ const ImageSlider = ({ slug, className }: ImageSliderProps) => {
 
   // Log the Swiper params for debugging
   useEffect(() => {
-    console.log('[ImageSlider] Swiper params:', swiperParams);
     // Remove the reference to SwiperType.version as it's not accessible this way
     console.log('[ImageSlider] Swiper initialized:', swiper ? 'yes' : 'no');
   }, [swiper]);

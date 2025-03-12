@@ -14,29 +14,10 @@ import { useAction } from "next-safe-action/hooks";
 // Only include troubleshooter in development
 const initInteractionTroubleshooter = () => {
   if (process.env.NODE_ENV !== 'production') {
-    console.log('[SwipeableCard] Initializing interaction troubleshooter');
     
-    // Create a global troubleshooter object
-    window.__troubleshoot = {
-      toggleInfoButtons: () => {
-        // Find all info buttons and toggle their visibility and z-index
-        const infoButtons = document.querySelectorAll('[aria-label="View profile details"]');
-        infoButtons.forEach(btn => {
-          const parent = btn.parentElement;
-          if (parent) {
-            const currentZIndex = getComputedStyle(parent).zIndex;
-            const newZIndex = currentZIndex === "1000" ? "9999" : "1000";
-            parent.style.zIndex = newZIndex;
-            parent.style.backgroundColor = newZIndex === "9999" ? "red" : "";
-            console.log(`Info button z-index set to ${newZIndex}`);
-          }
-        });
-      }
-    };
+   
     
-    return () => {
-      delete window.__troubleshoot;
-    };
+   
   }
   return () => {};
 };
@@ -91,7 +72,6 @@ export function SwipeableCard({
   // Log when the component mounts or becomes active
   useEffect(() => {
     if (active) {
-      console.log('[SwipeableCard] Card activated for profile:', profile.userId);
     }
   }, [active, profile.userId]);
 
@@ -99,7 +79,6 @@ export function SwipeableCard({
     event: MouseEvent | TouchEvent,
     info: { offset: { x: number } }
   ) => {
-    console.log('[SwipeableCard] Drag ended with offset:', info.offset.x);
     
     if (info.offset.x < -200) {
       animate(x, -400, {

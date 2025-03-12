@@ -104,7 +104,9 @@ export function SwipeControls({
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          onSuperLike && handleButtonClick("superLike", onSuperLike);
+          if (onSuperLike) {
+            handleButtonClick("superLike", onSuperLike);
+          }
         }}
         disabled={disabled}
         className={cn(
