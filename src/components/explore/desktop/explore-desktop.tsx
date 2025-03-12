@@ -415,7 +415,7 @@ export function ExploreDesktop({
         transition={{ duration: 0.3, ease: "easeOut" }}
         className="hidden lg:flex flex-col w-72 border-r border-border/40 bg-gradient-to-b from-pink-50/30 to-transparent dark:from-pink-950/20 h-full shadow-md"
       >
-        <div className="p-4 border-b border-border/40 bg-gradient-to-r from-pink-100/30 to-transparent dark:from-pink-950/30">
+        <div className="p-4 border-b border-border/40 bg-transparent dark:bg-transparent">
           <div className="flex items-center space-x-3">
             <Avatar className="h-12 w-12 ring-2 ring-pink-500/30 shadow-xl">
               <AvatarImage
