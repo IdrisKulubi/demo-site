@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
-import type SwiperType from "swiper";
+import type { Swiper as SwiperType } from "swiper";
 import { useEffect, useState, useRef } from "react";
 import { Pagination } from "swiper/modules";
 import { cn } from "@/lib/utils";
@@ -30,11 +30,11 @@ const ImageSlider = ({ slug, className }: ImageSliderProps) => {
     console.log('[ImageSlider] Initial slide config:', slideConfig);
   }, []);
 
-  // Preload images for smoother transitions
+  // Preload images for smoother transitions - this replaces the preloadImages prop
   useEffect(() => {
     if (imagesPreloaded.current || !slug || slug.length === 0) return;
     
-    console.log('[ImageSlider] Preloading images:', slug);
+    console.log('[ImageSlider] Preloading images manually:', slug);
     
     // Use window.Image to explicitly reference the browser's Image constructor
     slug.forEach((url) => {
@@ -78,9 +78,15 @@ const ImageSlider = ({ slug, className }: ImageSliderProps) => {
     modules: [Pagination],
     slidesPerView: 1,
     speed: 300, // Faster slide transitions
-    preloadImages: true,
-    updateOnImagesReady: true
+    // The problematic props have been removed and handled manually in the useEffect above
   };
+
+  // Log the Swiper params for debugging
+  useEffect(() => {
+    console.log('[ImageSlider] Swiper params:', swiperParams);
+    // Remove the reference to SwiperType.version as it's not accessible this way
+    console.log('[ImageSlider] Swiper initialized:', swiper ? 'yes' : 'no');
+  }, [swiper]);
 
   return (
     <div

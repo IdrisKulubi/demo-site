@@ -612,6 +612,8 @@ export function ExploreDesktop({
                                   profiles[currentIndex] as Profile & { photos?: string[] }
                                 }
                                 onSwipe={(direction) => {
+                                  console.log('[ExploreDesktop] Swipe detected:', direction);
+                                  console.log('[ExploreDesktop] Troubleshooting Swiper props issue');
                                   handleSwipe(direction);
                                 }}
                                 active={true}
